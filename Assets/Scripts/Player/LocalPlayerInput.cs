@@ -36,7 +36,8 @@ namespace Vhaldren.Gameplay.Player
 
             Vector3 right = Vector3.Cross(Vector3.up, forward);
             Vector3 move = Vector3.ClampMagnitude(right * axes.x + forward * axes.y, 1f);
-            Vector3 facing = transform.forward;
+            // Preservar la ultima orientacion si el cursor no corta el plano.
+            Vector3 facing = motor.CurrentFacing;
 
             if (TryReadPointer(out Vector2 pointer))
             {
