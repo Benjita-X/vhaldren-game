@@ -1,18 +1,19 @@
 using UnityEngine;
+#if ENABLE_INPUT_SYSTEM
+using UnityEngine.InputSystem;
+#endif
 
 namespace Vhaldren.Gameplay.Player
 {
     /// <summary>
-    /// Entrada temporal de teclado y raton para la primera prueba local.
-    /// Requiere Active Input Handling = Both o Input Manager (Old).
-    /// Al introducir LAN, habilitar este componente SOLO en el jugador local.
+    /// Adaptador exclusivo del jugador local. Nunca activar en avatares remotos.
+    /// Usa el nuevo Input System cuando esta habilitado y el legado como alternativa.
     /// </summary>
     [DisallowMultipleComponent]
     [RequireComponent(typeof(PlayerMotor))]
     public sealed class LocalPlayerInput : MonoBehaviour
     {
         [SerializeField] private Camera viewCamera;
-
         private PlayerMotor motor;
 
         private void Awake()
@@ -24,32 +25,69 @@ namespace Vhaldren.Gameplay.Player
         {
             if (viewCamera == null)
                 viewCamera = Camera.main;
-
             if (viewCamera == null)
                 return;
 
-            float horizontal = (Input.GetKey(KeyCode.D) ? 1f : 0f)
-                             - (Input.GetKey(KeyCode.A) ? 1f : 0f);
-            float vertical = (Input.GetKey(KeyCode.W) ? 1f : 0f)
-                           - (Input.GetKey(KeyCode.S) ? 1f : 0f);
-
+            Vector2 axes = ReadMovement();
             Vector3 forward = Vector3.ProjectOnPlane(viewCamera.transform.forward, Vector3.up);
             if (forward.sqrMagnitude < 0.0001f)
                 forward = Vector3.forward;
             forward.Normalize();
 
             Vector3 right = Vector3.Cross(Vector3.up, forward);
-            Vector3 worldMovement = forward * vertical + right * horizontal;
+            Vector3 move = Vector3.ClampMagnitude(right * axes.x + forward * axes.y, 1f);
+            Vector3 facing = transform.forward;
 
-            // Girar hacia el cursor usando un plano a la altura del personaje.
-            Vector3 worldFacing = transform.forward;
-            Ray cursorRay = viewCamera.ScreenPointToRay(Input.mousePosition);
-            Plane aimPlane = new Plane(Vector3.up, transform.position);
+            if (TryReadPointer(out Vector2 pointer))
+            {
+                Ray ray = viewCamera.ScreenPointToRay(pointer);
+                Plane plane = new Plane(Vector3.up, transform.position);
+                if (plane.Raycast(ray, out float distance))
+                {
+                    Vector3 candidate = ray.GetPoint(distance) - transform.position;
+                    if (candidate.sqrMagnitude > 0.0001f)
+                        facing = candidate;
+                }
+            }
 
-            if (aimPlane.Raycast(cursorRay, out float distance))
-                worldFacing = cursorRay.GetPoint(distance) - transform.position;
+            motor.Simulate(new PlayerMotionCommand(move, facing), Time.deltaTime);
+        }
 
-            motor.Simulate(worldMovement, worldFacing, Time.deltaTime);
+        private static Vector2 ReadMovement()
+        {
+            Vector2 axes = Vector2.zero;
+#if ENABLE_INPUT_SYSTEM
+            Keyboard keyboard = Keyboard.current;
+            if (keyboard != null)
+            {
+                axes.x = (keyboard.dKey.isPressed ? 1f : 0f)
+                       - (keyboard.aKey.isPressed ? 1f : 0f);
+                axes.y = (keyboard.wKey.isPressed ? 1f : 0f)
+                       - (keyboard.sKey.isPressed ? 1f : 0f);
+            }
+#elif ENABLE_LEGACY_INPUT_MANAGER
+            axes.x = (Input.GetKey(KeyCode.D) ? 1f : 0f)
+                   - (Input.GetKey(KeyCode.A) ? 1f : 0f);
+            axes.y = (Input.GetKey(KeyCode.W) ? 1f : 0f)
+                   - (Input.GetKey(KeyCode.S) ? 1f : 0f);
+#endif
+            return Vector2.ClampMagnitude(axes, 1f);
+        }
+
+        private static bool TryReadPointer(out Vector2 screenPosition)
+        {
+            screenPosition = Vector2.zero;
+#if ENABLE_INPUT_SYSTEM
+            if (Mouse.current == null)
+                return false;
+            screenPosition = Mouse.current.position.ReadValue();
+            return true;
+#elif ENABLE_LEGACY_INPUT_MANAGER
+            screenPosition = Input.mousePosition;
+            return true;
+#else
+            return false;
+#endif
         }
     }
 }
