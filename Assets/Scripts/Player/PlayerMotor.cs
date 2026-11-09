@@ -29,9 +29,9 @@ namespace Vhaldren.Gameplay.Player
         private void Awake()
         {
             controller = GetComponent<CharacterController>();
-            CurrentFacing = (visualRoot != null ? visualRoot.forward : transform.forward);
-            CurrentFacing.y = 0f;
-            CurrentFacing = CurrentFacing.sqrMagnitude > 0.0001f ? CurrentFacing.normalized : Vector3.forward;
+            Vector3 initialFacing = visualRoot != null ? visualRoot.forward : transform.forward;
+            initialFacing.y = 0f;
+            CurrentFacing = initialFacing.sqrMagnitude > 0.0001f ? initialFacing.normalized : Vector3.forward;
         }
 
         /// <summary>
