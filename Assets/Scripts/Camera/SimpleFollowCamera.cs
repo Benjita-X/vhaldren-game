@@ -29,7 +29,10 @@ namespace Vhaldren.Gameplay.CameraSystem
                 return;
 
             Vector3 desiredPosition = target.position + offset;
-            float blend = 1f - Mathf.Exp(-followSharpness * Time.deltaTime);
+            // Sharpness = 0 significa seguimiento inmediato, nunca camara congelada.
+            float blend = followSharpness <= 0f
+                ? 1f
+                : 1f - Mathf.Exp(-followSharpness * Time.deltaTime);
             transform.position = Vector3.Lerp(transform.position, desiredPosition, blend);
             KeepFixedAngle();
         }
