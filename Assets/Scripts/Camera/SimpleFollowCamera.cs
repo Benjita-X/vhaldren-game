@@ -31,7 +31,15 @@ namespace Vhaldren.Gameplay.CameraSystem
             Vector3 desiredPosition = target.position + offset;
             float blend = 1f - Mathf.Exp(-followSharpness * Time.deltaTime);
             transform.position = Vector3.Lerp(transform.position, desiredPosition, blend);
-            transform.LookAt(target.position + lookOffset, Vector3.up);
+            KeepFixedAngle();
+        }
+
+        private void KeepFixedAngle()
+        {
+            // La orientacion no depende del retraso del seguimiento.
+            Vector3 forward = lookOffset - offset;
+            if (forward.sqrMagnitude > 0.0001f)
+                transform.rotation = Quaternion.LookRotation(forward.normalized, Vector3.up);
         }
 
         private void SnapToTarget()
@@ -40,7 +48,7 @@ namespace Vhaldren.Gameplay.CameraSystem
                 return;
 
             transform.position = target.position + offset;
-            transform.LookAt(target.position + lookOffset, Vector3.up);
+            KeepFixedAngle();
         }
     }
 }
