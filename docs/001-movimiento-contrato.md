@@ -1,41 +1,49 @@
-# Paso 001 — Contrato de locomocion y prueba en Unity
+# Paso 001 — Prueba minima de locomocion (Unity 6 URP)
 
-**Estado:** codigo revisado estaticamente, NO compilado ni jugado en Unity.
+**Estado:** los archivos de codigo estan en GitHub. Auditado estaticamente; no compilado, no ejecutado en Unity.
 
-## Responsabilidades
+## Alcance exacto
 
-- `LocalPlayerInput`: solo captura teclado, mouse y orientacion de la camara del **jugador local**. No se habilita en replicas remotas.
-- `PlayerMotionCommand`: solo transporta direcciones en mundo; no lee dispositivos ni sabe de redes.
-- `PlayerMotor`: limita y ejecuta movimiento, gravedad y orientacion; publica `ActualVelocity`, `IsGrounded` y `CurrentFacing`.
-- `visualRoot` es opcional: cuando se asigna un hijo visual, la raiz con `CharacterController` no gira con el cursor. Nunca asignar el mismo objeto raiz como `visualRoot`.
+- `Assets/Scripts/Player/LocalPlayerInput.cs`: WASD y raton del jugador local.
+- `Assets/Scripts/Player/PlayerMotionCommand.cs`: intencion de desplazamiento y orientacion en espacio del mundo.
+- `Assets/Scripts/Player/PlayerMotor.cs`: aplica el comando al CharacterController, controla gravedad, contacto, velocidad y orientacion visual.
+- `Assets/Scripts/Camera/SimpleFollowCamera.cs`: sigue al personaje con angulo fijo, sin leer entradas ni fisica; su orientacion es estable para WASD.
+- `Assets/Editor/Movement001SceneTool.cs`: genera y valida una escena de prueba. Es un script **solo del editor**.
 
-La simulacion del prototipo se llama desde `Update`. Antes de añadir LAN se debe definir un paso fijo, ownership/autoridad, serializacion de comandos y estrategia de reconciliacion. **Todavia no es un controlador de red ni posee prediccion.**
+## Configuracion inicial cuando instalemos Unity
 
-## Configuracion minima para probar mañana
+1. Crear en Unity Hub un proyecto nuevo **Unity 6 / Universal 3D (URP)**.
+2. Integrar en ese proyecto la carpeta `Assets/` de esta rama. Los archivos de Unity generados para `Packages/`, `ProjectSettings/` y recursos URP deben incorporarse despues a Git. No hay proyecto Unity completo versionado por ahora.
+3. Comprobar que `Input System` moderno esta disponible, o configurar el antiguo. Este prototipo soporta ambos por directivas condicionales. Evitar dejar ambos deshabilitados.
+4. Esperar a que Unity compile los scripts antes de utilizar el menu del editor.
+5. Seleccionar **Vhaldren > Crear escena de prueba > Movimiento 001**. Se guardara `Assets/Scenes/Movement001.unity`.
+6. Ejecutar **Vhaldren > Validar escena 001**. El verificador revisa conexiones y objetos principales; NO simula movimiento.
+7. Pulsar **Play**, mover con WASD y apuntar con el mouse. La barra delantera de la capsula muestra hacia donde mira el modelo.
+8. Guardar en el repositorio la escena generada y sus archivos `.meta` cuando la prueba sea satisfactoria.
 
-1. Crear proyecto Unity 6 con plantilla URP y guardar `Assets/` y `ProjectSettings/` en Git.
-2. Instalar o habilitar el Input System moderno (o habilitar el antiguo). Ambos estan contemplados mediante directivas de compilacion.
-3. Crear un suelo con collider y un jugador raiz con `CharacterController`, `PlayerMotor` y `LocalPlayerInput`.
-4. Asignar un hijo de la raiz como `visualRoot` (modelo provisional); apuntar con una camara elevada mirando hacia el escenario.
-5. Ejecutar en el editor y observar errores de consola.
+**Precauciones del generador:** confirma antes de sobrescribir una escena existente y pregunta si deseas guardar escenas abiertas con cambios. No usarlo durante Play.
 
-## Criterios de aceptacion del primer prototipo
+## Criterios de aceptacion manuales
 
-- W/A/S/D corresponden a la orientacion de la camara y la diagonal no corre mas rapido.
-- El modelo puede mirar al cursor mientras se desplaza en cualquier direccion.
-- Con `visualRoot` asignado, la raiz de colision no rota al apuntar.
-- Sin puntero valido se conserva la ultima direccion de apuntado, no hay salto brusco hacia una direccion arbitraria.
-- El controlador no atraviesa el suelo ni produce errores al detenerse.
-- Ausencia de excepciones en consola con el esquema de entrada instalado.
-- No hay scripts de red, ataques, magia ni dash en esta entrega.
+- El personaje se mueve en las direcciones relativas a la camara; diagonales sin ventaja de velocidad.
+- La camara mantiene el mismo angulo al seguir al personaje y no cambia los ejes de movimiento por su retraso.
+- Puedes desplazarte hacia atras o hacia los lados y seguir mirando al cursor.
+- Con `VisualRoot` asignado, girar el modelo no hace rotar la raiz que aloja el CharacterController.
+- El indicador `FacingIndicator` gira con el modelo.
+- Si no hay posicion valida del cursor, se conserva la direccion previa.
+- El personaje permanece sobre el suelo, la camara le sigue y la consola no muestra errores.
+- Regenerar una escena existente exige confirmacion.
 
-## Limites y riesgos actuales
+## Auditoria tecnica de esta entrega
 
-- No hay prefab o escena real de Unity en el repositorio.
-- No hay compilacion ejecutada, pruebas de juego ni FPS medidos.
-- Movimiento simple sin aceleracion, salto, pendientes especiales ni esquiva.
-- El objetivo de orientacion y la rotacion visual pueden diferir durante el giro interpolado: esto es intencional; hitboxes futuras deben definir cual utilizan.
-- `PlayerMotor` no impone autorizacion de red: esa comprobacion pertenece a la futura capa de sesion.
-- Si el plano del cursor no intersecta el rayo de la camara, permanece la direccion previa.
+- Capas separadas: `Input -> PlayerMotionCommand -> PlayerMotor`. Camara independiente.
+- Validacion de comandos: vectores no finitos se rechazan y magnitud se limita.
+- La escena es generada por script del editor; **el repositorio no contiene todavia un archivo .unity generado**, ya que no se ha abierto en Unity.
+- El validador del editor confirma objetos y referencias, pero **no es un test automatizado de fisica ni una prueba de compilacion**.
+- `CurrentFacing` expresa la **direccion objetivo**, distinta del giro visual interpolado. Las futuras hitboxes deben escoger su referencia deliberadamente.
+- `Simulate` se llama desde `Update` para la prueba local. La futura capa de red requerira tick, ownership, autoridad y una politica explicita de sincronizacion/prediccion.
+- No se han implementado combate, esquiva, animacion, salvado ni LAN.
 
-**Regla:** no fusionar el PR ni anadir funcionalidades hasta realizar la prueba en Unity y registrar el resultado.
+## Puerta de calidad
+
+**No fusionar PR #1 ni iniciar el combate hasta generar, compilar y probar la escena en Unity, registrando el resultado.** Si se encuentra un fallo, corregir solo ese defecto y repetir la prueba.
