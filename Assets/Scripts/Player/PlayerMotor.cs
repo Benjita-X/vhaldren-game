@@ -3,20 +3,27 @@ using UnityEngine;
 namespace Vhaldren.Gameplay.Player
 {
     /// <summary>
-    /// Movimiento del personaje sin leer teclado ni raton.
-    /// La capa de entrada (y mas adelante la capa de red) decide que comandos enviar.
+    /// Ejecuta intenciones de locomocion en espacio del mundo.
+    /// No lee teclado, raton, camara ni red. No decide autoridad de red.
     /// </summary>
     [DisallowMultipleComponent]
     [RequireComponent(typeof(CharacterController))]
     public sealed class PlayerMotor : MonoBehaviour
     {
-        [Header("Movimiento")]
+        [Header("Locomocion")]
         [SerializeField, Min(0f)] private float movementSpeed = 6f;
         [SerializeField, Min(0f)] private float turningSpeedDegrees = 1080f;
         [SerializeField] private float gravity = -25f;
 
+        [Header("Orientacion visual")]
+        [Tooltip("Opcional: hijo visual. Si se asigna, solo el modelo gira al apuntar.")]
+        [SerializeField] private Transform visualRoot;
+
         private CharacterController controller;
         private float verticalSpeed;
+
+        public Vector3 ActualVelocity { get; private set; }
+        public bool IsGrounded { get; private set; }
 
         private void Awake()
         {
@@ -24,33 +31,48 @@ namespace Vhaldren.Gameplay.Player
         }
 
         /// <summary>
-        /// Ejecutar una vez por frame de simulacion.
-        /// worldMovement y worldFacing son direcciones en coordenadas del mundo.
+        /// Una simulacion por paso. En local se llama desde Update.
+        /// Posteriormente un controlador autorizado podra suministrar comandos de red.
         /// </summary>
-        public void Simulate(Vector3 worldMovement, Vector3 worldFacing, float deltaTime)
+        public void Simulate(PlayerMotionCommand command, float deltaTime)
         {
-            if (!isActiveAndEnabled || deltaTime <= 0f)
+            if (!isActiveAndEnabled || !IsFinite(deltaTime) || deltaTime <= 0f)
                 return;
 
-            worldMovement.y = 0f;
-            worldMovement = Vector3.ClampMagnitude(worldMovement, 1f);
+            Vector3 move = IsFinite(command.MoveWorld) ? command.MoveWorld : Vector3.zero;
+            move.y = 0f;
+            move = Vector3.ClampMagnitude(move, 1f);
 
+            // Mantener contacto estable con el suelo.
             if (controller.isGrounded && verticalSpeed < 0f)
                 verticalSpeed = -2f;
 
+            // Este prototipo no incluye saltos ni dash. El motor no controla entradas.
             verticalSpeed += gravity * deltaTime;
-            Vector3 velocity = worldMovement * movementSpeed + Vector3.up * verticalSpeed;
-            controller.Move(velocity * deltaTime);
+            Vector3 velocity = move * movementSpeed + Vector3.up * verticalSpeed;
+            CollisionFlags flags = controller.Move(velocity * deltaTime);
+            IsGrounded = (flags & CollisionFlags.Below) != 0;
+            if (IsGrounded && verticalSpeed < 0f)
+                verticalSpeed = -2f;
+            ActualVelocity = controller.velocity;
 
-            // Apuntar no debe alterar la direccion de desplazamiento.
-            worldFacing.y = 0f;
-            if (worldFacing.sqrMagnitude > 0.0001f)
-            {
-                Quaternion target = Quaternion.LookRotation(worldFacing.normalized, Vector3.up);
-                transform.rotation = Quaternion.RotateTowards(
-                    transform.rotation, target, turningSpeedDegrees * deltaTime
-                );
-            }
+            Vector3 facing = IsFinite(command.FaceWorld) ? command.FaceWorld : Vector3.zero;
+            facing.y = 0f;
+            if (facing.sqrMagnitude <= 0.0001f)
+                return;
+
+            // Si existe un hijo visual, no rotar la raiz fisica del jugador.
+            Transform targetTransform = visualRoot != null ? visualRoot : transform;
+            Quaternion targetRotation = Quaternion.LookRotation(facing.normalized, Vector3.up);
+            targetTransform.rotation = Quaternion.RotateTowards(
+                targetTransform.rotation, targetRotation, turningSpeedDegrees * deltaTime
+            );
         }
+
+        private static bool IsFinite(float value) =>
+            !float.IsNaN(value) && !float.IsInfinity(value);
+
+        private static bool IsFinite(Vector3 value) =>
+            IsFinite(value.x) && IsFinite(value.y) && IsFinite(value.z);
     }
 }
