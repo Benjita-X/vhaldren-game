@@ -22,12 +22,16 @@ namespace Vhaldren.Gameplay.Player
         private CharacterController controller;
         private float verticalSpeed;
 
+        public Vector3 CurrentFacing { get; private set; } = Vector3.forward;
         public Vector3 ActualVelocity { get; private set; }
         public bool IsGrounded { get; private set; }
 
         private void Awake()
         {
             controller = GetComponent<CharacterController>();
+            CurrentFacing = (visualRoot != null ? visualRoot.forward : transform.forward);
+            CurrentFacing.y = 0f;
+            CurrentFacing = CurrentFacing.sqrMagnitude > 0.0001f ? CurrentFacing.normalized : Vector3.forward;
         }
 
         /// <summary>
@@ -61,9 +65,11 @@ namespace Vhaldren.Gameplay.Player
             if (facing.sqrMagnitude <= 0.0001f)
                 return;
 
+            CurrentFacing = facing.normalized;
+
             // Si existe un hijo visual, no rotar la raiz fisica del jugador.
             Transform targetTransform = visualRoot != null ? visualRoot : transform;
-            Quaternion targetRotation = Quaternion.LookRotation(facing.normalized, Vector3.up);
+            Quaternion targetRotation = Quaternion.LookRotation(CurrentFacing, Vector3.up);
             targetTransform.rotation = Quaternion.RotateTowards(
                 targetTransform.rotation, targetRotation, turningSpeedDegrees * deltaTime
             );
