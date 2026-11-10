@@ -69,7 +69,7 @@ namespace Vhaldren.Gameplay.Player
 
             Vector3 move = IsFinite(command.MoveWorld) ? command.MoveWorld : Vector3.zero;
             move.y = 0f;
-            move = Vector3.ClampMagnitude(move, 1f);
+            move = ClampPlanarMagnitude(move, 1f);
 
             // Mantener contacto estable con el suelo.
             if (controller.isGrounded && verticalSpeed < 0f)
@@ -89,13 +89,26 @@ namespace Vhaldren.Gameplay.Player
             );
 
             // Este prototipo no incluye saltos ni dash. El motor no controla entradas.
-            verticalSpeed += gravity * deltaTime;
+            // Una configuracion corrupta no debe propagar NaN/Infinity al CharacterController.
+            float safeGravity = IsFinite(gravity) ? gravity : 0f;
+            float gravityStep = safeGravity * deltaTime;
+            if (IsFinite(gravityStep))
+                verticalSpeed += gravityStep;
+            else
+                verticalSpeed = 0f;
+            if (!IsFinite(verticalSpeed))
+                verticalSpeed = 0f;
             Vector3 velocity = horizontalVelocity + Vector3.up * verticalSpeed;
+            Vector3 previousPosition = transform.position;
             CollisionFlags flags = controller.Move(velocity * deltaTime);
             IsGrounded = (flags & CollisionFlags.Below) != 0;
             if (IsGrounded && verticalSpeed < 0f)
                 verticalSpeed = -2f;
-            ActualVelocity = controller.velocity;
+            // Medir el desplazamiento con el mismo delta del comando mantiene el motor
+            // consistente si la simulacion se ejecuta a un tick distinto del frame de Unity.
+            ActualVelocity = (transform.position - previousPosition) / deltaTime;
+            if (!IsFinite(ActualVelocity))
+                ActualVelocity = Vector3.zero;
 
             // Si el CharacterController golpeo una pared, no guardar inercia
             // bloqueada que pueda dispararse al liberar la colision.
@@ -103,17 +116,46 @@ namespace Vhaldren.Gameplay.Player
 
             Vector3 facing = IsFinite(command.FaceWorld) ? command.FaceWorld : Vector3.zero;
             facing.y = 0f;
-            if (facing.sqrMagnitude <= 0.0001f)
+            facing = NormalizePlanar(facing);
+            if (facing == Vector3.zero)
                 return;
 
-            CurrentFacing = facing.normalized;
+            CurrentFacing = facing;
 
             // Si existe un hijo visual, no rotar la raiz fisica del jugador.
             Transform targetTransform = visualRoot != null ? visualRoot : transform;
             Quaternion targetRotation = Quaternion.LookRotation(CurrentFacing, Vector3.up);
+            float safeTurningSpeed = IsFinite(turningSpeedDegrees)
+                ? Mathf.Max(0f, turningSpeedDegrees)
+                : 0f;
+            float maxTurn = Mathf.Min(safeTurningSpeed * deltaTime, 360f);
             targetTransform.rotation = Quaternion.RotateTowards(
-                targetTransform.rotation, targetRotation, turningSpeedDegrees * deltaTime
+                targetTransform.rotation, targetRotation, maxTurn
             );
+        }
+
+        private static Vector3 ClampPlanarMagnitude(Vector3 value, float maxMagnitude)
+        {
+            float largestComponent = Mathf.Max(Mathf.Abs(value.x), Mathf.Abs(value.z));
+            if (largestComponent <= 0f || largestComponent <= maxMagnitude)
+                return Vector3.ClampMagnitude(value, maxMagnitude);
+
+            // Escalar antes de normalizar evita overflow en sqrMagnitude para entradas finitas enormes.
+            Vector3 scaled = value / largestComponent;
+            return scaled.normalized * maxMagnitude;
+        }
+
+        private static Vector3 NormalizePlanar(Vector3 value)
+        {
+            float largestComponent = Mathf.Max(Mathf.Abs(value.x), Mathf.Abs(value.z));
+            if (!IsFinite(largestComponent) || largestComponent <= 0f)
+                return Vector3.zero;
+
+            Vector3 scaled = value / largestComponent;
+            float squareMagnitude = scaled.sqrMagnitude;
+            if (!IsFinite(squareMagnitude) || squareMagnitude <= 0.0001f)
+                return Vector3.zero;
+            return scaled / Mathf.Sqrt(squareMagnitude);
         }
 
         private static bool IsFinite(float value) =>

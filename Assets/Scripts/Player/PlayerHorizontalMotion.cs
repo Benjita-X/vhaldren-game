@@ -17,9 +17,9 @@ namespace Vhaldren.Gameplay.Player
             float deltaTime,
             bool instant)
         {
-            if (!IsFinite(current))
+            if (!IsFiniteVector(current) || !IsFinite(current.sqrMagnitude))
                 current = Vector3.zero;
-            if (!IsFinite(desired))
+            if (!IsFiniteVector(desired) || !IsFinite(desired.sqrMagnitude))
                 desired = Vector3.zero;
 
             // El estado vertical pertenece a PlayerMotor.
@@ -55,7 +55,7 @@ namespace Vhaldren.Gameplay.Player
             return !float.IsNaN(value) && !float.IsInfinity(value);
         }
 
-        private static bool IsFinite(Vector3 value)
+        private static bool IsFiniteVector(Vector3 value)
         {
             return IsFinite(value.x) && IsFinite(value.y) && IsFinite(value.z);
         }

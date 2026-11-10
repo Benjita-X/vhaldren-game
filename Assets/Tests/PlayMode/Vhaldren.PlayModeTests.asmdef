@@ -1,0 +1,19 @@
+{
+  "name": "Vhaldren.PlayModeTests",
+  "rootNamespace": "Vhaldren.Tests",
+  "references": [
+    "Vhaldren.Gameplay"
+  ],
+  "includePlatforms": [],
+  "excludePlatforms": [],
+  "allowUnsafeCode": false,
+  "overrideReferences": false,
+  "precompiledReferences": [],
+  "autoReferenced": false,
+  "defineConstraints": [],
+  "versionDefines": [],
+  "optionalUnityReferences": [
+    "TestAssemblies"
+  ],
+  "noEngineReferences": false
+}

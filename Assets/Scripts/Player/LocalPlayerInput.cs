@@ -30,21 +30,25 @@ namespace Vhaldren.Gameplay.Player
         {
             if (viewCamera == null)
                 viewCamera = Camera.main;
-            if (viewCamera == null)
-                return;
 
             Vector2 axes = ReadMovement();
-            Vector3 forward = Vector3.ProjectOnPlane(viewCamera.transform.forward, Vector3.up);
-            if (forward.sqrMagnitude < 0.0001f)
-                forward = Vector3.forward;
-            forward.Normalize();
-
-            Vector3 right = Vector3.Cross(Vector3.up, forward);
+            // Sin camara se usa un marco mundial estable, pero se sigue simulando:
+            // gravedad, contacto y frenado no deben depender de una referencia visual.
+            Vector3 forward = Vector3.forward;
+            Vector3 right = Vector3.right;
+            if (viewCamera != null)
+            {
+                forward = Vector3.ProjectOnPlane(viewCamera.transform.forward, Vector3.up);
+                if (forward.sqrMagnitude < 0.0001f)
+                    forward = Vector3.forward;
+                forward.Normalize();
+                right = Vector3.Cross(Vector3.up, forward);
+            }
             Vector3 move = Vector3.ClampMagnitude(right * axes.x + forward * axes.y, 1f);
             // Preservar la ultima orientacion si el cursor no corta el plano.
             Vector3 facing = motor.CurrentFacing;
 
-            if (TryReadPointer(out Vector2 pointer))
+            if (viewCamera != null && TryReadPointer(out Vector2 pointer))
             {
                 Ray ray = viewCamera.ScreenPointToRay(pointer);
                 Plane plane = new Plane(Vector3.up, transform.position);

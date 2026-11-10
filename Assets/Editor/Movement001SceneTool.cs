@@ -15,6 +15,9 @@ namespace Vhaldren.EditorTools
     public static class Movement001SceneTool
     {
         private const string ScenePath = "Assets/Scenes/Movement001.unity";
+        private const string MaterialsFolder = "Assets/Materials";
+        private const string GroundMaterialPath = MaterialsFolder + "/Movement001_Ground.mat";
+        private const string PlayerMaterialPath = MaterialsFolder + "/Movement001_Player.mat";
 
         [MenuItem("Vhaldren/Crear escena de prueba/Movimiento 001")]
         public static void CreateScene()
@@ -37,6 +40,16 @@ namespace Vhaldren.EditorTools
 
             if (!AssetDatabase.IsValidFolder("Assets/Scenes"))
                 AssetDatabase.CreateFolder("Assets", "Scenes");
+            if (!AssetDatabase.IsValidFolder(MaterialsFolder))
+                AssetDatabase.CreateFolder("Assets", "Materials");
+
+            Material groundMaterial = GetOrCreateMaterial(GroundMaterialPath, "#8F2028");
+            Material playerMaterial = GetOrCreateMaterial(PlayerMaterialPath, "#151515");
+            if (groundMaterial == null || playerMaterial == null)
+            {
+                Debug.LogError("[Vhaldren] No se pudieron crear los materiales de Movement001.");
+                return;
+            }
 
             Scene scene = EditorSceneManager.NewScene(NewSceneSetup.EmptyScene, NewSceneMode.Single);
 
@@ -45,6 +58,7 @@ namespace Vhaldren.EditorTools
             ground.name = "Ground";
             ground.transform.position = new Vector3(0f, -0.5f, 0f);
             ground.transform.localScale = new Vector3(32f, 1f, 32f);
+            ground.GetComponent<Renderer>().sharedMaterial = groundMaterial;
 
             // Obstaculo deliberado: permite comprobar colision lateral y deslizamiento.
             GameObject wall = GameObject.CreatePrimitive(PrimitiveType.Cube);
@@ -66,6 +80,7 @@ namespace Vhaldren.EditorTools
             visual.name = "VisualRoot";
             visual.transform.SetParent(player.transform, false);
             DestroyCollider(visual);
+            visual.GetComponent<Renderer>().sharedMaterial = playerMaterial;
             AssignObjectReference(motor, "visualRoot", visual.transform);
 
             // Marcador visible hacia delante: la capsula no tiene un frente reconocible.
@@ -135,15 +150,24 @@ namespace Vhaldren.EditorTools
             CharacterController controller = player.GetComponent<CharacterController>();
             SimpleFollowCamera follow = cameraObject.GetComponent<SimpleFollowCamera>();
             Camera view = cameraObject.GetComponent<Camera>();
+            Renderer groundRenderer = ground.GetComponent<Renderer>();
+            Renderer visualRenderer = visual.GetComponent<Renderer>();
 
             bool valid = motor != null && input != null && controller != null &&
                          follow != null && view != null &&
                          ground.GetComponent<Collider>() != null && wall.GetComponent<Collider>() != null &&
+                         groundRenderer != null && groundRenderer.sharedMaterial != null &&
+                         visualRenderer != null && visualRenderer.sharedMaterial != null &&
+                         controller.radius > 0f && controller.height >= controller.radius * 2f &&
+                         controller.skinWidth >= 0f && controller.skinWidth < controller.radius &&
                          follow.Target == player.transform &&
                          visual.transform.parent == player.transform &&
                          visual.GetComponent<Collider>() == null &&
                          visual.transform.Find("FacingIndicator") != null &&
                          visual.transform.Find("FacingIndicator").GetComponent<Collider>() == null;
+
+            valid = valid && motor != null && follow != null &&
+                    HasValidMovementSettings(motor) && HasValidCameraSettings(follow);
 
             if (valid)
             {
@@ -178,6 +202,66 @@ namespace Vhaldren.EditorTools
             Collider collider = item.GetComponent<Collider>();
             if (collider != null)
                 UnityEngine.Object.DestroyImmediate(collider);
+        }
+
+        private static Material GetOrCreateMaterial(string assetPath, string htmlColor)
+        {
+            Material existing = AssetDatabase.LoadAssetAtPath<Material>(assetPath);
+            if (existing != null)
+                return existing;
+
+            Shader shader = Shader.Find("Universal Render Pipeline/Lit");
+            if (shader == null)
+                shader = Shader.Find("Standard");
+            if (shader == null)
+                return null;
+
+            if (!ColorUtility.TryParseHtmlString(htmlColor, out Color color))
+                throw new InvalidOperationException("Color de material no valido: " + htmlColor);
+
+            Material material = new Material(shader);
+            string colorProperty = material.HasProperty("_BaseColor") ? "_BaseColor" : "_Color";
+            if (material.HasProperty(colorProperty))
+                material.SetColor(colorProperty, color);
+            AssetDatabase.CreateAsset(material, assetPath);
+            return material;
+        }
+
+        private static bool HasValidMovementSettings(PlayerMotor motor)
+        {
+            SerializedObject serialized = new SerializedObject(motor);
+            SerializedProperty gravity = serialized.FindProperty("gravity");
+            return IsNonNegativeFinite(serialized.FindProperty("movementSpeed")) &&
+                   IsNonNegativeFinite(serialized.FindProperty("turningSpeedDegrees")) &&
+                   gravity != null && IsFinite(gravity.floatValue) &&
+                   IsNonNegativeFinite(serialized.FindProperty("acceleration")) &&
+                   IsNonNegativeFinite(serialized.FindProperty("braking")) &&
+                   IsNonNegativeFinite(serialized.FindProperty("reversalAcceleration"));
+        }
+
+        private static bool HasValidCameraSettings(SimpleFollowCamera follow)
+        {
+            SerializedObject serialized = new SerializedObject(follow);
+            SerializedProperty offset = serialized.FindProperty("offset");
+            SerializedProperty lookOffset = serialized.FindProperty("lookOffset");
+            return offset != null && lookOffset != null &&
+                   IsFinite(offset.vector3Value) && IsFinite(lookOffset.vector3Value) &&
+                   IsNonNegativeFinite(serialized.FindProperty("followSharpness"));
+        }
+
+        private static bool IsNonNegativeFinite(SerializedProperty property)
+        {
+            return property != null && IsFinite(property.floatValue) && property.floatValue >= 0f;
+        }
+
+        private static bool IsFinite(float value)
+        {
+            return !float.IsNaN(value) && !float.IsInfinity(value);
+        }
+
+        private static bool IsFinite(Vector3 value)
+        {
+            return IsFinite(value.x) && IsFinite(value.y) && IsFinite(value.z);
         }
 
         private static void AssignObjectReference(UnityEngine.Object target, string name, UnityEngine.Object value)
