@@ -1,4 +1,4 @@
-# Carpetas generadas por Unity: NO subir al repositorio
+# Unity generated state
 [Ll]ibrary/
 [Tt]emp/
 [Oo]bj/
@@ -9,10 +9,14 @@
 [Mm]emoryCaptures/
 [Rr]ecordings/
 
-# Archivos generados por IDEs
+# Test/build outputs
+TestResults/
+Artifacts/
+
+# IDE and OS files
 .vs/
-.vscode/
 .idea/
+.vscode/
 *.csproj
 *.sln
 *.suo
@@ -20,9 +24,12 @@
 *.userprefs
 *.pidb
 *.booproj
-
-# Sistema operativo
-.DS_Store
+*.svclog
+*.tmp
 Thumbs.db
+Desktop.ini
 
-# Mantener Assets/*.meta y ProjectSettings versionados.
+.DS_Store
+
+
+.DS_Store
