@@ -16,6 +16,8 @@ namespace Vhaldren.EditorTools
     {
         private const string ScenePath = "Assets/Scenes/Movement001.unity";
         private const string MaterialsFolder = "Assets/Materials";
+        private const string ModelsFolder = "Assets/Models";
+        private const string CapeMeshPath = ModelsFolder + "/Movement001_CapeMesh.asset";
         private const string GroundMaterialPath = MaterialsFolder + "/Movement001_Ground.mat";
         private const string PlayerMaterialPath = MaterialsFolder + "/Movement001_Player.mat";
         private const string ArmorMaterialPath = MaterialsFolder + "/Movement001_Armor.mat";
@@ -47,6 +49,8 @@ namespace Vhaldren.EditorTools
                 AssetDatabase.CreateFolder("Assets", "Scenes");
             if (!AssetDatabase.IsValidFolder(MaterialsFolder))
                 AssetDatabase.CreateFolder("Assets", "Materials");
+            if (!AssetDatabase.IsValidFolder(ModelsFolder))
+                AssetDatabase.CreateFolder("Assets", "Models");
 
             Material groundMaterial = GetOrCreateMaterial(GroundMaterialPath, "#8F2028");
             Material playerMaterial = GetOrCreateMaterial(PlayerMaterialPath, "#151515");
@@ -89,8 +93,14 @@ namespace Vhaldren.EditorTools
 
             GameObject visual = new GameObject("VisualRoot");
             visual.transform.SetParent(player.transform, false);
+            Mesh capeMesh = GetOrCreateCapeMesh();
+            if (capeMesh == null)
+            {
+                Debug.LogError("[Vhaldren] No se pudo crear la malla de la capa.");
+                return;
+            }
             BuildDarkFantasyCharacter(visual.transform, playerMaterial, armorMaterial,
-                capeMaterial, skinMaterial, metalMaterial, leatherMaterial);
+                capeMaterial, skinMaterial, metalMaterial, leatherMaterial, capeMesh);
             AssignObjectReference(motor, "visualRoot", visual.transform);
 
             // Marcador de apuntado va en el suelo para que sea legible desde la cámara elevada.
@@ -214,12 +224,23 @@ namespace Vhaldren.EditorTools
         }
 
         private static void BuildDarkFantasyCharacter(Transform root, Material cloth, Material armor,
-            Material cape, Material skin, Material metal, Material leather)
+            Material cape, Material skin, Material metal, Material leather, Mesh capeMesh)
         {
             // Escala aproximada de dos metros: los pies quedan en Y=-1 y la cabeza en Y=1.
-            CreateVisualPart(PrimitiveType.Cube, "Cape", root,
-                new Vector3(0f, -0.12f, -0.27f), new Vector3(0.78f, 1.42f, 0.16f), cape,
-                Quaternion.Euler(8f, 0f, 0f));
+            GameObject capeObject = new GameObject("Cape");
+            capeObject.transform.SetParent(root, false);
+            capeObject.AddComponent<MeshFilter>().sharedMesh = capeMesh;
+            capeObject.AddComponent<MeshRenderer>().sharedMaterial = cape;
+            CreateVisualPart(PrimitiveType.Cube, "CapeHem", root,
+                new Vector3(0f, -0.79f, -0.45f), new Vector3(0.68f, 0.07f, 0.06f), metal);
+            for (int side = -1; side <= 1; side += 2)
+            {
+                CreateVisualPart(PrimitiveType.Cube, side < 0 ? "CapeLeftTrim" : "CapeRightTrim", root,
+                    new Vector3(side * 0.31f, -0.13f, -0.405f), new Vector3(0.035f, 1.1f, 0.035f), metal);
+            }
+            CreateVisualPart(PrimitiveType.Cube, "CloakSigil", root,
+                new Vector3(0f, 0.08f, -0.35f), new Vector3(0.13f, 0.22f, 0.045f), metal,
+                Quaternion.Euler(0f, 0f, 45f));
             CreateVisualPart(PrimitiveType.Capsule, "Body", root,
                 new Vector3(0f, 0.02f, 0f), new Vector3(0.64f, 0.62f, 0.42f), cloth);
             CreateVisualPart(PrimitiveType.Sphere, "ChestArmor", root,
@@ -261,6 +282,41 @@ namespace Vhaldren.EditorTools
                 Quaternion.Euler(-18f, 0f, 0f));
             CreateVisualPart(PrimitiveType.Sphere, "Clasp", root,
                 new Vector3(0f, 0.37f, 0.28f), new Vector3(0.12f, 0.14f, 0.05f), metal);
+        }
+
+        private static Mesh GetOrCreateCapeMesh()
+        {
+            Mesh existing = AssetDatabase.LoadAssetAtPath<Mesh>(CapeMeshPath);
+            if (existing != null)
+                return existing;
+
+            // Trapezoidal, double-sided silhouette avoids a rectangular "cube person" look.
+            Mesh mesh = new Mesh { name = "Movement001_CapeMesh" };
+            mesh.vertices = new[]
+            {
+                new Vector3(-0.23f, 0.48f, -0.30f),
+                new Vector3(-0.34f, -0.78f, -0.48f),
+                new Vector3(0.34f, -0.78f, -0.48f),
+                new Vector3(0.23f, 0.48f, -0.30f),
+                new Vector3(-0.23f, 0.48f, -0.23f),
+                new Vector3(-0.34f, -0.78f, -0.41f),
+                new Vector3(0.34f, -0.78f, -0.41f),
+                new Vector3(0.23f, 0.48f, -0.23f)
+            };
+            mesh.uv = new[]
+            {
+                new Vector2(0f, 1f), new Vector2(0f, 0f), new Vector2(1f, 0f), new Vector2(1f, 1f),
+                new Vector2(0f, 1f), new Vector2(0f, 0f), new Vector2(1f, 0f), new Vector2(1f, 1f)
+            };
+            mesh.triangles = new[]
+            {
+                0, 2, 1, 0, 3, 2,
+                4, 5, 6, 4, 6, 7
+            };
+            mesh.RecalculateNormals();
+            mesh.RecalculateBounds();
+            AssetDatabase.CreateAsset(mesh, CapeMeshPath);
+            return AssetDatabase.LoadAssetAtPath<Mesh>(CapeMeshPath);
         }
 
         private static GameObject CreateVisualPart(PrimitiveType type, string partName, Transform parent,

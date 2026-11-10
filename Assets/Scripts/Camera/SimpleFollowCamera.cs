@@ -10,11 +10,11 @@ namespace Vhaldren.Gameplay.CameraSystem
     [RequireComponent(typeof(Camera))]
     public sealed class SimpleFollowCamera : MonoBehaviour
     {
-        private static readonly Vector3 DefaultOffset = new Vector3(0f, 13f, -12f);
+        private static readonly Vector3 DefaultOffset = new Vector3(0f, 10f, -10f);
         private static readonly Vector3 DefaultLookOffset = new Vector3(0f, 0.5f, 0f);
 
         [SerializeField] private Transform target;
-        [SerializeField] private Vector3 offset = new Vector3(0f, 13f, -12f);
+        [SerializeField] private Vector3 offset = new Vector3(0f, 10f, -10f);
         [SerializeField] private Vector3 lookOffset = new Vector3(0f, 0.5f, 0f);
         [SerializeField, Min(0f)] private float followSharpness = 12f;
 

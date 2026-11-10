@@ -156,7 +156,7 @@ namespace Vhaldren.Tests
             AssertFinite(cameraObject.transform.position);
             AssertFinite(cameraObject.transform.rotation);
             Assert.That(float.IsNaN(Quaternion.Dot(cameraObject.transform.rotation, cameraObject.transform.rotation)), Is.False);
-            Assert.That(cameraObject.transform.position, Is.EqualTo(target.transform.position + new Vector3(0f, 13f, -12f)));
+            Assert.That(cameraObject.transform.position, Is.EqualTo(target.transform.position + new Vector3(0f, 10f, -10f)));
         }
 
         private GameObject CreatePlayer(Vector3 position)

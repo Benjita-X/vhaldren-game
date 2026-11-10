@@ -53,8 +53,10 @@ Push final realizado a `origin/feature/001-movimiento-base`; HEAD publicado: `7b
 ## Preparación visual para prueba de movimiento — 2026-11-10
 
 - La escena se amplió con un personaje 3D provisional de fantasía oscura, creado con primitivas de Unity y materiales separados para tela, capa, armadura, piel, cuero y metal.
-- El visual no contiene colliders; el `CharacterController` sigue siendo la única colisión del jugador. El marcador de apuntado queda visible desde la cámara elevada.
-- El generador creó y validó `Movement001.unity` con el modelo visual; EditMode volvió a pasar 16/16 y PlayMode 6/6.
+- La capa tiene una malla trapezoidal con borde y emblema metálicos; el visual no contiene colliders. El `CharacterController` sigue siendo la única colisión del jugador y el marcador de apuntado queda visible desde la cámara elevada.
+- La cámara quedó a 10 unidades de altura y distancia para que el personaje ocupe más pantalla conservando el ángulo elevado.
+- El generador creó y validó `Movement001.unity` con el modelo visual; las últimas corridas en Unity dieron EditMode 16/16 y PlayMode 6/6.
 - El modelo es un bloque visual temporal, no un asset texturizado final.
-- Estos cambios se publicarán en commits posteriores de la misma rama; la escena local anterior del usuario se respaldará antes de reemplazar la copia de prueba.
+- Unity quedó abierto en `Movement001`, en modo edición, listo para pulsar Play.
+- La carpeta ZIP del usuario no se reemplazó; el proyecto actualizado está en el checkout Git.
 
