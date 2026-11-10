@@ -108,10 +108,14 @@ namespace Vhaldren.EditorTools
                 return;
             }
 
-            GameObject player = GameObject.Find("PlayerRoot");
-            GameObject visual = GameObject.Find("VisualRoot");
-            GameObject cameraObject = GameObject.Find("MainCamera");
-            GameObject ground = GameObject.Find("Ground");
+            // No buscar globalmente: escenas aditivas pueden contener nombres repetidos.
+            GameObject player = FindSceneRoot(scene, "PlayerRoot");
+            GameObject cameraObject = FindSceneRoot(scene, "MainCamera");
+            GameObject ground = FindSceneRoot(scene, "Ground");
+            Transform visualTransform = player != null
+                ? player.transform.Find("VisualRoot")
+                : null;
+            GameObject visual = visualTransform != null ? visualTransform.gameObject : null;
 
             if (player == null || visual == null || cameraObject == null || ground == null)
             {
@@ -146,6 +150,17 @@ namespace Vhaldren.EditorTools
                 Debug.LogError("[Vhaldren] Hay conexiones o componentes incorrectos en Movement001.");
             else
                 Debug.Log("[Vhaldren] Validacion estructural correcta. Falta probar compilacion y movimiento en Play.");
+        }
+
+        private static GameObject FindSceneRoot(Scene scene, string objectName)
+        {
+            // Se limita al nivel raiz de la escena activa, sin objetos de otras escenas.
+            foreach (GameObject root in scene.GetRootGameObjects())
+            {
+                if (root.name == objectName)
+                    return root;
+            }
+            return null;
         }
 
         private static void DestroyCollider(GameObject item)
