@@ -11,6 +11,7 @@
 
 # Test/build outputs
 TestResults/
+Captures/
 Artifacts/
 
 # IDE and OS files
