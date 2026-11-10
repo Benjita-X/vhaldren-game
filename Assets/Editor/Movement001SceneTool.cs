@@ -18,6 +18,11 @@ namespace Vhaldren.EditorTools
         private const string MaterialsFolder = "Assets/Materials";
         private const string GroundMaterialPath = MaterialsFolder + "/Movement001_Ground.mat";
         private const string PlayerMaterialPath = MaterialsFolder + "/Movement001_Player.mat";
+        private const string ArmorMaterialPath = MaterialsFolder + "/Movement001_Armor.mat";
+        private const string CapeMaterialPath = MaterialsFolder + "/Movement001_Cape.mat";
+        private const string SkinMaterialPath = MaterialsFolder + "/Movement001_Skin.mat";
+        private const string MetalMaterialPath = MaterialsFolder + "/Movement001_Metal.mat";
+        private const string LeatherMaterialPath = MaterialsFolder + "/Movement001_Leather.mat";
 
         [MenuItem("Vhaldren/Crear escena de prueba/Movimiento 001")]
         public static void CreateScene()
@@ -45,7 +50,13 @@ namespace Vhaldren.EditorTools
 
             Material groundMaterial = GetOrCreateMaterial(GroundMaterialPath, "#8F2028");
             Material playerMaterial = GetOrCreateMaterial(PlayerMaterialPath, "#151515");
-            if (groundMaterial == null || playerMaterial == null)
+            Material armorMaterial = GetOrCreateMaterial(ArmorMaterialPath, "#292D3B");
+            Material capeMaterial = GetOrCreateMaterial(CapeMaterialPath, "#641D2B");
+            Material skinMaterial = GetOrCreateMaterial(SkinMaterialPath, "#C6B7AA");
+            Material metalMaterial = GetOrCreateMaterial(MetalMaterialPath, "#9E8755");
+            Material leatherMaterial = GetOrCreateMaterial(LeatherMaterialPath, "#3A2422");
+            if (groundMaterial == null || playerMaterial == null || armorMaterial == null ||
+                capeMaterial == null || skinMaterial == null || metalMaterial == null || leatherMaterial == null)
             {
                 Debug.LogError("[Vhaldren] No se pudieron crear los materiales de Movement001.");
                 return;
@@ -76,20 +87,16 @@ namespace Vhaldren.EditorTools
             PlayerMotor motor = player.AddComponent<PlayerMotor>();
             LocalPlayerInput input = player.AddComponent<LocalPlayerInput>();
 
-            GameObject visual = GameObject.CreatePrimitive(PrimitiveType.Capsule);
-            visual.name = "VisualRoot";
+            GameObject visual = new GameObject("VisualRoot");
             visual.transform.SetParent(player.transform, false);
-            DestroyCollider(visual);
-            visual.GetComponent<Renderer>().sharedMaterial = playerMaterial;
+            BuildDarkFantasyCharacter(visual.transform, playerMaterial, armorMaterial,
+                capeMaterial, skinMaterial, metalMaterial, leatherMaterial);
             AssignObjectReference(motor, "visualRoot", visual.transform);
 
-            // Marcador visible hacia delante: la capsula no tiene un frente reconocible.
-            GameObject facing = GameObject.CreatePrimitive(PrimitiveType.Cube);
-            facing.name = "FacingIndicator";
-            facing.transform.SetParent(visual.transform, false);
-            facing.transform.localPosition = new Vector3(0f, 0.25f, 0.65f);
-            facing.transform.localScale = new Vector3(0.22f, 0.22f, 0.55f);
-            DestroyCollider(facing);
+            // Marcador de apuntado va en el suelo para que sea legible desde la cámara elevada.
+            GameObject facing = CreateVisualPart(PrimitiveType.Cube, "FacingIndicator", visual.transform,
+                new Vector3(0f, -0.87f, 0.72f), new Vector3(0.16f, 0.07f, 0.38f), metalMaterial);
+            facing.transform.localRotation = Quaternion.identity;
 
             GameObject cameraObject = new GameObject("MainCamera");
             cameraObject.tag = "MainCamera";
@@ -151,7 +158,7 @@ namespace Vhaldren.EditorTools
             SimpleFollowCamera follow = cameraObject.GetComponent<SimpleFollowCamera>();
             Camera view = cameraObject.GetComponent<Camera>();
             Renderer groundRenderer = ground.GetComponent<Renderer>();
-            Renderer visualRenderer = visual.GetComponent<Renderer>();
+            Renderer visualRenderer = visual.GetComponentInChildren<Renderer>();
 
             bool valid = motor != null && input != null && controller != null &&
                          follow != null && view != null &&
@@ -164,7 +171,9 @@ namespace Vhaldren.EditorTools
                          visual.transform.parent == player.transform &&
                          visual.GetComponent<Collider>() == null &&
                          visual.transform.Find("FacingIndicator") != null &&
-                         visual.transform.Find("FacingIndicator").GetComponent<Collider>() == null;
+                         visual.transform.Find("FacingIndicator").GetComponent<Collider>() == null &&
+                         visual.GetComponentsInChildren<Collider>().Length == 0 &&
+                         visual.GetComponentsInChildren<Renderer>().Length >= 10;
 
             valid = valid && motor != null && follow != null &&
                     HasValidMovementSettings(motor) && HasValidCameraSettings(follow);
@@ -202,6 +211,70 @@ namespace Vhaldren.EditorTools
             Collider collider = item.GetComponent<Collider>();
             if (collider != null)
                 UnityEngine.Object.DestroyImmediate(collider);
+        }
+
+        private static void BuildDarkFantasyCharacter(Transform root, Material cloth, Material armor,
+            Material cape, Material skin, Material metal, Material leather)
+        {
+            // Escala aproximada de dos metros: los pies quedan en Y=-1 y la cabeza en Y=1.
+            CreateVisualPart(PrimitiveType.Cube, "Cape", root,
+                new Vector3(0f, -0.12f, -0.27f), new Vector3(0.78f, 1.42f, 0.16f), cape,
+                Quaternion.Euler(8f, 0f, 0f));
+            CreateVisualPart(PrimitiveType.Capsule, "Body", root,
+                new Vector3(0f, 0.02f, 0f), new Vector3(0.64f, 0.62f, 0.42f), cloth);
+            CreateVisualPart(PrimitiveType.Sphere, "ChestArmor", root,
+                new Vector3(0f, 0.16f, 0.16f), new Vector3(0.62f, 0.42f, 0.25f), armor);
+            CreateVisualPart(PrimitiveType.Cube, "Belt", root,
+                new Vector3(0f, -0.31f, 0.05f), new Vector3(0.58f, 0.12f, 0.46f), leather);
+            CreateVisualPart(PrimitiveType.Sphere, "BeltClasp", root,
+                new Vector3(0f, -0.31f, 0.29f), new Vector3(0.14f, 0.14f, 0.06f), metal);
+
+            for (int side = -1; side <= 1; side += 2)
+            {
+                float x = side * 0.18f;
+                CreateVisualPart(PrimitiveType.Capsule, side < 0 ? "LeftLeg" : "RightLeg", root,
+                    new Vector3(x, -0.57f, 0f), new Vector3(0.2f, 0.5f, 0.22f), armor,
+                    Quaternion.Euler(0f, 0f, side * -3f));
+                CreateVisualPart(PrimitiveType.Cube, side < 0 ? "LeftBoot" : "RightBoot", root,
+                    new Vector3(x, -0.88f, 0.09f), new Vector3(0.27f, 0.2f, 0.42f), leather);
+
+                CreateVisualPart(PrimitiveType.Capsule, side < 0 ? "LeftArm" : "RightArm", root,
+                    new Vector3(side * 0.29f, 0.02f, 0.02f), new Vector3(0.17f, 0.56f, 0.18f), cloth,
+                    Quaternion.Euler(0f, 0f, side * -12f));
+                CreateVisualPart(PrimitiveType.Sphere, side < 0 ? "LeftShoulder" : "RightShoulder", root,
+                    new Vector3(side * 0.28f, 0.34f, 0.03f), new Vector3(0.24f, 0.26f, 0.29f), armor);
+                CreateVisualPart(PrimitiveType.Sphere, side < 0 ? "LeftPauldronTrim" : "RightPauldronTrim", root,
+                    new Vector3(side * 0.28f, 0.42f, 0.05f), new Vector3(0.2f, 0.08f, 0.24f), metal);
+            }
+
+            CreateVisualPart(PrimitiveType.Capsule, "Neck", root,
+                new Vector3(0f, 0.48f, 0.02f), new Vector3(0.21f, 0.2f, 0.2f), skin);
+            CreateVisualPart(PrimitiveType.Sphere, "Head", root,
+                new Vector3(0f, 0.68f, 0.04f), new Vector3(0.37f, 0.4f, 0.34f), skin);
+            CreateVisualPart(PrimitiveType.Sphere, "Hair", root,
+                new Vector3(0f, 0.84f, -0.015f), new Vector3(0.4f, 0.28f, 0.37f), cloth);
+            CreateVisualPart(PrimitiveType.Cube, "HairFringe", root,
+                new Vector3(0f, 0.73f, 0.2f), new Vector3(0.32f, 0.1f, 0.08f), cloth,
+                Quaternion.Euler(0f, 0f, -7f));
+            CreateVisualPart(PrimitiveType.Cube, "Collar", root,
+                new Vector3(0f, 0.47f, 0.18f), new Vector3(0.46f, 0.18f, 0.17f), leather,
+                Quaternion.Euler(-18f, 0f, 0f));
+            CreateVisualPart(PrimitiveType.Sphere, "Clasp", root,
+                new Vector3(0f, 0.37f, 0.28f), new Vector3(0.12f, 0.14f, 0.05f), metal);
+        }
+
+        private static GameObject CreateVisualPart(PrimitiveType type, string partName, Transform parent,
+            Vector3 localPosition, Vector3 localScale, Material material, Quaternion? localRotation = null)
+        {
+            GameObject part = GameObject.CreatePrimitive(type);
+            part.name = partName;
+            part.transform.SetParent(parent, false);
+            part.transform.localPosition = localPosition;
+            part.transform.localRotation = localRotation ?? Quaternion.identity;
+            part.transform.localScale = localScale;
+            part.GetComponent<Renderer>().sharedMaterial = material;
+            DestroyCollider(part);
+            return part;
         }
 
         private static Material GetOrCreateMaterial(string assetPath, string htmlColor)
