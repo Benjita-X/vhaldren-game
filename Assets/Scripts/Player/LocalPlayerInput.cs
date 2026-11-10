@@ -19,6 +19,11 @@ namespace Vhaldren.Gameplay.Player
         private void Awake()
         {
             motor = GetComponent<PlayerMotor>();
+#if !ENABLE_INPUT_SYSTEM && !ENABLE_LEGACY_INPUT_MANAGER
+            Debug.LogError(
+                "[Vhaldren] No hay sistema de entrada habilitado. Configura Active Input Handling en Player Settings.",
+                this);
+#endif
         }
 
         private void Update()
@@ -82,13 +87,19 @@ namespace Vhaldren.Gameplay.Player
             if (Mouse.current == null)
                 return false;
             screenPosition = Mouse.current.position.ReadValue();
-            return true;
+            return IsInsideGameViewport(screenPosition);
 #elif ENABLE_LEGACY_INPUT_MANAGER
             screenPosition = Input.mousePosition;
-            return true;
+            return IsInsideGameViewport(screenPosition);
 #else
             return false;
 #endif
+        }
+
+        private static bool IsInsideGameViewport(Vector2 screenPosition)
+        {
+            return screenPosition.x >= 0f && screenPosition.y >= 0f &&
+                   screenPosition.x < Screen.width && screenPosition.y < Screen.height;
         }
     }
 }
