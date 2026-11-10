@@ -17,7 +17,7 @@ namespace Vhaldren.Gameplay.Player
 
         [Header("Respuesta horizontal")]
         [Tooltip("Activado: respuesta inmediata identica a la del Paso 001.")]
-        [SerializeField] private bool instantHorizontalMovement = false;
+        [SerializeField] private bool instantHorizontalMovement = true;
         [Tooltip("Rapidez al arrancar o cambiar hacia un lado perpendicular.")]
         [SerializeField, Min(0f)] private float acceleration = 45f;
         [Tooltip("Rapidez al soltar WASD.")]

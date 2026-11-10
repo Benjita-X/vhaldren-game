@@ -15,10 +15,12 @@ namespace Vhaldren.Gameplay.Player
     {
         [SerializeField] private Camera viewCamera;
         private PlayerMotor motor;
+        private LocalPlayerShooter shooter;
 
         private void Awake()
         {
             motor = GetComponent<PlayerMotor>();
+            shooter = GetComponent<LocalPlayerShooter>();
 #if !ENABLE_INPUT_SYSTEM && !ENABLE_LEGACY_INPUT_MANAGER
             Debug.LogError(
                 "[Vhaldren] No hay sistema de entrada habilitado. Configura Active Input Handling en Player Settings.",
@@ -50,13 +52,22 @@ namespace Vhaldren.Gameplay.Player
 
             if (viewCamera != null && TryReadPointer(out Vector2 pointer))
             {
-                Ray ray = viewCamera.ScreenPointToRay(pointer);
-                Plane plane = new Plane(Vector3.up, transform.position);
-                if (plane.Raycast(ray, out float distance))
+                if (shooter != null && shooter.TryGetAimPoint(pointer, out Vector3 aimPoint))
                 {
-                    Vector3 candidate = ray.GetPoint(distance) - transform.position;
+                    Vector3 candidate = aimPoint - transform.position;
                     if (candidate.sqrMagnitude > 0.0001f)
                         facing = candidate;
+                }
+                else
+                {
+                    Ray ray = viewCamera.ScreenPointToRay(pointer);
+                    Plane plane = new Plane(Vector3.up, transform.position);
+                    if (plane.Raycast(ray, out float distance))
+                    {
+                        Vector3 candidate = ray.GetPoint(distance) - transform.position;
+                        if (candidate.sqrMagnitude > 0.0001f)
+                            facing = candidate;
+                    }
                 }
             }
 

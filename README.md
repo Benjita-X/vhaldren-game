@@ -1,6 +1,6 @@
 # Vhaldren
 
-Base de locomoción para Unity 6.2. El código separa la entrada local, la intención de movimiento, el motor del jugador y la cámara. La escena trae un personaje 3D provisional de fantasía oscura para evaluar silueta y apuntado mientras se mueve. Aún no incluye combate, dash ni red.
+Base de locomoción para Unity 6.2. El código separa la entrada local, la intención de movimiento, el motor del jugador y la cámara. La escena trae un personaje 3D provisional de fantasía oscura para evaluar silueta y apuntado mientras se mueve. Incluye un disparo hitscan de prueba para verificar la puntería; todavía no hace daño ni incluye habilidades o red.
 
 ## Abrir en Unity
 
@@ -10,13 +10,13 @@ Base de locomoción para Unity 6.2. El código separa la entrada local, la inten
 4. Espera a que Package Manager instale Unity Test Framework 1.6.0 y a que termine la compilación. El proyecto aún usa el pipeline integrado de Unity; URP no está instalado/configurado en esta fase.
 5. Abre `Assets/Scenes/Movement001.unity` si está presente; si no, usa **Vhaldren → Crear escena de prueba → Movimiento 001**.
 6. Ejecuta **Vhaldren → Validar escena 001** antes de entrar a Play.
-7. Pulsa **Play**, haz clic dentro de **Game** y prueba WASD, movimiento diagonal, apuntado con el mouse y choque/deslizamiento contra la pared.
+7. Pulsa **Play**, haz clic dentro de **Game** y prueba WASD, movimiento diagonal, apuntado con el mouse, clic izquierdo para disparar al punto bajo el cursor y choque/deslizamiento contra la pared.
 
-El personaje provisional se construye con geometría y materiales de Unity; todavía no usa un modelo externo ni una textura UV final. Su raíz visual gira independientemente de la cápsula de colisión. El marcador metálico al frente indica el apuntado.
+El personaje provisional se construye con geometría y materiales de Unity; todavía no usa un modelo externo ni una textura UV final. Su raíz visual gira independientemente de la cápsula de colisión. El marcador circular en el suelo señala el punto bajo el cursor; el clic izquierdo muestra un trazador hacia ese punto. Este disparo de prueba no aplica daño. La animación de piernas queda para una fase posterior.
 
 ## Pruebas
 
-La carpeta `Assets/Tests` contiene pruebas EditMode del solver y pruebas PlayMode del `CharacterController`, movimiento diagonal, apuntado visual, valores inválidos y gravedad sin cámara.
+La carpeta `Assets/Tests` contiene pruebas EditMode del solver y pruebas PlayMode del `CharacterController`, movimiento diagonal e inmediato, apuntado visual, disparo hacia el cursor, valores inválidos y gravedad sin cámara.
 
 Desde Unity: **Window → General → Test Runner**, ejecuta primero **EditMode** y luego **PlayMode**.
 

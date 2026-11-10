@@ -60,3 +60,13 @@ Push final realizado a `origin/feature/001-movimiento-base`; HEAD publicado: `7b
 - Unity quedó abierto en `Movement001`, en modo edición, listo para pulsar Play.
 - La carpeta ZIP del usuario no se reemplazó; el proyecto actualizado está en el checkout Git.
 
+## Respuesta de movimiento y puntería — 2026-11-10
+
+- Se activó movimiento horizontal inmediato para que toques muy cortos de WASD sean visibles; la cápsula física sigue separada del visual y el apuntado no cambia la dirección de marcha.
+- El punto de puntería ahora consulta el mundo bajo el pixel del cursor. El clic izquierdo dispara un hitscan de prueba desde el personaje y muestra un trazador; los obstáculos interpuestos lo detienen. No hay daño ni habilidades en esta fase.
+- Se añadió un marcador de suelo para el punto de puntería y se amplió el validador para revisar sus referencias.
+- Se añadieron dos pruebas PlayMode: respuesta a un toque corto con inversión de dirección y coincidencia entre el cursor, el punto de puntería y el impacto.
+- Verificado en Unity 6.2, en una copia aislada del proyecto: EditMode 16/16 y PlayMode 8/8 aprobadas. El PlayMode cubre las nuevas pruebas de toque corto y puntería/disparo.
+- Se comprobó manualmente en Unity que un toque de W mueve al personaje y que el visual gira hacia la posición del cursor; el disparo se valida también en PlayMode.
+- La animación de piernas se deja para después, como parte separada.
+

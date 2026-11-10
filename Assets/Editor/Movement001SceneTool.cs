@@ -10,7 +10,7 @@ namespace Vhaldren.EditorTools
 {
     /// <summary>
     /// Genera una escena minima y valida sus conexiones.
-    /// Solo funciona en el editor. No agrega sistemas de combate ni red.
+    /// Solo funciona en el editor. Incluye una prueba local de apuntado y disparo hitscan, sin dano ni red.
     /// </summary>
     public static class Movement001SceneTool
     {
@@ -90,6 +90,7 @@ namespace Vhaldren.EditorTools
 
             PlayerMotor motor = player.AddComponent<PlayerMotor>();
             LocalPlayerInput input = player.AddComponent<LocalPlayerInput>();
+            LocalPlayerShooter shooter = player.AddComponent<LocalPlayerShooter>();
 
             GameObject visual = new GameObject("VisualRoot");
             visual.transform.SetParent(player.transform, false);
@@ -103,10 +104,17 @@ namespace Vhaldren.EditorTools
                 capeMaterial, skinMaterial, metalMaterial, leatherMaterial, capeMesh);
             AssignObjectReference(motor, "visualRoot", visual.transform);
 
+            GameObject shotOrigin = new GameObject("ShotOrigin");
+            shotOrigin.transform.SetParent(visual.transform, false);
+            shotOrigin.transform.localPosition = new Vector3(0f, 0.18f, 0.43f);
+
             // Marcador de apuntado va en el suelo para que sea legible desde la cámara elevada.
             GameObject facing = CreateVisualPart(PrimitiveType.Cube, "FacingIndicator", visual.transform,
                 new Vector3(0f, -0.87f, 0.72f), new Vector3(0.16f, 0.07f, 0.38f), metalMaterial);
             facing.transform.localRotation = Quaternion.identity;
+
+            GameObject aimMarker = CreateVisualPart(PrimitiveType.Cylinder, "AimMarker", null,
+                new Vector3(0f, 0.025f, 2f), new Vector3(0.26f, 0.035f, 0.26f), metalMaterial);
 
             GameObject cameraObject = new GameObject("MainCamera");
             cameraObject.tag = "MainCamera";
@@ -116,6 +124,9 @@ namespace Vhaldren.EditorTools
             SimpleFollowCamera follow = cameraObject.AddComponent<SimpleFollowCamera>();
             follow.SetTarget(player.transform);
             AssignObjectReference(input, "viewCamera", view);
+            AssignObjectReference(shooter, "viewCamera", view);
+            AssignObjectReference(shooter, "shotOrigin", shotOrigin.transform);
+            AssignObjectReference(shooter, "aimMarker", aimMarker.transform);
 
             GameObject sun = new GameObject("DirectionalLight");
             Light sunLight = sun.AddComponent<Light>();
@@ -133,7 +144,7 @@ namespace Vhaldren.EditorTools
             Selection.activeGameObject = player;
             ValidateScene();
             Debug.Log("[Vhaldren] Escena generada: " + ScenePath +
-                      ". Pulsa Play para probar WASD y el indicador de apuntado.");
+                      ". Pulsa Play: WASD mueve al instante, mouse apunta y clic izquierdo dispara al cursor.");
         }
 
         [MenuItem("Vhaldren/Validar escena 001")]
@@ -151,12 +162,14 @@ namespace Vhaldren.EditorTools
             GameObject cameraObject = FindSceneRoot(scene, "MainCamera");
             GameObject ground = FindSceneRoot(scene, "Ground");
             GameObject wall = FindSceneRoot(scene, "WallObstacle");
+            GameObject aimMarker = FindSceneRoot(scene, "AimMarker");
             Transform visualTransform = player != null
                 ? player.transform.Find("VisualRoot")
                 : null;
             GameObject visual = visualTransform != null ? visualTransform.gameObject : null;
 
-            if (player == null || visual == null || cameraObject == null || ground == null || wall == null)
+            if (player == null || visual == null || cameraObject == null || ground == null || wall == null ||
+                aimMarker == null)
             {
                 Debug.LogError("[Vhaldren] Escena incompleta: faltan objetos principales.");
                 return;
@@ -164,13 +177,14 @@ namespace Vhaldren.EditorTools
 
             PlayerMotor motor = player.GetComponent<PlayerMotor>();
             LocalPlayerInput input = player.GetComponent<LocalPlayerInput>();
+            LocalPlayerShooter shooter = player.GetComponent<LocalPlayerShooter>();
             CharacterController controller = player.GetComponent<CharacterController>();
             SimpleFollowCamera follow = cameraObject.GetComponent<SimpleFollowCamera>();
             Camera view = cameraObject.GetComponent<Camera>();
             Renderer groundRenderer = ground.GetComponent<Renderer>();
             Renderer visualRenderer = visual.GetComponentInChildren<Renderer>();
 
-            bool valid = motor != null && input != null && controller != null &&
+            bool valid = motor != null && input != null && shooter != null && controller != null &&
                          follow != null && view != null &&
                          ground.GetComponent<Collider>() != null && wall.GetComponent<Collider>() != null &&
                          groundRenderer != null && groundRenderer.sharedMaterial != null &&
@@ -182,6 +196,8 @@ namespace Vhaldren.EditorTools
                          visual.GetComponent<Collider>() == null &&
                          visual.transform.Find("FacingIndicator") != null &&
                          visual.transform.Find("FacingIndicator").GetComponent<Collider>() == null &&
+                         visual.transform.Find("ShotOrigin") != null &&
+                         aimMarker.GetComponent<Collider>() == null &&
                          visual.GetComponentsInChildren<Collider>().Length == 0 &&
                          visual.GetComponentsInChildren<Renderer>().Length >= 10;
 
@@ -192,11 +208,21 @@ namespace Vhaldren.EditorTools
             {
                 SerializedObject motorSerialized = new SerializedObject(motor);
                 SerializedObject inputSerialized = new SerializedObject(input);
+                SerializedObject shooterSerialized = new SerializedObject(shooter);
                 SerializedProperty visualProperty = motorSerialized.FindProperty("visualRoot");
+                SerializedProperty instantMovementProperty = motorSerialized.FindProperty("instantHorizontalMovement");
                 SerializedProperty cameraProperty = inputSerialized.FindProperty("viewCamera");
-                valid = visualProperty != null && cameraProperty != null &&
+                SerializedProperty shooterCameraProperty = shooterSerialized.FindProperty("viewCamera");
+                SerializedProperty shotOriginProperty = shooterSerialized.FindProperty("shotOrigin");
+                SerializedProperty aimMarkerProperty = shooterSerialized.FindProperty("aimMarker");
+                valid = visualProperty != null && instantMovementProperty != null &&
+                        instantMovementProperty.boolValue && cameraProperty != null &&
                         visualProperty.objectReferenceValue == visual.transform &&
-                        cameraProperty.objectReferenceValue == view;
+                        cameraProperty.objectReferenceValue == view &&
+                        shooterCameraProperty != null && shooterCameraProperty.objectReferenceValue == view &&
+                        shotOriginProperty != null && shotOriginProperty.objectReferenceValue ==
+                            visual.transform.Find("ShotOrigin") &&
+                        aimMarkerProperty != null && aimMarkerProperty.objectReferenceValue == aimMarker.transform;
             }
 
             if (!valid)

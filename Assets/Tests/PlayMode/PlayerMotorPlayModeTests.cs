@@ -137,6 +137,59 @@ namespace Vhaldren.Tests
         }
 
         [UnityTest]
+        public IEnumerator OneFrameMovementTapsRespondImmediatelyAndReverseDirection()
+        {
+            GameObject ground = GameObject.CreatePrimitive(PrimitiveType.Cube);
+            ground.transform.position = new Vector3(0f, -0.5f, 0f);
+            ground.transform.localScale = new Vector3(20f, 1f, 20f);
+            createdObjects.Add(ground);
+            GameObject player = CreatePlayer(new Vector3(0f, 1.01f, 0f));
+            PlayerMotor motor = player.GetComponent<PlayerMotor>();
+            player.GetComponent<CharacterController>().center = Vector3.zero;
+            SetField(motor, "instantHorizontalMovement", true);
+            yield return null;
+
+            Vector3 start = player.transform.position;
+            motor.Simulate(new PlayerMotionCommand(Vector3.forward, Vector3.forward), 1f / 60f);
+            Assert.That(player.transform.position.z - start.z, Is.GreaterThan(0.08f),
+                "Un toque de una sola actualizacion no debe sentirse como si el personaje estuviera quieto.");
+
+            Vector3 afterForward = player.transform.position;
+            motor.Simulate(new PlayerMotionCommand(Vector3.back, Vector3.forward), 1f / 60f);
+            Assert.That(player.transform.position.z, Is.LessThan(afterForward.z),
+                "Debe aceptar la direccion opuesta inmediatamente al cambiar de tecla.");
+        }
+
+        [UnityTest]
+        public IEnumerator MouseRaySetsAimPointAndShotImpactAtCursorTarget()
+        {
+            GameObject ground = GameObject.CreatePrimitive(PrimitiveType.Cube);
+            ground.transform.position = new Vector3(0f, -0.5f, 0f);
+            ground.transform.localScale = new Vector3(40f, 1f, 40f);
+            createdObjects.Add(ground);
+
+            GameObject cameraObject = new GameObject("AimCamera");
+            cameraObject.transform.position = new Vector3(0f, 10f, -10f);
+            cameraObject.transform.rotation = Quaternion.Euler(45f, 0f, 0f);
+            Camera camera = cameraObject.AddComponent<Camera>();
+            createdObjects.Add(cameraObject);
+
+            GameObject player = CreatePlayer(new Vector3(3f, 1.01f, 0f));
+            LocalPlayerShooter shooter = player.AddComponent<LocalPlayerShooter>();
+            SetShooterField(shooter, "viewCamera", camera);
+            yield return null;
+
+            Vector2 cursor = new Vector2(Screen.width * 0.5f, Screen.height * 0.5f);
+            Assert.That(shooter.TryGetAimPoint(cursor, out Vector3 target), Is.True);
+            Assert.That(target.x, Is.EqualTo(0f).Within(0.1f));
+            Assert.That(target.z, Is.EqualTo(0f).Within(0.2f));
+            Assert.That(shooter.FireAtScreenPosition(cursor), Is.True);
+            Assert.That(shooter.ShotsFired, Is.EqualTo(1));
+            Assert.That(Vector3.Distance(shooter.LastAimPoint, target), Is.LessThan(0.001f));
+            Assert.That(Vector3.Distance(shooter.LastImpactPoint, target), Is.LessThan(0.15f));
+        }
+
+        [UnityTest]
         public IEnumerator CameraRecoversFromNonFiniteOffsetsAndSharpness()
         {
             GameObject target = new GameObject("CameraTarget");
@@ -181,6 +234,13 @@ namespace Vhaldren.Tests
         private static void SetCameraField(object target, string fieldName, object value)
         {
             typeof(SimpleFollowCamera)
+                .GetField(fieldName, BindingFlags.Instance | BindingFlags.NonPublic)
+                .SetValue(target, value);
+        }
+
+        private static void SetShooterField(object target, string fieldName, object value)
+        {
+            typeof(LocalPlayerShooter)
                 .GetField(fieldName, BindingFlags.Instance | BindingFlags.NonPublic)
                 .SetValue(target, value);
         }
