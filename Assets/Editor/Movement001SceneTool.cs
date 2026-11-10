@@ -141,7 +141,9 @@ namespace Vhaldren.EditorTools
                          ground.GetComponent<Collider>() != null && wall.GetComponent<Collider>() != null &&
                          follow.Target == player.transform &&
                          visual.transform.parent == player.transform &&
-                         visual.transform.Find("FacingIndicator") != null;
+                         visual.GetComponent<Collider>() == null &&
+                         visual.transform.Find("FacingIndicator") != null &&
+                         visual.transform.Find("FacingIndicator").GetComponent<Collider>() == null;
 
             if (valid)
             {
