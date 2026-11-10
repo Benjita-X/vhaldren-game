@@ -46,4 +46,7 @@
 - `e2a7e31` — endurecimiento del movimiento y pruebas automatizadas.
 - `72afa87` — proyecto Unity 6 reproducible, escena y materiales.
 - `e3f9860` — documentación de instalación y verificación.
+- `7bb0eba` — bitácora de resultados y límites de verificación.
+
+Push final realizado a `origin/feature/001-movimiento-base`; HEAD publicado: `7bb0eba7d0dbd940eb48d95657c894829c895b0a`.
 
