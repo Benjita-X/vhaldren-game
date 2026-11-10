@@ -26,7 +26,7 @@ namespace Vhaldren.EditorTools
             }
 
             bool existing = AssetDatabase.LoadAssetAtPath<SceneAsset>(ScenePath) != null;
-            if (existing && !EditorUtility.DisplayDialog(
+            if (existing && !Application.isBatchMode && !EditorUtility.DisplayDialog(
                     "Vhaldren - Escena existente",
                     "La escena Movement001.unity ya existe. ¿Quieres reemplazarla?",
                     "Reemplazar", "Cancelar"))
