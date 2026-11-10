@@ -17,7 +17,7 @@ namespace Vhaldren.EditorTools
         private const string ScenePath = "Assets/Scenes/Movement001.unity";
 
         [MenuItem("Vhaldren/Crear escena de prueba/Movimiento 001")]
-        private static void CreateScene()
+        public static void CreateScene()
         {
             if (EditorApplication.isPlaying)
             {
@@ -105,7 +105,7 @@ namespace Vhaldren.EditorTools
         }
 
         [MenuItem("Vhaldren/Validar escena 001")]
-        private static void ValidateScene()
+        public static void ValidateScene()
         {
             Scene scene = SceneManager.GetActiveScene();
             if (scene.path != ScenePath)
