@@ -1,0 +1,354 @@
+using System.Collections;
+using System.Collections.Generic;
+using System.Reflection;
+using Vhaldren.Gameplay.CameraSystem;
+using NUnit.Framework;
+using UnityEngine;
+using UnityEngine.TestTools;
+using Vhaldren.Gameplay.Player;
+
+namespace Vhaldren.Tests
+{
+    public sealed class PlayerMotorPlayModeTests
+    {
+        private readonly List<GameObject> createdObjects = new List<GameObject>();
+
+        [UnityTearDown]
+        public IEnumerator TearDown()
+        {
+            Time.captureDeltaTime = 0f;
+            foreach (GameObject item in createdObjects)
+            {
+                if (item != null)
+                    Object.Destroy(item);
+            }
+            createdObjects.Clear();
+            yield return null;
+        }
+
+        [UnityTest]
+        public IEnumerator CharacterControllerStopsAtWallAndSlidesAlongIt()
+        {
+            Time.captureDeltaTime = 1f / 60f;
+            CreateGround();
+
+            GameObject wall = GameObject.CreatePrimitive(PrimitiveType.Cube);
+            wall.transform.position = new Vector3(0f, 1f, 2f);
+            wall.transform.localScale = new Vector3(6f, 2f, 0.5f);
+            createdObjects.Add(wall);
+
+            GameObject player = CreatePlayer(new Vector3(0f, 1f, 0f));
+            PlayerMotor motor = player.GetComponent<PlayerMotor>();
+            SetField(motor, "instantHorizontalMovement", true);
+
+            for (int i = 0; i < 45; i++)
+            {
+                motor.Simulate(new PlayerMotionCommand(Vector3.forward, Vector3.forward), 1f / 60f);
+                yield return null;
+            }
+
+            Assert.That(player.transform.position.z, Is.LessThan(1.55f),
+                "El CharacterController no debe atravesar la pared.");
+            Assert.That(Mathf.Abs(motor.HorizontalVelocity.z), Is.LessThan(0.1f),
+                "La velocidad bloqueada contra la pared debe borrarse.");
+
+            for (int i = 0; i < 15; i++)
+            {
+                motor.Simulate(new PlayerMotionCommand(Vector3.right, Vector3.forward), 1f / 60f);
+                yield return null;
+            }
+
+            Assert.That(player.transform.position.x, Is.GreaterThan(0.5f),
+                "El personaje debe poder deslizarse por el lateral de la pared.");
+            Assert.That(player.transform.position.z, Is.LessThan(1.55f));
+        }
+
+        [UnityTest]
+        public IEnumerator InvalidGravityAndTurnSpeedDoNotCorruptTransform()
+        {
+            GameObject player = CreatePlayer(new Vector3(0f, 3f, 0f));
+            PlayerMotor motor = player.GetComponent<PlayerMotor>();
+            SetField(motor, "gravity", float.NaN);
+            SetField(motor, "turningSpeedDegrees", float.PositiveInfinity);
+            GameObject visual = new GameObject("VisualRoot");
+            visual.transform.SetParent(player.transform, false);
+            SetField(motor, "visualRoot", visual.transform);
+
+            motor.Simulate(new PlayerMotionCommand(Vector3.zero, Vector3.right), 1f / 60f);
+            yield return null;
+
+            float verticalSpeed = (float)typeof(PlayerMotor)
+                .GetField("verticalSpeed", BindingFlags.Instance | BindingFlags.NonPublic)
+                .GetValue(motor);
+            Assert.That(float.IsNaN(verticalSpeed) || float.IsInfinity(verticalSpeed), Is.False);
+            AssertFinite(player.transform.position);
+            AssertFinite(visual.transform.position);
+            Assert.That(Mathf.Abs(Quaternion.Dot(visual.transform.rotation, Quaternion.identity)),
+                Is.GreaterThan(0.01f));
+        }
+
+        [UnityTest]
+        public IEnumerator MissingCameraDoesNotDisableGravitySimulation()
+        {
+            Time.captureDeltaTime = 1f / 60f;
+            GameObject player = CreatePlayer(new Vector3(0f, 5f, 0f));
+            player.AddComponent<LocalPlayerInput>();
+            float startY = player.transform.position.y;
+
+            for (int i = 0; i < 20; i++)
+                yield return null;
+
+            Assert.That(player.transform.position.y, Is.LessThan(startY),
+                "Sin cámara, la entrada local debe continuar suministrando pasos de gravedad.");
+        }
+
+        [UnityTest]
+        public IEnumerator AimRotatesVisualWithoutRotatingPhysicsRoot()
+        {
+            GameObject player = CreatePlayer(new Vector3(0f, 1f, 0f));
+            PlayerMotor motor = player.GetComponent<PlayerMotor>();
+            GameObject visual = new GameObject("VisualRoot");
+            visual.transform.SetParent(player.transform, false);
+            SetField(motor, "visualRoot", visual.transform);
+            SetField(motor, "turningSpeedDegrees", 1080f);
+            Quaternion rootBefore = player.transform.rotation;
+
+            motor.Simulate(new PlayerMotionCommand(Vector3.zero, Vector3.right), 0.1f);
+            yield return null;
+
+            Assert.That(Quaternion.Angle(player.transform.rotation, rootBefore), Is.LessThan(0.01f));
+            Assert.That(Quaternion.Angle(visual.transform.rotation, rootBefore), Is.EqualTo(90f).Within(0.1f));
+        }
+
+        [UnityTest]
+        public IEnumerator DiagonalInputDoesNotExceedConfiguredSpeed()
+        {
+            GameObject player = CreatePlayer(new Vector3(0f, 2f, 0f));
+            PlayerMotor motor = player.GetComponent<PlayerMotor>();
+            SetField(motor, "instantHorizontalMovement", true);
+
+            motor.Simulate(new PlayerMotionCommand(new Vector3(1f, 0f, 1f), Vector3.forward), 1f / 60f);
+            yield return null;
+
+            Assert.That(motor.HorizontalVelocity.magnitude, Is.LessThanOrEqualTo(6.01f));
+        }
+
+        [UnityTest]
+        public IEnumerator OneFrameMovementTapsRespondImmediatelyAndReverseDirection()
+        {
+            CreateGround();
+            GameObject player = CreatePlayer(new Vector3(0f, 1.01f, 0f));
+            PlayerMotor motor = player.GetComponent<PlayerMotor>();
+            SetField(motor, "instantHorizontalMovement", true);
+            yield return null;
+
+            Vector3 start = player.transform.position;
+            motor.Simulate(new PlayerMotionCommand(Vector3.forward, Vector3.forward), 1f / 60f);
+            Assert.That(player.transform.position.z - start.z, Is.GreaterThan(0.08f),
+                "Un toque de una sola actualizacion no debe sentirse como si el personaje estuviera quieto.");
+
+            Vector3 afterForward = player.transform.position;
+            motor.Simulate(new PlayerMotionCommand(Vector3.back, Vector3.forward), 1f / 60f);
+            Assert.That(player.transform.position.z, Is.LessThan(afterForward.z),
+                "Debe aceptar la direccion opuesta inmediatamente al cambiar de tecla.");
+        }
+
+        [UnityTest]
+        public IEnumerator MouseRaySetsAimPointAndShotImpactAtCursorTarget()
+        {
+            CreateGround(40f);
+
+            GameObject cameraObject = new GameObject("AimCamera");
+            cameraObject.transform.position = new Vector3(0f, 10f, -10f);
+            cameraObject.transform.rotation = Quaternion.Euler(45f, 0f, 0f);
+            Camera camera = cameraObject.AddComponent<Camera>();
+            createdObjects.Add(cameraObject);
+
+            GameObject player = CreatePlayer(new Vector3(3f, 1.01f, 0f));
+            LocalPlayerShooter shooter = player.AddComponent<LocalPlayerShooter>();
+            SetShooterField(shooter, "viewCamera", camera);
+            yield return null;
+
+            Vector2 cursor = new Vector2(Screen.width * 0.5f, Screen.height * 0.5f);
+            Assert.That(shooter.TryGetAimPoint(cursor, out Vector3 target), Is.True);
+            Assert.That(target.x, Is.EqualTo(0f).Within(0.1f));
+            Assert.That(target.z, Is.EqualTo(0f).Within(0.2f));
+            Assert.That(shooter.FireAtScreenPosition(cursor), Is.True);
+            Assert.That(shooter.ShotsFired, Is.EqualTo(1));
+            Assert.That(Vector3.Distance(shooter.LastAimPoint, target), Is.LessThan(0.001f));
+            Assert.That(Vector3.Distance(shooter.LastImpactPoint, target), Is.LessThan(0.15f));
+        }
+
+        [UnityTest]
+        public IEnumerator CameraRecoversFromNonFiniteOffsetsAndSharpness()
+        {
+            GameObject target = new GameObject("CameraTarget");
+            target.transform.position = new Vector3(2f, 1f, -3f);
+            createdObjects.Add(target);
+
+            GameObject cameraObject = new GameObject("TestCamera");
+            cameraObject.AddComponent<Camera>();
+            SimpleFollowCamera follow = cameraObject.AddComponent<SimpleFollowCamera>();
+            SetCameraField(follow, "offset", new Vector3(float.NaN, float.PositiveInfinity, -12f));
+            SetCameraField(follow, "lookOffset", new Vector3(0f, float.NaN, 0f));
+            SetCameraField(follow, "followSharpness", float.NaN);
+            follow.SetTarget(target.transform);
+
+            yield return null;
+
+            AssertFinite(cameraObject.transform.position);
+            AssertFinite(cameraObject.transform.rotation);
+            Assert.That(float.IsNaN(Quaternion.Dot(cameraObject.transform.rotation, cameraObject.transform.rotation)), Is.False);
+            Assert.That(cameraObject.transform.position, Is.EqualTo(target.transform.position + new Vector3(0f, 10f, -10f)));
+        }
+
+        [UnityTest]
+        public IEnumerator AcceleratedMovementStartsAtHighFrameRates()
+        {
+            // A 1000 FPS cada paso con aceleracion mueve menos de 1 mm. El personaje
+            // debe arrancar igual: el control no puede depender de los FPS del equipo.
+            CreateGround();
+            GameObject player = CreatePlayer(new Vector3(0f, 1.08f, 0f));
+            PlayerMotor motor = player.GetComponent<PlayerMotor>();
+            SetField(motor, "instantHorizontalMovement", false);
+            Physics.SyncTransforms();
+            yield return null;
+
+            const float step = 0.001f;
+            for (int i = 0; i < 50; i++)
+                motor.Simulate(new PlayerMotionCommand(Vector3.zero, Vector3.forward), step);
+
+            Vector3 start = player.transform.position;
+            for (int i = 0; i < 300; i++)
+                motor.Simulate(new PlayerMotionCommand(Vector3.forward, Vector3.forward), step);
+
+            Assert.That(player.transform.position.z - start.z, Is.GreaterThan(1f),
+                "Con aceleracion y FPS altos el personaje se quedaba quieto para siempre.");
+            Assert.That(motor.HorizontalVelocity.z, Is.EqualTo(6f).Within(0.05f));
+        }
+
+        [UnityTest]
+        public IEnumerator AcceleratedMovementKeepsSpeedAndStopsCleanly()
+        {
+            // Con aceleracion, la velocidad no debe degradarse por medir la posicion
+            // en cada paso, y al soltar debe frenar hasta cero sin quedarse deslizando.
+            CreateGround(60f);
+            GameObject player = CreatePlayer(new Vector3(0f, 1.08f, 0f));
+            PlayerMotor motor = player.GetComponent<PlayerMotor>();
+            SetField(motor, "instantHorizontalMovement", false);
+            yield return null;
+
+            const float step = 1f / 240f;
+            for (int i = 0; i < 240; i++)
+                motor.Simulate(new PlayerMotionCommand(Vector3.right, Vector3.forward), step);
+
+            Assert.That(motor.HorizontalVelocity.x, Is.EqualTo(6f).Within(0.01f));
+            Assert.That(motor.ActualVelocity.x, Is.EqualTo(6f).Within(0.2f));
+
+            for (int i = 0; i < 60; i++)
+                motor.Simulate(new PlayerMotionCommand(Vector3.zero, Vector3.forward), step);
+
+            Assert.That(motor.HorizontalVelocity.magnitude, Is.LessThan(0.001f));
+        }
+
+        [UnityTest]
+        public IEnumerator ShotStopsAtWallEvenWhenRayCrossesOwnBody()
+        {
+            // El origen del disparo esta delante del modelo; al apuntar hacia atras el rayo
+            // cruza la capsula del propio jugador antes de llegar a la pared.
+            CreateGround(40f);
+
+            GameObject wall = GameObject.CreatePrimitive(PrimitiveType.Cube);
+            wall.transform.position = new Vector3(0f, 0.5f, 1.5f);
+            wall.transform.localScale = new Vector3(4f, 1f, 0.3f);
+            createdObjects.Add(wall);
+
+            GameObject cameraObject = new GameObject("AimCamera");
+            cameraObject.transform.position = new Vector3(0f, 10f, -10f);
+            cameraObject.transform.rotation = Quaternion.Euler(45f, 0f, 0f);
+            Camera camera = cameraObject.AddComponent<Camera>();
+            createdObjects.Add(cameraObject);
+
+            GameObject player = CreatePlayer(new Vector3(0f, 1.08f, 3f));
+            GameObject muzzle = new GameObject("ShotOrigin");
+            muzzle.transform.SetParent(player.transform, false);
+            muzzle.transform.localPosition = new Vector3(0f, 0.18f, 0.43f);
+            LocalPlayerShooter shooter = player.AddComponent<LocalPlayerShooter>();
+            SetShooterField(shooter, "viewCamera", camera);
+            SetShooterField(shooter, "shotOrigin", muzzle.transform);
+            Physics.SyncTransforms();
+            yield return null;
+
+            Vector2 cursor = new Vector2(Screen.width * 0.5f, Screen.height * 0.5f);
+            Assert.That(shooter.TryGetAimPoint(cursor, out Vector3 target), Is.True);
+            Assert.That(target.z, Is.EqualTo(0f).Within(0.2f), "El cursor apunta al suelo, delante de la pared.");
+
+            Assert.That(shooter.FireAtScreenPosition(cursor), Is.True);
+            Assert.That(shooter.LastImpactPoint.z, Is.GreaterThan(1.5f),
+                "El disparo no debe atravesar la pared que esta entre el jugador y el cursor.");
+        }
+
+        private GameObject CreateGround(float size = 20f)
+        {
+            GameObject ground = GameObject.CreatePrimitive(PrimitiveType.Cube);
+            ground.transform.position = new Vector3(0f, -0.5f, 0f);
+            ground.transform.localScale = new Vector3(size, 1f, size);
+            createdObjects.Add(ground);
+            // Sin esto el collider sigue en su pose de creacion (cubo unitario en el origen)
+            // hasta el siguiente paso de fisica, y la prueba depende de la duracion del frame.
+            Physics.SyncTransforms();
+            return ground;
+        }
+
+        private GameObject CreatePlayer(Vector3 position)
+        {
+            GameObject player = new GameObject("TestPlayer");
+            player.transform.position = position;
+            CharacterController controller = player.AddComponent<CharacterController>();
+            controller.height = 2f;
+            controller.radius = 0.4f;
+            player.AddComponent<PlayerMotor>();
+            createdObjects.Add(player);
+            // La geometria de la prueba se crea antes que el jugador: se sincroniza aqui para
+            // que sus colliders esten en su sitio aunque no haya corrido un paso de fisica.
+            Physics.SyncTransforms();
+            return player;
+        }
+
+        private static void SetField(object target, string fieldName, object value)
+        {
+            typeof(PlayerMotor)
+                .GetField(fieldName, BindingFlags.Instance | BindingFlags.NonPublic)
+                .SetValue(target, value);
+        }
+
+        private static void SetCameraField(object target, string fieldName, object value)
+        {
+            typeof(SimpleFollowCamera)
+                .GetField(fieldName, BindingFlags.Instance | BindingFlags.NonPublic)
+                .SetValue(target, value);
+        }
+
+        private static void SetShooterField(object target, string fieldName, object value)
+        {
+            typeof(LocalPlayerShooter)
+                .GetField(fieldName, BindingFlags.Instance | BindingFlags.NonPublic)
+                .SetValue(target, value);
+        }
+
+        private static void AssertFinite(Vector3 value)
+        {
+            Assert.That(float.IsNaN(value.x) || float.IsInfinity(value.x), Is.False);
+            Assert.That(float.IsNaN(value.y) || float.IsInfinity(value.y), Is.False);
+            Assert.That(float.IsNaN(value.z) || float.IsInfinity(value.z), Is.False);
+        }
+
+        private static void AssertFinite(Quaternion value)
+        {
+            Assert.That(float.IsNaN(value.x) || float.IsInfinity(value.x), Is.False);
+            Assert.That(float.IsNaN(value.y) || float.IsInfinity(value.y), Is.False);
+            Assert.That(float.IsNaN(value.z) || float.IsInfinity(value.z), Is.False);
+            Assert.That(float.IsNaN(value.w) || float.IsInfinity(value.w), Is.False);
+        }
+    }
+}
