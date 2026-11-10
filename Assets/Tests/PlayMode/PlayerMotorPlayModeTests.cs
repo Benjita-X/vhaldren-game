@@ -30,10 +30,7 @@ namespace Vhaldren.Tests
         public IEnumerator CharacterControllerStopsAtWallAndSlidesAlongIt()
         {
             Time.captureDeltaTime = 1f / 60f;
-            GameObject ground = GameObject.CreatePrimitive(PrimitiveType.Cube);
-            ground.transform.position = new Vector3(0f, -0.5f, 0f);
-            ground.transform.localScale = new Vector3(20f, 1f, 20f);
-            createdObjects.Add(ground);
+            CreateGround();
 
             GameObject wall = GameObject.CreatePrimitive(PrimitiveType.Cube);
             wall.transform.position = new Vector3(0f, 1f, 2f);
@@ -139,13 +136,9 @@ namespace Vhaldren.Tests
         [UnityTest]
         public IEnumerator OneFrameMovementTapsRespondImmediatelyAndReverseDirection()
         {
-            GameObject ground = GameObject.CreatePrimitive(PrimitiveType.Cube);
-            ground.transform.position = new Vector3(0f, -0.5f, 0f);
-            ground.transform.localScale = new Vector3(20f, 1f, 20f);
-            createdObjects.Add(ground);
+            CreateGround();
             GameObject player = CreatePlayer(new Vector3(0f, 1.01f, 0f));
             PlayerMotor motor = player.GetComponent<PlayerMotor>();
-            player.GetComponent<CharacterController>().center = Vector3.zero;
             SetField(motor, "instantHorizontalMovement", true);
             yield return null;
 
@@ -163,10 +156,7 @@ namespace Vhaldren.Tests
         [UnityTest]
         public IEnumerator MouseRaySetsAimPointAndShotImpactAtCursorTarget()
         {
-            GameObject ground = GameObject.CreatePrimitive(PrimitiveType.Cube);
-            ground.transform.position = new Vector3(0f, -0.5f, 0f);
-            ground.transform.localScale = new Vector3(40f, 1f, 40f);
-            createdObjects.Add(ground);
+            CreateGround(40f);
 
             GameObject cameraObject = new GameObject("AimCamera");
             cameraObject.transform.position = new Vector3(0f, 10f, -10f);
@@ -212,6 +202,104 @@ namespace Vhaldren.Tests
             Assert.That(cameraObject.transform.position, Is.EqualTo(target.transform.position + new Vector3(0f, 10f, -10f)));
         }
 
+        [UnityTest]
+        public IEnumerator AcceleratedMovementStartsAtHighFrameRates()
+        {
+            // A 1000 FPS cada paso con aceleracion mueve menos de 1 mm. El personaje
+            // debe arrancar igual: el control no puede depender de los FPS del equipo.
+            CreateGround();
+            GameObject player = CreatePlayer(new Vector3(0f, 1.08f, 0f));
+            PlayerMotor motor = player.GetComponent<PlayerMotor>();
+            SetField(motor, "instantHorizontalMovement", false);
+            Physics.SyncTransforms();
+            yield return null;
+
+            const float step = 0.001f;
+            for (int i = 0; i < 50; i++)
+                motor.Simulate(new PlayerMotionCommand(Vector3.zero, Vector3.forward), step);
+
+            Vector3 start = player.transform.position;
+            for (int i = 0; i < 300; i++)
+                motor.Simulate(new PlayerMotionCommand(Vector3.forward, Vector3.forward), step);
+
+            Assert.That(player.transform.position.z - start.z, Is.GreaterThan(1f),
+                "Con aceleracion y FPS altos el personaje se quedaba quieto para siempre.");
+            Assert.That(motor.HorizontalVelocity.z, Is.EqualTo(6f).Within(0.05f));
+        }
+
+        [UnityTest]
+        public IEnumerator AcceleratedMovementKeepsSpeedAndStopsCleanly()
+        {
+            // Con aceleracion, la velocidad no debe degradarse por medir la posicion
+            // en cada paso, y al soltar debe frenar hasta cero sin quedarse deslizando.
+            CreateGround(60f);
+            GameObject player = CreatePlayer(new Vector3(0f, 1.08f, 0f));
+            PlayerMotor motor = player.GetComponent<PlayerMotor>();
+            SetField(motor, "instantHorizontalMovement", false);
+            yield return null;
+
+            const float step = 1f / 240f;
+            for (int i = 0; i < 240; i++)
+                motor.Simulate(new PlayerMotionCommand(Vector3.right, Vector3.forward), step);
+
+            Assert.That(motor.HorizontalVelocity.x, Is.EqualTo(6f).Within(0.01f));
+            Assert.That(motor.ActualVelocity.x, Is.EqualTo(6f).Within(0.2f));
+
+            for (int i = 0; i < 60; i++)
+                motor.Simulate(new PlayerMotionCommand(Vector3.zero, Vector3.forward), step);
+
+            Assert.That(motor.HorizontalVelocity.magnitude, Is.LessThan(0.001f));
+        }
+
+        [UnityTest]
+        public IEnumerator ShotStopsAtWallEvenWhenRayCrossesOwnBody()
+        {
+            // El origen del disparo esta delante del modelo; al apuntar hacia atras el rayo
+            // cruza la capsula del propio jugador antes de llegar a la pared.
+            CreateGround(40f);
+
+            GameObject wall = GameObject.CreatePrimitive(PrimitiveType.Cube);
+            wall.transform.position = new Vector3(0f, 0.5f, 1.5f);
+            wall.transform.localScale = new Vector3(4f, 1f, 0.3f);
+            createdObjects.Add(wall);
+
+            GameObject cameraObject = new GameObject("AimCamera");
+            cameraObject.transform.position = new Vector3(0f, 10f, -10f);
+            cameraObject.transform.rotation = Quaternion.Euler(45f, 0f, 0f);
+            Camera camera = cameraObject.AddComponent<Camera>();
+            createdObjects.Add(cameraObject);
+
+            GameObject player = CreatePlayer(new Vector3(0f, 1.08f, 3f));
+            GameObject muzzle = new GameObject("ShotOrigin");
+            muzzle.transform.SetParent(player.transform, false);
+            muzzle.transform.localPosition = new Vector3(0f, 0.18f, 0.43f);
+            LocalPlayerShooter shooter = player.AddComponent<LocalPlayerShooter>();
+            SetShooterField(shooter, "viewCamera", camera);
+            SetShooterField(shooter, "shotOrigin", muzzle.transform);
+            Physics.SyncTransforms();
+            yield return null;
+
+            Vector2 cursor = new Vector2(Screen.width * 0.5f, Screen.height * 0.5f);
+            Assert.That(shooter.TryGetAimPoint(cursor, out Vector3 target), Is.True);
+            Assert.That(target.z, Is.EqualTo(0f).Within(0.2f), "El cursor apunta al suelo, delante de la pared.");
+
+            Assert.That(shooter.FireAtScreenPosition(cursor), Is.True);
+            Assert.That(shooter.LastImpactPoint.z, Is.GreaterThan(1.5f),
+                "El disparo no debe atravesar la pared que esta entre el jugador y el cursor.");
+        }
+
+        private GameObject CreateGround(float size = 20f)
+        {
+            GameObject ground = GameObject.CreatePrimitive(PrimitiveType.Cube);
+            ground.transform.position = new Vector3(0f, -0.5f, 0f);
+            ground.transform.localScale = new Vector3(size, 1f, size);
+            createdObjects.Add(ground);
+            // Sin esto el collider sigue en su pose de creacion (cubo unitario en el origen)
+            // hasta el siguiente paso de fisica, y la prueba depende de la duracion del frame.
+            Physics.SyncTransforms();
+            return ground;
+        }
+
         private GameObject CreatePlayer(Vector3 position)
         {
             GameObject player = new GameObject("TestPlayer");
@@ -221,6 +309,9 @@ namespace Vhaldren.Tests
             controller.radius = 0.4f;
             player.AddComponent<PlayerMotor>();
             createdObjects.Add(player);
+            // La geometria de la prueba se crea antes que el jugador: se sincroniza aqui para
+            // que sus colliders esten en su sitio aunque no haya corrido un paso de fisica.
+            Physics.SyncTransforms();
             return player;
         }
 

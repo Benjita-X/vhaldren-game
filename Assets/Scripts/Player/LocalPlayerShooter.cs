@@ -96,27 +96,11 @@ namespace Vhaldren.Gameplay.Player
                 return false;
 
             Ray ray = viewCamera.ScreenPointToRay(screenPosition);
-            int hitCount = Physics.RaycastNonAlloc(ray, aimHits, SafeMaxRange(), aimLayers,
-                QueryTriggerInteraction.Ignore);
-            float nearestDistance = float.PositiveInfinity;
-            bool foundWorldHit = false;
-            for (int i = 0; i < hitCount; i++)
+            if (TryNearestWorldHit(ray, SafeMaxRange(), out Vector3 worldPoint))
             {
-                Collider hitCollider = aimHits[i].collider;
-                if (hitCollider == null || hitCollider.transform == transform ||
-                    hitCollider.transform.IsChildOf(transform))
-                    continue;
-
-                if (aimHits[i].distance < nearestDistance)
-                {
-                    nearestDistance = aimHits[i].distance;
-                    aimPoint = aimHits[i].point;
-                    foundWorldHit = true;
-                }
-            }
-
-            if (foundWorldHit)
+                aimPoint = worldPoint;
                 return true;
+            }
 
             // Si el cursor cae en cielo o fuera del suelo, conserva un punto util delante del jugador.
             Plane ground = new Plane(Vector3.up, Vector3.zero);
@@ -150,14 +134,40 @@ namespace Vhaldren.Gameplay.Player
 
             LastAimPoint = aimPoint;
             LastImpactPoint = aimPoint;
-            if (Physics.Raycast(origin, direction, out RaycastHit hit, range, aimLayers,
-                    QueryTriggerInteraction.Ignore) &&
-                hit.transform != transform && !hit.transform.IsChildOf(transform))
-                LastImpactPoint = hit.point;
+            // Se ignora el propio cuerpo sin dejar de buscar: si el primer impacto era el
+            // jugador (al apuntar hacia atras mientras el modelo aun gira), el tiro
+            // atravesaba la pared que hubiera detras.
+            if (TryNearestWorldHit(new Ray(origin, direction), range, out Vector3 obstaclePoint))
+                LastImpactPoint = obstaclePoint;
 
             ShotsFired++;
             ShowTracer(origin, LastImpactPoint);
             return true;
+        }
+
+        /// <summary>Primer impacto del rayo que no pertenece al propio jugador.</summary>
+        private bool TryNearestWorldHit(Ray ray, float range, out Vector3 point)
+        {
+            point = Vector3.zero;
+            int hitCount = Physics.RaycastNonAlloc(ray, aimHits, range, aimLayers,
+                QueryTriggerInteraction.Ignore);
+            float nearestDistance = float.PositiveInfinity;
+            bool found = false;
+            for (int i = 0; i < hitCount; i++)
+            {
+                Collider hitCollider = aimHits[i].collider;
+                if (hitCollider == null || hitCollider.transform == transform ||
+                    hitCollider.transform.IsChildOf(transform))
+                    continue;
+
+                if (aimHits[i].distance < nearestDistance)
+                {
+                    nearestDistance = aimHits[i].distance;
+                    point = aimHits[i].point;
+                    found = true;
+                }
+            }
+            return found;
         }
 
         private void ShowTracer(Vector3 origin, Vector3 end)

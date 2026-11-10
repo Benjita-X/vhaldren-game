@@ -14,8 +14,14 @@ namespace Vhaldren.Gameplay.Player
     public sealed class LocalPlayerInput : MonoBehaviour
     {
         [SerializeField] private Camera viewCamera;
+        [Tooltip("Radio en metros alrededor del personaje donde el cursor no cambia hacia donde mira. " +
+                 "Evita que el modelo gire de golpe al pasar el mouse por encima de el.")]
+        [SerializeField, Min(0f)] private float aimDeadZone = 0.35f;
+
         private PlayerMotor motor;
         private LocalPlayerShooter shooter;
+        private OpposingKeysAxis horizontalKeys;
+        private OpposingKeysAxis verticalKeys;
 
         private void Awake()
         {
@@ -26,6 +32,41 @@ namespace Vhaldren.Gameplay.Player
                 "[Vhaldren] No hay sistema de entrada habilitado. Configura Active Input Handling en Player Settings.",
                 this);
 #endif
+        }
+
+        private void OnDisable()
+        {
+            ForgetHeldKeys();
+        }
+
+        private void OnApplicationFocus(bool hasFocus)
+        {
+            // Una tecla soltada fuera de la ventana no debe seguir contando como pulsada.
+            if (!hasFocus)
+                ForgetHeldKeys();
+        }
+
+        private void ForgetHeldKeys()
+        {
+            horizontalKeys.Reset();
+            verticalKeys.Reset();
+        }
+
+        /// <summary>
+        /// Direccion plana hacia el punto apuntado. Dentro de la zona muerta conserva la
+        /// orientacion actual: tan cerca del personaje un pixel de mouse la invertiria.
+        /// </summary>
+        public static Vector3 ResolveFacing(
+            Vector3 origin, Vector3 aimPoint, Vector3 currentFacing, float deadZone)
+        {
+            Vector3 planar = aimPoint - origin;
+            planar.y = 0f;
+            float radius = float.IsNaN(deadZone) ? 0f : Mathf.Max(deadZone, 0.01f);
+            float squareDistance = planar.sqrMagnitude;
+            if (float.IsNaN(squareDistance) || float.IsInfinity(squareDistance) ||
+                squareDistance <= radius * radius)
+                return currentFacing;
+            return planar;
         }
 
         private void Update()
@@ -54,44 +95,44 @@ namespace Vhaldren.Gameplay.Player
             {
                 if (shooter != null && shooter.TryGetAimPoint(pointer, out Vector3 aimPoint))
                 {
-                    Vector3 candidate = aimPoint - transform.position;
-                    if (candidate.sqrMagnitude > 0.0001f)
-                        facing = candidate;
+                    facing = ResolveFacing(transform.position, aimPoint, facing, aimDeadZone);
                 }
                 else
                 {
                     Ray ray = viewCamera.ScreenPointToRay(pointer);
                     Plane plane = new Plane(Vector3.up, transform.position);
                     if (plane.Raycast(ray, out float distance))
-                    {
-                        Vector3 candidate = ray.GetPoint(distance) - transform.position;
-                        if (candidate.sqrMagnitude > 0.0001f)
-                            facing = candidate;
-                    }
+                        facing = ResolveFacing(transform.position, ray.GetPoint(distance), facing, aimDeadZone);
                 }
             }
 
             motor.Simulate(new PlayerMotionCommand(move, facing), Time.deltaTime);
         }
 
-        private static Vector2 ReadMovement()
+        private Vector2 ReadMovement()
         {
-            Vector2 axes = Vector2.zero;
+            bool left = false, right = false, back = false, forward = false;
+            // "Pulsada ahora" o "bajo en este frame": un toque mas corto que un frame
+            // (se pulsa y se suelta entre dos lecturas) tambien cuenta como un paso.
 #if ENABLE_INPUT_SYSTEM
             Keyboard keyboard = Keyboard.current;
             if (keyboard != null)
             {
-                axes.x = (keyboard.dKey.isPressed ? 1f : 0f)
-                       - (keyboard.aKey.isPressed ? 1f : 0f);
-                axes.y = (keyboard.wKey.isPressed ? 1f : 0f)
-                       - (keyboard.sKey.isPressed ? 1f : 0f);
+                left = keyboard.aKey.isPressed || keyboard.aKey.wasPressedThisFrame;
+                right = keyboard.dKey.isPressed || keyboard.dKey.wasPressedThisFrame;
+                back = keyboard.sKey.isPressed || keyboard.sKey.wasPressedThisFrame;
+                forward = keyboard.wKey.isPressed || keyboard.wKey.wasPressedThisFrame;
             }
 #elif ENABLE_LEGACY_INPUT_MANAGER
-            axes.x = (Input.GetKey(KeyCode.D) ? 1f : 0f)
-                   - (Input.GetKey(KeyCode.A) ? 1f : 0f);
-            axes.y = (Input.GetKey(KeyCode.W) ? 1f : 0f)
-                   - (Input.GetKey(KeyCode.S) ? 1f : 0f);
+            left = Input.GetKey(KeyCode.A) || Input.GetKeyDown(KeyCode.A);
+            right = Input.GetKey(KeyCode.D) || Input.GetKeyDown(KeyCode.D);
+            back = Input.GetKey(KeyCode.S) || Input.GetKeyDown(KeyCode.S);
+            forward = Input.GetKey(KeyCode.W) || Input.GetKeyDown(KeyCode.W);
 #endif
+            // Teclas opuestas a la vez: manda la ultima pulsada (ver OpposingKeysAxis).
+            Vector2 axes = new Vector2(
+                horizontalKeys.Resolve(left, right),
+                verticalKeys.Resolve(back, forward));
             return Vector2.ClampMagnitude(axes, 1f);
         }
 

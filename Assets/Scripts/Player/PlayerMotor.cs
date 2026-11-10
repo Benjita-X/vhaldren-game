@@ -41,6 +41,10 @@ namespace Vhaldren.Gameplay.Player
         private void Awake()
         {
             controller = GetComponent<CharacterController>();
+            // Con el valor por defecto (1 mm) el CharacterController descarta los pasos
+            // pequenos. A muchos FPS todos los pasos de arranque son menores que eso y
+            // el personaje no llegaba a moverse nunca. Cero es el valor que recomienda Unity.
+            controller.minMoveDistance = 0f;
 
             // Nunca girar un objeto visual externo o la propia raiz fisica por error.
             if (visualRoot != null && (visualRoot == transform || !visualRoot.IsChildOf(transform)))
@@ -110,9 +114,15 @@ namespace Vhaldren.Gameplay.Player
             if (!IsFinite(ActualVelocity))
                 ActualVelocity = Vector3.zero;
 
-            // Si el CharacterController golpeo una pared, no guardar inercia
-            // bloqueada que pueda dispararse al liberar la colision.
-            horizontalVelocity = new Vector3(ActualVelocity.x, 0f, ActualVelocity.z);
+            // Solo si choco de lado se sustituye la velocidad por la que de verdad logro:
+            // asi no queda inercia bloqueada que se dispare al liberar la pared. Sin choque
+            // se conserva la velocidad calculada; medirla en cada paso la contaminaba con
+            // el redondeo de la posicion y con los pasos que el controlador descarta.
+            if ((flags & CollisionFlags.Sides) != 0)
+            {
+                Vector3 achieved = new Vector3(ActualVelocity.x, 0f, ActualVelocity.z);
+                horizontalVelocity = Vector3.ClampMagnitude(achieved, horizontalVelocity.magnitude);
+            }
 
             Vector3 facing = IsFinite(command.FaceWorld) ? command.FaceWorld : Vector3.zero;
             facing.y = 0f;
