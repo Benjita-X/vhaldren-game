@@ -46,6 +46,12 @@ namespace Vhaldren.EditorTools
             ground.transform.position = new Vector3(0f, -0.5f, 0f);
             ground.transform.localScale = new Vector3(32f, 1f, 32f);
 
+            // Obstaculo deliberado: permite comprobar colision lateral y deslizamiento.
+            GameObject wall = GameObject.CreatePrimitive(PrimitiveType.Cube);
+            wall.name = "WallObstacle";
+            wall.transform.position = new Vector3(0f, 1f, 5f);
+            wall.transform.localScale = new Vector3(5f, 2f, 1f);
+
             GameObject player = new GameObject("PlayerRoot");
             player.transform.position = new Vector3(0f, 1.01f, 0f);
             CharacterController character = player.AddComponent<CharacterController>();
@@ -112,12 +118,13 @@ namespace Vhaldren.EditorTools
             GameObject player = FindSceneRoot(scene, "PlayerRoot");
             GameObject cameraObject = FindSceneRoot(scene, "MainCamera");
             GameObject ground = FindSceneRoot(scene, "Ground");
+            GameObject wall = FindSceneRoot(scene, "WallObstacle");
             Transform visualTransform = player != null
                 ? player.transform.Find("VisualRoot")
                 : null;
             GameObject visual = visualTransform != null ? visualTransform.gameObject : null;
 
-            if (player == null || visual == null || cameraObject == null || ground == null)
+            if (player == null || visual == null || cameraObject == null || ground == null || wall == null)
             {
                 Debug.LogError("[Vhaldren] Escena incompleta: faltan objetos principales.");
                 return;
@@ -130,7 +137,8 @@ namespace Vhaldren.EditorTools
             Camera view = cameraObject.GetComponent<Camera>();
 
             bool valid = motor != null && input != null && controller != null &&
-                         follow != null && view != null && ground.GetComponent<Collider>() != null &&
+                         follow != null && view != null &&
+                         ground.GetComponent<Collider>() != null && wall.GetComponent<Collider>() != null &&
                          follow.Target == player.transform &&
                          visual.transform.parent == player.transform &&
                          visual.transform.Find("FacingIndicator") != null;
