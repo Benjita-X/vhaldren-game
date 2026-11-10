@@ -1,4 +1,5 @@
 using UnityEngine;
+using Vhaldren.Gameplay.CameraSystem;
 #if ENABLE_INPUT_SYSTEM
 using UnityEngine.InputSystem;
 #endif
@@ -17,11 +18,15 @@ namespace Vhaldren.Gameplay.Player
         [Tooltip("Radio en metros alrededor del personaje donde el cursor no cambia hacia donde mira. " +
                  "Evita que el modelo gire de golpe al pasar el mouse por encima de el.")]
         [SerializeField, Min(0f)] private float aimDeadZone = 0.35f;
+        [Tooltip("Cuanto cambia el zoom por cada paso de la rueda del mouse.")]
+        [SerializeField, Min(0f)] private float zoomStep = 0.1f;
 
         private PlayerMotor motor;
         private LocalPlayerShooter shooter;
         private OpposingKeysAxis horizontalKeys;
         private OpposingKeysAxis verticalKeys;
+        private SimpleFollowCamera followCamera;
+        private Camera followCameraSource;
 
         private void Awake()
         {
@@ -91,8 +96,19 @@ namespace Vhaldren.Gameplay.Player
             // Preservar la ultima orientacion si el cursor no corta el plano.
             Vector3 facing = motor.CurrentFacing;
 
+            if (viewCamera != followCameraSource)
+            {
+                followCameraSource = viewCamera;
+                followCamera = viewCamera != null ? viewCamera.GetComponent<SimpleFollowCamera>() : null;
+            }
+
             if (viewCamera != null && TryReadPointer(out Vector2 pointer))
             {
+                // Rueda hacia delante = acercar. Solo con el cursor dentro de la ventana de juego.
+                float scroll = ReadScroll();
+                if (followCamera != null && scroll != 0f)
+                    followCamera.AddZoom(-scroll * zoomStep);
+
                 if (shooter != null && shooter.TryGetAimPoint(pointer, out Vector3 aimPoint))
                 {
                     facing = ResolveFacing(transform.position, aimPoint, facing, aimDeadZone);
@@ -106,7 +122,7 @@ namespace Vhaldren.Gameplay.Player
                 }
             }
 
-            motor.Simulate(new PlayerMotionCommand(move, facing), Time.deltaTime);
+            motor.Simulate(new PlayerMotionCommand(move, facing, ReadDashPressed()), Time.deltaTime);
         }
 
         private Vector2 ReadMovement()
@@ -134,6 +150,30 @@ namespace Vhaldren.Gameplay.Player
                 horizontalKeys.Resolve(left, right),
                 verticalKeys.Resolve(back, forward));
             return Vector2.ClampMagnitude(axes, 1f);
+        }
+
+        private static bool ReadDashPressed()
+        {
+#if ENABLE_INPUT_SYSTEM
+            return Keyboard.current != null && Keyboard.current.spaceKey.wasPressedThisFrame;
+#elif ENABLE_LEGACY_INPUT_MANAGER
+            return Input.GetKeyDown(KeyCode.Space);
+#else
+            return false;
+#endif
+        }
+
+        /// <summary>Pasos de rueda en este frame; positivo hacia delante.</summary>
+        private static float ReadScroll()
+        {
+            float steps = 0f;
+#if ENABLE_INPUT_SYSTEM
+            if (Mouse.current != null)
+                steps = Mouse.current.scroll.ReadValue().y / 120f;
+#elif ENABLE_LEGACY_INPUT_MANAGER
+            steps = Input.mouseScrollDelta.y;
+#endif
+            return float.IsNaN(steps) ? 0f : Mathf.Clamp(steps, -3f, 3f);
         }
 
         private static bool TryReadPointer(out Vector2 screenPosition)

@@ -1,4 +1,4 @@
-# Contrato de control — movimiento, apuntado y disparo de prueba
+# Contrato de control — movimiento, esquiva, apuntado, cámara y disparo de prueba
 
 Qué debe cumplir el control del personaje y con qué se comprueba. Si el código y este documento no coinciden, uno de los dos está mal y hay que corregirlo.
 
@@ -21,6 +21,11 @@ Qué debe cumplir el control del personaje y con qué se comprueba. Si el códig
 | 13 | La cámara mantiene su ángulo y nunca cambia los ejes de WASD | Jugando |
 | 14 | Valores inválidos en el Inspector (NaN, infinito) no corrompen posición ni rotación | `InvalidGravityAndTurnSpeedDoNotCorruptTransform`, `CameraRecoversFromNonFiniteOffsetsAndSharpness` |
 | 15 | Sin cámara, la gravedad y el frenado siguen funcionando | `MissingCameraDoesNotDisableGravitySimulation` |
+| 16 | La esquiva recorre la misma distancia a 30 que a 240 FPS | `DashCoversItsDistanceAtAnyFrameRate`, `LastsExactlyItsDurationAtAnyFrameRate` |
+| 17 | La esquiva va hacia donde se camina; quieto, hacia donde se apunta | `DashFollowsMovementDirectionInsteadOfAim` |
+| 18 | La esquiva no atraviesa paredes | `DashStopsAtWalls`, `DashingIntoTheWallStopsAtTheWall` |
+| 19 | La esquiva respeta su espera; una pulsación hecha hasta 0,15 s antes de tiempo no se pierde | `DashRespectsItsCooldown`, `RequestMadeJustBeforeTheCooldownEndsIsNotLost` |
+| 20 | El zoom cambia la distancia de la cámara dentro de sus límites, nunca el ángulo | `CameraZoomIsClampedAndKeepsTheViewAngle` |
 
 ## Estructura
 
@@ -30,6 +35,7 @@ Qué debe cumplir el control del personaje y con qué se comprueba. Si el códig
 - `VisualRoot` es hijo de `PlayerRoot`. El modelo gira; la cápsula de colisión no.
 - La única colisión del jugador es el `CharacterController`. Las piezas del modelo no llevan colliders.
 - `CurrentFacing` es la dirección **objetivo**; el giro visible del modelo la alcanza a 1080°/s.
+- La esquiva es una intención más del comando (`Dash`). El cálculo de su estado es puro (`PlayerDash`) y el motor lo convierte en desplazamiento: las futuras habilidades seguirán el mismo camino.
 
 ## Parámetros actuales
 
@@ -40,13 +46,15 @@ Qué debe cumplir el control del personaje y con qué se comprueba. Si el códig
 | Aceleración / frenado / inversión (solo sin movimiento inmediato) | 45 / 75 / 100 m/s² |
 | Giro del modelo | 1080°/s |
 | Gravedad | −25 m/s² |
+| Esquiva | 4,5 m en 0,18 s; espera de 1,2 s; pulsación guardada 0,15 s |
+| Zoom | Entre 0,6 y 1,5 veces la distancia normal; 0,1 por paso de rueda |
 | Cápsula | 2 m de alto, 0,4 m de radio, `stepOffset` 0,3, `skinWidth` 0,08, `minMoveDistance` 0 |
 | Cámara | Desplazamiento (0, 10, −8), campo de visión 50° |
 | Alcance del disparo | 100 m |
 
 ## Fuera de alcance por ahora
 
-Daño, habilidades, esquiva, animación, enemigos, guardado y red. El orden propuesto está en [ESTADO.md](ESTADO.md).
+Daño, habilidades, animación, enemigos, guardado y red. El orden propuesto está en [ESTADO.md](ESTADO.md).
 
 ## Puerta de calidad
 

@@ -128,6 +128,18 @@ namespace Vhaldren.Tests
             yield break;
         }
 
+        [UnityTest]
+        public IEnumerator DashingIntoTheWallStopsAtTheWall()
+        {
+            Walk(Vector3.zero, 0.1f);
+            motor.Simulate(new PlayerMotionCommand(Vector3.forward, Vector3.forward, true), Step);
+            Walk(Vector3.forward, 1.5f);
+
+            Assert.That(player.position.z, Is.InRange(3.85f, 4.1f));
+            Assert.That(player.GetComponent<DashFeedback>(), Is.Not.Null);
+            yield break;
+        }
+
         private void Walk(Vector3 direction, float seconds)
         {
             int steps = Mathf.RoundToInt(seconds / Step);

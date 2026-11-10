@@ -13,10 +13,14 @@ Prioridades del dueño del juego:
 - El personaje puede mirar a cualquier lado mientras camina hacia otro.
 - Los disparos van exactamente al punto bajo el cursor.
 - El dueño no programa: el agente decide lo técnico, lo comprueba y lo publica.
+- **Es para jugar con hermanos y primos: el juego necesita multijugador cooperativo.**
+- Avanzar rápido reutilizando lo que ya existe (arte y librerías con licencia que lo permita) en vez de crear todo desde cero.
 
 ## Qué hay hoy
 
 - Movimiento con WASD relativo a la cámara, inmediato por defecto (aceleración opcional).
+- Esquiva con Espacio: 4,5 m en 0,18 s, con 1,2 s de espera, estela y un indicador a los pies que se apaga durante la espera.
+- Zoom de cámara con la rueda del mouse.
 - El modelo gira hacia el cursor sin girar la cápsula física.
 - Disparo de prueba (hitscan) al punto bajo el cursor, con trazo. Sin daño.
 - Cámara elevada que sigue al personaje con ángulo fijo.
@@ -43,10 +47,11 @@ Nota sobre el defecto 2: el movimiento inmediato que se activó antes lo tapaba,
 
 ## Qué está comprobado
 
-**Automático** (Unity 6000.2.12f1, en una copia del proyecto, 10 de noviembre de 2026):
+**Automático** (Unity 6000.2.12f1, 10 de noviembre de 2026):
 
-- EditMode: 27 de 27 pruebas.
-- PlayMode: 17 de 17 pruebas. Seis de ellas recorren la escena real `Movement001`: reposo en el suelo, choque con la pared, paso por el hueco, deslizamiento en la diagonal, subida del escalón, y subida y caída de la rampa.
+- EditMode: 40 de 40 pruebas.
+- PlayMode: 23 de 23 pruebas. Siete de ellas recorren la escena real `Movement001`: reposo en el suelo, choque con la pared, paso por el hueco, deslizamiento en la diagonal, subida del escalón, subida y caída de la rampa, y esquiva contra la pared.
+- La esquiva recorre 4,5 m tanto a 30 como a 240 FPS.
 - El generador crea la escena desde cero y el validador la aprueba.
 - Foto de la cámara revisada: suelo rojo cuadriculado, obstáculos grises con sombra, personaje oscuro legible.
 
@@ -59,6 +64,8 @@ Nota sobre el defecto 2: el movimiento inmediato que se activó antes lo tapaba,
 - [ ] Disparar con una pared en medio: el trazo debe parar en la pared.
 - [ ] Recorrer el circuito: diagonal, pilares, hueco, escalón y rampa.
 - [ ] Tamaño del personaje en pantalla y ángulo de la cámara: ¿cómodos?
+- [ ] Esquiva con Espacio: ¿la distancia, la rapidez y la espera de 1,2 s se sienten bien?
+- [ ] Zoom con la rueda: ¿los límites cerca/lejos son cómodos?
 - [ ] Opinión: ¿movimiento inmediato o con aceleración? (casilla **Instant Horizontal Movement** de `PlayerMotor`).
 
 ## Límites conocidos
@@ -72,22 +79,26 @@ Nota sobre el defecto 2: el movimiento inmediato que se activó antes lo tapaba,
 
 ## Qué sigue, en orden recomendado
 
+El multijugador ya está decidido (sí), y eso manda en el orden: cuanto más se construya antes de tener red, más habrá que rehacer.
+
 1. **Prueba jugando** de la lista de arriba y ajuste de sensación con lo que salga.
-2. **Cámara**: zoom con la rueda del mouse.
-3. **Esquiva** (dash con tiempo de espera): es el movimiento que define al género y la primera habilidad real. Obliga a crear la capa de intenciones (mover, apuntar, disparar, esquivar) por la que pasarán todas las habilidades.
-4. **Muñeco de práctica con vida y daño**, y un ataque básico de verdad con respuesta al impacto.
+2. **Arte reutilizado**: importar paquetes con licencia libre para tener mapa, personaje animado y enemigos sin modelarlos. Candidatos revisados el 10 de noviembre de 2026, los tres con licencia CC0 (uso libre, también comercial) y modelos en FBX:
+   - KayKit Dungeon Remastered: piezas modulares de mazmorra (203 modelos, ~42 MB).
+   - KayKit Adventurers: personajes animados (~118 MB).
+   - KayKit Skeletons: enemigos animados (~110 MB).
+3. **Multijugador cooperativo**: usar una librería de red en vez de escribirla. Recomendada: Netcode for GameObjects, la oficial de Unity (se instala desde el Package Manager). Incluye pasar la simulación a paso fijo y decidir quién manda en el movimiento.
+4. **Vida, daño y un ataque básico** con respuesta al impacto, ya pensados para red.
 5. **Sistema de habilidades** mínimo: teclas, tiempos de espera y tiempos de lanzamiento definidos como datos.
-6. **Modelo y animaciones** del personaje.
-7. **Primer enemigo** con comportamiento básico.
+6. **Primer enemigo** con comportamiento básico.
 
-Decisiones que conviene tomar pronto porque después cuesta cambiarlas:
+Referencia para copiar ideas, no para usar como base: Boss Room, el ejemplo cooperativo oficial de Unity (licencia Unity Companion, Unity 6000.0). Tiene sala de espera, habilidades, enemigos y jefe ya resueltos en red. No conviene partir de él porque se controla con clic para moverse y usa otro pipeline de render: habría que rehacer justo el control que ya tenemos.
 
-- **¿Habrá multijugador?** Si la respuesta es sí, hay que pasar la simulación a paso fijo antes de construir habilidades encima.
-- **Pipeline de render**: integrado (actual) o URP. Hay que decidirlo antes de producir arte y efectos.
+Decisión pendiente: **pipeline de render**, integrado (actual) o URP. Hay que decidirlo antes de producir efectos.
 
 ## Reglas de trabajo
 
-- Rama de trabajo: `feature/001-movimiento-base`. PR #1 en borrador; no fusionar a `main` hasta que el dueño apruebe la prueba jugando.
+- `feature/001-movimiento-base` (PR #1, borrador): base de control. `feature/002-esquiva-zoom` (PR #2, borrador, apilada sobre la anterior): esquiva y zoom. No fusionar a `main` hasta que el dueño apruebe la prueba jugando.
+- Solo se importa código o arte de terceros cuya licencia permita reutilizarlo, y se anota de dónde viene.
 - Todo arreglo de un defecto lleva una prueba que fallaba antes.
 - Las pruebas se ejecutan antes de publicar, y aquí se anota el resultado real, con fecha.
 - No se da por hecho lo que solo está planeado.

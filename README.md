@@ -2,7 +2,7 @@
 
 Juego de acción de fantasía oscura con cámara elevada: te mueves con WASD y apuntas con el mouse. Proyecto de Unity 6 (`6000.2.12f1`, pipeline de render integrado).
 
-Esta rama contiene la **base de control**: movimiento, apuntado, un disparo de prueba y una escena-gimnasio para probarlos. Todavía no hay daño, habilidades, animación ni red.
+Esta rama contiene la **base de control**: movimiento, esquiva, apuntado, zoom de cámara, un disparo de prueba y una escena-gimnasio para probarlos. Todavía no hay daño, habilidades, animación ni red.
 
 - Estado actual, qué está comprobado y qué sigue: [docs/ESTADO.md](docs/ESTADO.md)
 - Qué debe cumplir el control y cómo se verifica: [docs/001-movimiento-contrato.md](docs/001-movimiento-contrato.md)
@@ -17,7 +17,9 @@ Esta rama contiene la **base de control**: movimiento, apuntado, un disparo de p
 | Control | Qué hace |
 |---|---|
 | W A S D | Mover al personaje (relativo a la cámara) |
+| Espacio | Esquiva: un impulso corto hacia donde caminas (quieto, hacia donde apuntas). Tiene 1,2 s de espera |
 | Mouse | El personaje mira hacia el cursor, aunque camine hacia otro lado |
+| Rueda del mouse | Acercar o alejar la cámara |
 | Clic izquierdo | Disparo de prueba hacia el punto bajo el cursor (solo deja un trazo) |
 
 La escena es un circuito de prueba. Cada pieza sirve para comprobar algo:
@@ -42,12 +44,14 @@ Si cambias el generador, la escena se vuelve a crear con **Vhaldren → Crear es
 | `Assets/Scripts/Player/PlayerMotionCommand.cs` | La intención: hacia dónde moverse y hacia dónde mirar |
 | `Assets/Scripts/Player/PlayerMotor.cs` | Mueve la cápsula física, aplica gravedad y gira el modelo. No lee teclado ni mouse |
 | `Assets/Scripts/Player/PlayerHorizontalMotion.cs` | Cálculo puro de aceleración, frenado e inversión |
+| `Assets/Scripts/Player/PlayerDash.cs` | Cálculo puro de la esquiva: duración, espera y pulsación guardada |
+| `Assets/Scripts/Player/DashFeedback.cs` | Estela de la esquiva e indicador de "lista / en espera" |
 | `Assets/Scripts/Player/LocalPlayerShooter.cs` | Punto del mundo bajo el cursor y disparo de prueba |
-| `Assets/Scripts/Camera/SimpleFollowCamera.cs` | Cámara que sigue al personaje con ángulo fijo |
+| `Assets/Scripts/Camera/SimpleFollowCamera.cs` | Cámara que sigue al personaje con ángulo fijo y zoom |
 | `Assets/Editor/Movement001SceneTool.cs` | Genera y valida la escena de prueba |
 | `Assets/Editor/GameViewCapture.cs` | Guarda en PNG lo que ve la cámara |
 
-El movimiento es inmediato por defecto. Para probarlo con aceleración y frenado, desmarca **Instant Horizontal Movement** en el componente `PlayerMotor` de `PlayerRoot`.
+El movimiento es inmediato por defecto. Para probarlo con aceleración y frenado, desmarca **Instant Horizontal Movement** en el componente `PlayerMotor` de `PlayerRoot`. En ese mismo componente se ajustan la distancia, la duración y la espera de la esquiva.
 
 ## Pruebas automáticas
 

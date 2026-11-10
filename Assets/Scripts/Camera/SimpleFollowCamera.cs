@@ -18,7 +18,39 @@ namespace Vhaldren.Gameplay.CameraSystem
         [SerializeField] private Vector3 lookOffset = new Vector3(0f, 0.5f, 0f);
         [SerializeField, Min(0f)] private float followSharpness = 12f;
 
+        [Header("Zoom")]
+        [Tooltip("Distancia minima, como fraccion de la distancia normal (1 = sin zoom).")]
+        [SerializeField, Min(0.1f)] private float minZoom = 0.6f;
+        [Tooltip("Distancia maxima, como fraccion de la distancia normal.")]
+        [SerializeField, Min(0.1f)] private float maxZoom = 1.5f;
+        [SerializeField, Min(0f)] private float zoomSharpness = 14f;
+
+        private float targetZoom = 1f;
+        private float currentZoom = 1f;
+
         public Transform Target => target;
+        /// <summary>Zoom aplicado ahora mismo: 1 es la distancia normal, menos es mas cerca.</summary>
+        public float Zoom => currentZoom;
+        public float TargetZoom => targetZoom;
+
+        /// <summary>Acerca (negativo) o aleja (positivo) la camara dentro de sus limites.</summary>
+        public void AddZoom(float delta)
+        {
+            if (IsFinite(delta))
+                SetZoom(targetZoom + delta, false);
+        }
+
+        public void SetZoom(float value, bool immediate)
+        {
+            if (!IsFinite(value))
+                return;
+
+            float low = IsFinite(minZoom) ? Mathf.Max(0.1f, minZoom) : 0.6f;
+            float high = IsFinite(maxZoom) ? Mathf.Max(low, maxZoom) : Mathf.Max(low, 1.5f);
+            targetZoom = Mathf.Clamp(value, low, high);
+            if (immediate)
+                currentZoom = targetZoom;
+        }
 
         public void SetTarget(Transform nextTarget)
         {
@@ -33,7 +65,14 @@ namespace Vhaldren.Gameplay.CameraSystem
 
             Vector3 safeOffset = IsFinite(offset) ? offset : DefaultOffset;
             Vector3 safeLookOffset = IsFinite(lookOffset) ? lookOffset : DefaultLookOffset;
-            Vector3 desiredPosition = target.position + safeOffset;
+
+            float safeZoomSharpness = IsFinite(zoomSharpness) ? Mathf.Max(0f, zoomSharpness) : 0f;
+            float zoomBlend = safeZoomSharpness <= 0f
+                ? 1f
+                : 1f - Mathf.Exp(-safeZoomSharpness * Time.deltaTime);
+            currentZoom = Mathf.Lerp(currentZoom, targetZoom, zoomBlend);
+
+            Vector3 desiredPosition = target.position + ZoomedOffset(safeOffset, safeLookOffset);
             if (!IsFinite(desiredPosition))
                 return;
 
@@ -45,6 +84,16 @@ namespace Vhaldren.Gameplay.CameraSystem
             Vector3 currentPosition = IsFinite(transform.position) ? transform.position : desiredPosition;
             transform.position = Vector3.Lerp(currentPosition, desiredPosition, blend);
             KeepFixedAngle(safeOffset, safeLookOffset);
+        }
+
+        /// <summary>
+        /// El zoom acerca la camara al punto que mira, sobre la misma linea: cambia la
+        /// distancia, no el angulo ni el centro de la imagen.
+        /// </summary>
+        private Vector3 ZoomedOffset(Vector3 safeOffset, Vector3 safeLookOffset)
+        {
+            float zoom = IsFinite(currentZoom) && currentZoom > 0f ? currentZoom : 1f;
+            return safeLookOffset + (safeOffset - safeLookOffset) * zoom;
         }
 
         private void KeepFixedAngle(Vector3 safeOffset, Vector3 safeLookOffset)
@@ -71,12 +120,13 @@ namespace Vhaldren.Gameplay.CameraSystem
                 return;
 
             Vector3 safeOffset = IsFinite(offset) ? offset : DefaultOffset;
-            Vector3 desiredPosition = target.position + safeOffset;
+            Vector3 safeLookOffset = IsFinite(lookOffset) ? lookOffset : DefaultLookOffset;
+            currentZoom = targetZoom;
+            Vector3 desiredPosition = target.position + ZoomedOffset(safeOffset, safeLookOffset);
             if (!IsFinite(desiredPosition))
                 return;
 
             transform.position = desiredPosition;
-            Vector3 safeLookOffset = IsFinite(lookOffset) ? lookOffset : DefaultLookOffset;
             KeepFixedAngle(safeOffset, safeLookOffset);
         }
 
