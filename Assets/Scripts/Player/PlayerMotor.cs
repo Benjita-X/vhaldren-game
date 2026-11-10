@@ -29,6 +29,17 @@ namespace Vhaldren.Gameplay.Player
         private void Awake()
         {
             controller = GetComponent<CharacterController>();
+
+            // Nunca girar un objeto visual externo o la propia raiz fisica por error.
+            if (visualRoot != null && (visualRoot == transform || !visualRoot.IsChildOf(transform)))
+            {
+                Debug.LogError(
+                    "[Vhaldren] visualRoot debe ser un hijo del PlayerRoot, nunca la raiz ni un objeto ajeno.",
+                    this);
+                enabled = false;
+                return;
+            }
+
             Vector3 initialFacing = visualRoot != null ? visualRoot.forward : transform.forward;
             initialFacing.y = 0f;
             CurrentFacing = initialFacing.sqrMagnitude > 0.0001f ? initialFacing.normalized : Vector3.forward;
