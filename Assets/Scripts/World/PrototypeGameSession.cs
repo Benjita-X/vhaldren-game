@@ -79,7 +79,9 @@ namespace Vhaldren.Gameplay.World
             {
                 foreach (PrototypeEnemy enemy in enemies)
                 {
-                    if (enemy != null && enemy.gameObject.scene == gameObject.scene)
+                    // Desuscribir incluso si el enemigo cambio de escena;
+                    // no dejar handlers retenidos tras una transferencia aditiva.
+                    if (enemy != null)
                         enemy.Defeated -= OnEnemyDefeated;
                 }
             }
