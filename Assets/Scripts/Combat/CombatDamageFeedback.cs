@@ -115,7 +115,7 @@ namespace Vhaldren.Gameplay.Combat
             nextPopup++;
             popups[index] = new DamagePopup
             {
-                Text = "-" + actualAmount.ToString(actualAmount >= 1f ? "0" : "0.#"),
+                Text = "-" + actualAmount.ToString("0.##"),
                 Time = Time.time,
                 Lane = index
             };
@@ -174,7 +174,7 @@ namespace Vhaldren.Gameplay.Combat
             {
                 cachedHealth = current;
                 cachedMaxHealth = maximum;
-                healthText = current.ToString("0") + " / " + maximum.ToString("0") + " PV";
+                healthText = current.ToString("0.##") + " / " + maximum.ToString("0.##") + " PV";
             }
 
             Color previous = GUI.color;
