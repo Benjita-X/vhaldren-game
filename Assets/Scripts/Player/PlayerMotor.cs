@@ -99,7 +99,11 @@ namespace Vhaldren.Gameplay.Player
             move.y = 0f;
             move = ClampPlanarMagnitude(move, 1f);
             if (actionModifiers != null && !actionModifiers.AllowsMovement)
+            {
+                // Un stun/root debe bloquear de inmediato incluso si hay inercia opcional.
                 move = Vector3.zero;
+                horizontalVelocity = Vector3.zero;
+            }
 
             // Mantener contacto estable con el suelo.
             if (controller.isGrounded && verticalSpeed < 0f)
