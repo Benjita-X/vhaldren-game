@@ -242,7 +242,6 @@ namespace Vhaldren.EditorTools
             bool valid = player.GetComponent<PlayerMotor>() != null &&
                 player.GetComponent<LocalPlayerShooter>() != null &&
                 player.GetComponent<CharacterController>() != null &&
-                player.GetComponent<CombatDamageFeedback>() != null &&
                 health != null && health.MaximumHealth >= 150f &&
                 camera.GetComponent<Camera>() != null &&
                 session != null &&
@@ -253,8 +252,7 @@ namespace Vhaldren.EditorTools
             foreach (PrototypeEnemy enemy in enemies)
             {
                 if (enemy == null || enemy.GetComponent<CharacterController>() == null ||
-                    enemy.GetComponent<CombatHealth>() == null ||
-                    enemy.GetComponent<CombatDamageFeedback>() == null)
+                    enemy.GetComponent<CombatHealth>() == null)
                     valid = false;
                 if (enemy != null)
                 {
