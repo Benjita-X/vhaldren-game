@@ -44,6 +44,7 @@ Defectos encontrados y corregidos. Cada uno tiene una prueba que fallaba antes d
 | 8 | La escena no estaba en Build Settings | Una build habría salido vacía | El generador la registra |
 | 9 | El validador exigía movimiento inmediato | Probar la aceleración rompía la validación | El validador ya no impone una decisión de sensación |
 | 10 | Las pruebas alternaban teclas sostenidas, pero no pulsar y soltar A/D varias veces dentro del mismo frame | La corrección anterior no demostraba que el último tap llegara al motor | Se agregó una prueba PlayMode con A down/up y D down/up antes de una sola lectura; verifica que D gana y el tap se consume una vez |
+| 11 | El zoom dividía por 120 el delta del Input System | Con la normalización multiplataforma predeterminada de Unity, la rueda apenas acercaba la cámara | Se usa el delta normalizado; si Windows se configura para conservar unidades nativas, se convierte 120 a un paso. Dos pruebas cubren ambos modos |
 
 Nota sobre el defecto 2: el movimiento inmediato que se activó antes lo tapaba, no lo arreglaba. Ahora los dos modos funcionan a cualquier número de FPS.
 
@@ -52,7 +53,7 @@ Nota sobre el defecto 2: el movimiento inmediato que se activó antes lo tapaba,
 **Automático** (Unity 6000.2.12f1, 10 de noviembre de 2026):
 
 - EditMode: 45 de 45 pruebas.
-- PlayMode: 24 de 24 pruebas. La prueba nueva procesa cuatro eventos A/D en una actualización y confirma el orden real de entrada; otras siete recorren la escena real `Movement001`: reposo en el suelo, choque con la pared, paso por el hueco, deslizamiento en la diagonal, subida del escalón, subida y caída de la rampa, y esquiva contra la pared.
+- PlayMode: 26 de 26 pruebas. Las pruebas nuevas procesan cuatro eventos A/D en una actualización y verifican los dos modos de delta de rueda; la prueba de taps confirma que la última dirección llega al motor, mueve al jugador y se consume una vez. Otras siete recorren la escena real `Movement001`: reposo en el suelo, choque con la pared, paso por el hueco, deslizamiento en la diagonal, subida del escalón, subida y caída de la rampa, y esquiva contra la pared.
 - La esquiva recorre 4,5 m tanto a 30 como a 240 FPS.
 - El generador crea la escena desde cero y el validador la aprueba.
 - Foto de la cámara revisada: suelo rojo cuadriculado, obstáculos grises con sombra, personaje oscuro legible.

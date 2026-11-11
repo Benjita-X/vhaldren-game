@@ -25,7 +25,7 @@ Qué debe cumplir el control del personaje y con qué se comprueba. Si el códig
 | 17 | La esquiva va hacia donde se camina; quieto, hacia donde se apunta | `DashFollowsMovementDirectionInsteadOfAim` |
 | 18 | La esquiva no atraviesa paredes | `DashStopsAtWalls`, `DashingIntoTheWallStopsAtTheWall` |
 | 19 | La esquiva respeta su espera; una pulsación hecha hasta 0,15 s antes de tiempo no se pierde | `DashRespectsItsCooldown`, `RequestMadeJustBeforeTheCooldownEndsIsNotLost` |
-| 20 | El zoom cambia la distancia de la cámara dentro de sus límites, nunca el ángulo | `CameraZoomIsClampedAndKeepsTheViewAngle` |
+| 20 | El zoom cambia la distancia de la cámara dentro de sus límites, nunca el ángulo; la rueda se normaliza en los modos uniforme y nativo de Windows | `CameraZoomIsClampedAndKeepsTheViewAngle`, `NormalizedMouseWheelDeltaIsNotDividedByNativeWindowsUnits`, `NativePlatformWheelDeltaNormalizesToOneStep` |
 
 ## Estructura
 

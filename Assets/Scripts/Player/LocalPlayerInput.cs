@@ -267,7 +267,16 @@ namespace Vhaldren.Gameplay.Player
             float steps = 0f;
 #if ENABLE_INPUT_SYSTEM
             if (Mouse.current != null)
-                steps = Mouse.current.scroll.ReadValue().y / 120f;
+            {
+                // Unity normaliza por defecto a -1..1. Solo si alguien eligio el modo
+                // nativo, Windows devuelve unidades de 120 por paso de rueda.
+                steps = Mouse.current.scroll.ReadValue().y;
+                bool windows = Application.platform == RuntimePlatform.WindowsEditor ||
+                               Application.platform == RuntimePlatform.WindowsPlayer;
+                if (windows && InputSystem.settings.scrollDeltaBehavior ==
+                    InputSettings.ScrollDeltaBehavior.KeepPlatformSpecificInputRange)
+                    steps /= 120f;
+            }
 #elif ENABLE_LEGACY_INPUT_MANAGER
             steps = Input.mouseScrollDelta.y;
 #endif

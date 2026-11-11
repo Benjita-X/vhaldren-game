@@ -10,6 +10,59 @@ namespace Vhaldren.Tests
     public sealed class KeyboardMovementInputPlayModeTests : InputTestFixture
     {
         [Test]
+        public void NormalizedMouseWheelDeltaIsNotDividedByNativeWindowsUnits()
+        {
+            InputSettings settings = InputSystem.settings;
+            InputSettings.ScrollDeltaBehavior originalBehavior = settings.scrollDeltaBehavior;
+            settings.scrollDeltaBehavior = InputSettings.ScrollDeltaBehavior.UniformAcrossAllPlatforms;
+            Mouse mouse = InputSystem.AddDevice<Mouse>();
+            try
+            {
+                InputSystem.QueueStateEvent(mouse, new MouseState
+                {
+                    position = new Vector2(100f, 100f),
+                    scroll = new Vector2(0f, 1f)
+                });
+                InputSystem.Update();
+
+                Assert.That(ReadScroll(), Is.EqualTo(1f).Within(0.0001f),
+                    "Unity normaliza el delta de rueda; 1 debe equivaler a un paso de zoom.");
+            }
+            finally
+            {
+                settings.scrollDeltaBehavior = originalBehavior;
+            }
+        }
+
+        [Test]
+        public void NativePlatformWheelDeltaNormalizesToOneStep()
+        {
+            InputSettings settings = InputSystem.settings;
+            InputSettings.ScrollDeltaBehavior originalBehavior = settings.scrollDeltaBehavior;
+            settings.scrollDeltaBehavior = InputSettings.ScrollDeltaBehavior.KeepPlatformSpecificInputRange;
+            Mouse mouse = InputSystem.AddDevice<Mouse>();
+            bool windows = Application.platform == RuntimePlatform.WindowsEditor ||
+                           Application.platform == RuntimePlatform.WindowsPlayer;
+            try
+            {
+                float nativeDelta = windows ? 120f : 1f;
+                InputSystem.QueueStateEvent(mouse, new MouseState
+                {
+                    position = new Vector2(100f, 100f),
+                    scroll = new Vector2(0f, nativeDelta)
+                });
+                InputSystem.Update();
+
+                Assert.That(ReadScroll(), Is.EqualTo(1f).Within(0.0001f),
+                    "El delta nativo debe convertirse a un paso de zoom en todas las plataformas.");
+            }
+            finally
+            {
+                settings.scrollDeltaBehavior = originalBehavior;
+            }
+        }
+
+        [Test]
         public void OppositeTapsInOneInputUpdateKeepTheFinalPressDirection()
         {
             Keyboard keyboard = InputSystem.AddDevice<Keyboard>();
@@ -50,6 +103,14 @@ namespace Vhaldren.Tests
                 System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic;
             MethodInfo update = typeof(LocalPlayerInput).GetMethod("Update", flags);
             update.Invoke(input, null);
+        }
+
+        private static float ReadScroll()
+        {
+            const System.Reflection.BindingFlags flags =
+                System.Reflection.BindingFlags.Static | System.Reflection.BindingFlags.NonPublic;
+            MethodInfo readScroll = typeof(LocalPlayerInput).GetMethod("ReadScroll", flags);
+            return (float)readScroll.Invoke(null, null);
         }
     }
 }
