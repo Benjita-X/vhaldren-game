@@ -62,6 +62,13 @@ namespace Vhaldren.Gameplay.Player
             tracer.enabled = false;
         }
 
+        private void OnDisable()
+        {
+            if (tracer != null)
+                tracer.enabled = false;
+            tracerTimeRemaining = 0f;
+        }
+
         private void OnDestroy()
         {
             if (tracerMaterial != null)
