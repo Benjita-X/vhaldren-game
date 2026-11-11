@@ -26,6 +26,7 @@ namespace Vhaldren.Gameplay.Player
 
         private RaycastHit[] aimHits = new RaycastHit[AimHitCapacity];
         private LineRenderer tracer;
+        private PlayerActionModifiers actionModifiers;
         private Material tracerMaterial;
         private float tracerTimeRemaining;
 
@@ -36,6 +37,7 @@ namespace Vhaldren.Gameplay.Player
 
         private void Awake()
         {
+            actionModifiers = GetComponent<PlayerActionModifiers>();
             if (viewCamera == null)
                 viewCamera = Camera.main;
 
@@ -122,6 +124,8 @@ namespace Vhaldren.Gameplay.Player
         /// <summary>Dispara hacia el punto resuelto por la camara para esta posicion del mouse.</summary>
         public bool FireAtScreenPosition(Vector2 screenPosition)
         {
+            if (actionModifiers != null && !actionModifiers.AllowsAttack)
+                return false;
             if (!TryGetAimPoint(screenPosition, out Vector3 aimPoint))
                 return false;
 
