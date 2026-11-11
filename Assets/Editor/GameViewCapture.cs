@@ -31,6 +31,13 @@ namespace Vhaldren.EditorTools
             Capture("Movement001");
         }
 
+        /// <summary>Entrada para -executeMethod: abre la sala KayKit y la captura.</summary>
+        public static void CaptureKayKitCombat001()
+        {
+            EditorSceneManager.OpenScene("Assets/Scenes/KayKitCombat001.unity", OpenSceneMode.Single);
+            Capture("KayKitCombat001");
+        }
+
         private static void Capture(string name)
         {
             Camera view = Camera.main;

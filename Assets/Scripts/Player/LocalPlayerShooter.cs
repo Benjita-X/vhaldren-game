@@ -122,6 +122,11 @@ namespace Vhaldren.Gameplay.Player
         /// <summary>Dispara hacia el punto resuelto por la camara para esta posicion del mouse.</summary>
         public bool FireAtScreenPosition(Vector2 screenPosition)
         {
+            // Un estado que bloquea ataques (aturdimiento, silencio) impide disparar.
+            PlayerActionModifiers modifiers = GetComponent<PlayerActionModifiers>();
+            if (modifiers != null && modifiers.isActiveAndEnabled && !modifiers.AllowsAttack)
+                return false;
+
             if (!TryGetAimPoint(screenPosition, out Vector3 aimPoint))
                 return false;
 

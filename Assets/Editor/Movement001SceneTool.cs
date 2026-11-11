@@ -164,6 +164,8 @@ namespace Vhaldren.EditorTools
             trail.emitting = false;
 
             // El indicador de frente tambien avisa: encendido = esquiva lista, apagado = en espera.
+            // Punto de conexion para futuras habilidades y estados (sprint, aturdimiento...).
+            player.AddComponent<PlayerActionModifiers>();
             DashFeedback feedback = player.AddComponent<DashFeedback>();
             AssignObjectReference(feedback, "motor", motor);
             AssignObjectReference(feedback, "trail", trail);

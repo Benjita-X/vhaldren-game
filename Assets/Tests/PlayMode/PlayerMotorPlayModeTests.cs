@@ -580,6 +580,96 @@ namespace Vhaldren.Tests
             return motor.transform.position.z - startZ;
         }
 
+        [UnityTest]
+        public IEnumerator ModifiersChangeSpeedAndStackAndAreRemovable()
+        {
+            CreateGround(60f);
+            GameObject player = CreatePlayerWithModifiers(new Vector3(0f, 1.08f, 0f),
+                out PlayerActionModifiers modifiers);
+            PlayerMotor motor = player.GetComponent<PlayerMotor>();
+            yield return null;
+
+            const float step = 1f / 120f;
+            Settle(motor, step);
+            int sprint = modifiers.AddModifier(PlayerActionModifiers.LockedAction.None, 1.5f);
+            motor.Simulate(new PlayerMotionCommand(Vector3.right, Vector3.forward), step);
+            Assert.That(motor.HorizontalVelocity.x, Is.EqualTo(9f).Within(0.01f), "Sprint: 6 x 1,5.");
+
+            int slow = modifiers.AddModifier(PlayerActionModifiers.LockedAction.None, 0.5f);
+            motor.Simulate(new PlayerMotionCommand(Vector3.right, Vector3.forward), step);
+            Assert.That(motor.HorizontalVelocity.x, Is.EqualTo(4.5f).Within(0.01f), "Sprint y lentitud se combinan.");
+
+            modifiers.RemoveModifier(sprint);
+            modifiers.RemoveModifier(slow);
+            motor.Simulate(new PlayerMotionCommand(Vector3.right, Vector3.forward), step);
+            Assert.That(motor.HorizontalVelocity.x, Is.EqualTo(6f).Within(0.01f), "Al retirarlos vuelve a la normal.");
+        }
+
+        [UnityTest]
+        public IEnumerator StunBlocksMovementDashFacingAndAttack()
+        {
+            CreateGround(60f);
+            GameObject cameraObject = new GameObject("AimCamera");
+            cameraObject.transform.position = new Vector3(0f, 10f, -10f);
+            cameraObject.transform.rotation = Quaternion.Euler(45f, 0f, 0f);
+            Camera camera = cameraObject.AddComponent<Camera>();
+            createdObjects.Add(cameraObject);
+
+            GameObject player = CreatePlayerWithModifiers(new Vector3(4f, 1.08f, 0f),
+                out PlayerActionModifiers modifiers);
+            PlayerMotor motor = player.GetComponent<PlayerMotor>();
+            LocalPlayerShooter shooter = player.AddComponent<LocalPlayerShooter>();
+            SetShooterField(shooter, "viewCamera", camera);
+            yield return null;
+
+            const float step = 1f / 120f;
+            Settle(motor, step);
+            Vector3 start = player.transform.position;
+            Vector3 facingBefore = motor.CurrentFacing;
+            Vector2 cursor = new Vector2(Screen.width * 0.5f, Screen.height * 0.5f);
+
+            const PlayerActionModifiers.LockedAction everything =
+                PlayerActionModifiers.LockedAction.Movement | PlayerActionModifiers.LockedAction.Dash |
+                PlayerActionModifiers.LockedAction.Attack | PlayerActionModifiers.LockedAction.Facing;
+            int stun = modifiers.AddModifier(everything);
+
+            for (int i = 0; i < 60; i++)
+                motor.Simulate(new PlayerMotionCommand(Vector3.forward, Vector3.right, i == 0), step);
+
+            Vector3 moved = player.transform.position - start;
+            Assert.That(new Vector2(moved.x, moved.z).magnitude, Is.LessThan(0.01f), "Aturdido no camina ni esquiva.");
+            Assert.That(motor.IsDashing, Is.False);
+            Assert.That(motor.CurrentFacing, Is.EqualTo(facingBefore), "Aturdido no gira.");
+            Assert.That(shooter.FireAtScreenPosition(cursor), Is.False, "Aturdido no dispara.");
+            Assert.That(shooter.ShotsFired, Is.Zero);
+
+            modifiers.RemoveModifier(stun);
+            // La esquiva pedida durante el aturdimiento no debe salir sola al terminar.
+            for (int i = 0; i < 30; i++)
+                motor.Simulate(new PlayerMotionCommand(Vector3.zero, Vector3.right), step);
+            Assert.That(motor.IsDashing, Is.False);
+            Assert.That((player.transform.position - start).magnitude, Is.LessThan(0.05f));
+
+            motor.Simulate(new PlayerMotionCommand(Vector3.forward, Vector3.right), step);
+            Assert.That(motor.HorizontalVelocity.z, Is.EqualTo(6f).Within(0.01f), "Al terminar recupera el control.");
+            Assert.That(shooter.FireAtScreenPosition(cursor), Is.True);
+        }
+
+        private GameObject CreatePlayerWithModifiers(Vector3 position, out PlayerActionModifiers modifiers)
+        {
+            GameObject player = new GameObject("TestPlayer");
+            player.transform.position = position;
+            CharacterController controller = player.AddComponent<CharacterController>();
+            controller.height = 2f;
+            controller.radius = 0.4f;
+            // Antes que el motor: el motor busca los modificadores al despertar.
+            modifiers = player.AddComponent<PlayerActionModifiers>();
+            player.AddComponent<PlayerMotor>();
+            createdObjects.Add(player);
+            Physics.SyncTransforms();
+            return player;
+        }
+
         private static void Settle(PlayerMotor motor, float step)
         {
             // Sin esto el primer paso se gasta en asentar la capsula sobre el suelo.
