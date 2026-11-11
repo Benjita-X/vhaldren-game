@@ -46,6 +46,7 @@ namespace Vhaldren.Tests
             player.AddComponent<CombatHealth>();
 
             enemyObject = new GameObject("PrototypeEnemyTest");
+            enemyObject.SetActive(false); // Asegurar que Awake lea el target asignado.
             enemyObject.transform.position = new Vector3(0f, 1.08f, distance);
             CharacterController enemyCollider = enemyObject.AddComponent<CharacterController>();
             enemyCollider.height = 2f;
@@ -53,6 +54,9 @@ namespace Vhaldren.Tests
             enemyHealth = enemyObject.AddComponent<CombatHealth>();
             enemyHealth.ResetToFull();
             PrototypeEnemy enemy = enemyObject.AddComponent<PrototypeEnemy>();
+            typeof(PrototypeEnemy).GetField("target",
+                BindingFlags.Instance | BindingFlags.NonPublic).SetValue(enemy, player.transform);
+            enemyObject.SetActive(true);
             Physics.SyncTransforms();
             return enemy;
         }
