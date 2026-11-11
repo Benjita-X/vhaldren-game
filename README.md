@@ -37,6 +37,16 @@ La escena es un circuito de prueba. Cada pieza sirve para comprobar algo:
 
 Si cambias el generador, la escena se vuelve a crear con **Vhaldren → Crear escena de prueba → Movimiento 001** y se comprueba con **Vhaldren → Validar escena 001**.
 
+## Nueva sala opcional: combate con KayKit CC0 (PR de integración)
+
+Esta rama incluye modelos originales KayKit Dungeon Remastered (licencia CC0, ver `Assets/ThirdParty/KayKitDungeon/LICENSE.txt`) y una primera diana de entrenamiento con vida, daño y reaparición.
+
+**Para crearla sin tocar la escena de movimiento:** en Unity, con el proyecto abierto y fuera de Play, usa **Vhaldren → Crear escena de prueba → Combate KayKit 001**. Se crea `Assets/Scenes/KayKitCombat001.unity`. Ábrela y pulsa Play: WASD para moverte, Espacio para esquivar y clic izquierdo para disparar a los dos barriles-diana; cada disparo válido causa 25 PV de daño de prueba y la diana reaparece después de unos segundos. La escena `Movement001` permanece intacta.
+
+La primera generación también crea `Assets/ThirdParty/KayKitDungeon/KayKitAtlas.mat`; si decides guardar la escena en Git, añade ambos archivos generados y sus `.meta` después de verificarla.
+
+**Advertencia:** este combate funciona solo en local y no incorpora AnyRPG ni FishNet. Faltan compilación y ejecución de las pruebas en Unity. Consulta [auditoría de sistemas externos e integración](docs/004-AUDITORIA-EXTERNOS-E-INTEGRACION.md) y [auditoría de conexiones, posibles fugas y futuras habilidades](docs/005-CONEXIONES-FUGAS-Y-HABILIDADES.md) antes de fusionar o añadir multiplayer.
+
 ## Cómo está organizado el código
 
 | Archivo | Responsabilidad |

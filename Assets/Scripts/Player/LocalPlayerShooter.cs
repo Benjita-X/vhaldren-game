@@ -1,4 +1,5 @@
 using UnityEngine;
+using Vhaldren.Gameplay.Combat;
 #if ENABLE_INPUT_SYSTEM
 using UnityEngine.InputSystem;
 #endif
@@ -19,19 +20,24 @@ namespace Vhaldren.Gameplay.Player
         [SerializeField] private Transform shotOrigin;
         [SerializeField] private Transform aimMarker;
         [SerializeField, Min(1f)] private float maxRange = 100f;
+        [Tooltip("Dano de prueba. No es un ataque validado por servidor.")]
+        [SerializeField, Min(0f)] private float testDamage = 25f;
         [SerializeField] private LayerMask aimLayers = Physics.DefaultRaycastLayers;
 
         private RaycastHit[] aimHits = new RaycastHit[AimHitCapacity];
         private LineRenderer tracer;
+        private PlayerActionModifiers actionModifiers;
         private Material tracerMaterial;
         private float tracerTimeRemaining;
 
         public Vector3 LastAimPoint { get; private set; }
         public Vector3 LastImpactPoint { get; private set; }
         public int ShotsFired { get; private set; }
+        public int HitsLanded { get; private set; }
 
         private void Awake()
         {
+            actionModifiers = GetComponent<PlayerActionModifiers>();
             if (viewCamera == null)
                 viewCamera = Camera.main;
 
@@ -54,6 +60,13 @@ namespace Vhaldren.Gameplay.Player
                 tracer.sharedMaterial = tracerMaterial;
             }
             tracer.enabled = false;
+        }
+
+        private void OnDisable()
+        {
+            if (tracer != null)
+                tracer.enabled = false;
+            tracerTimeRemaining = 0f;
         }
 
         private void OnDestroy()
@@ -118,6 +131,8 @@ namespace Vhaldren.Gameplay.Player
         /// <summary>Dispara hacia el punto resuelto por la camara para esta posicion del mouse.</summary>
         public bool FireAtScreenPosition(Vector2 screenPosition)
         {
+            if (actionModifiers != null && !actionModifiers.AllowsAttack)
+                return false;
             if (!TryGetAimPoint(screenPosition, out Vector3 aimPoint))
                 return false;
 
@@ -138,8 +153,22 @@ namespace Vhaldren.Gameplay.Player
             // Se ignora el propio cuerpo sin dejar de buscar: si el primer impacto era el
             // jugador (al apuntar hacia atras mientras el modelo aun gira), el tiro
             // atravesaba la pared que hubiera detras.
-            if (TryNearestWorldHit(new Ray(origin, direction), range, out Vector3 obstaclePoint))
+            if (TryNearestWorldHit(new Ray(origin, direction), range,
+                out Vector3 obstaclePoint, out Collider hitCollider))
+            {
                 LastImpactPoint = obstaclePoint;
+                // La logica de vida queda en el objetivo, no en el motor del jugador.
+                // En cooperativo el servidor debera validar este impacto.
+                if (hitCollider != null)
+                {
+                    CombatHealth health = hitCollider.GetComponentInParent<CombatHealth>();
+                    float safeDamage = float.IsNaN(testDamage) || float.IsInfinity(testDamage)
+                        ? 0f : Mathf.Max(0f, testDamage);
+                    if (health != null && !health.transform.IsChildOf(transform) &&
+                        health.ApplyDamage(safeDamage) > 0f)
+                        HitsLanded++;
+                }
+            }
 
             ShotsFired++;
             ShowTracer(origin, LastImpactPoint);
@@ -149,7 +178,14 @@ namespace Vhaldren.Gameplay.Player
         /// <summary>Primer impacto del rayo que no pertenece al propio jugador.</summary>
         private bool TryNearestWorldHit(Ray ray, float range, out Vector3 point)
         {
+            return TryNearestWorldHit(ray, range, out point, out _);
+        }
+
+        private bool TryNearestWorldHit(Ray ray, float range, out Vector3 point,
+            out Collider closestCollider)
+        {
             point = Vector3.zero;
+            closestCollider = null;
             int hitCount = Physics.RaycastNonAlloc(ray, aimHits, range, aimLayers,
                 QueryTriggerInteraction.Ignore);
             // RaycastNonAlloc no garantiza orden ni exhaustividad al llenar el buffer.
@@ -182,6 +218,7 @@ namespace Vhaldren.Gameplay.Player
                 {
                     nearestDistance = hits[i].distance;
                     point = hits[i].point;
+                    closestCollider = hitCollider;
                     found = true;
                 }
             }
