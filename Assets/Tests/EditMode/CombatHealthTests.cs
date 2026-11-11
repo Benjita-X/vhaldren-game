@@ -52,6 +52,29 @@ namespace Vhaldren.Tests
         }
 
         [Test]
+        public void LoweringMaximumHealthNeverMakesHealingNegative()
+        {
+            GameObject obj = new GameObject("HealthResizeTest");
+            try
+            {
+                CombatHealth health = obj.AddComponent<CombatHealth>();
+                health.ResetToFull();
+                var maximum = typeof(CombatHealth).GetField("maximumHealth",
+                    System.Reflection.BindingFlags.Instance |
+                    System.Reflection.BindingFlags.NonPublic);
+                maximum.SetValue(health, 20f);
+
+                Assert.That(health.CurrentHealth, Is.EqualTo(20f));
+                Assert.That(health.Heal(10f), Is.Zero);
+                Assert.That(health.CurrentHealth, Is.EqualTo(20f));
+            }
+            finally
+            {
+                Object.DestroyImmediate(obj);
+            }
+        }
+
+        [Test]
         public void HealAndResetAreBounded()
         {
             GameObject obj = new GameObject("HealthHealTest");
