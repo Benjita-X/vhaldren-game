@@ -83,6 +83,11 @@ namespace Vhaldren.Gameplay.Player
         {
             dash.Cancel();
             DashMovedThisStep = false;
+            // Evitar que el movimiento anterior reviva al reactivar/respawnear.
+            horizontalVelocity = Vector3.zero;
+            verticalSpeed = 0f;
+            ActualVelocity = Vector3.zero;
+            IsGrounded = false;
         }
 
         /// <summary>
