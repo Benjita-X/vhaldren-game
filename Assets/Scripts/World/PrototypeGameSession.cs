@@ -24,6 +24,8 @@ namespace Vhaldren.Gameplay.World
         private PrototypeEnemy[] enemies;
         private CombatHealth playerHealth;
         private PlayerMotor playerMotor;
+        private LocalPlayerShooter playerShooter;
+        private bool playerShooterWasEnabled;
         private Vector3 spawnPosition;
         private float healReadyAt;
         private float respawnAt = float.PositiveInfinity;
@@ -47,6 +49,7 @@ namespace Vhaldren.Gameplay.World
             spawnPosition = player.position;
             playerHealth = player.GetComponent<CombatHealth>();
             playerMotor = player.GetComponent<PlayerMotor>();
+            playerShooter = player.GetComponent<LocalPlayerShooter>();
             if (playerHealth != null)
                 playerHealth.Defeated += OnPlayerDefeated;
 
@@ -63,6 +66,7 @@ namespace Vhaldren.Gameplay.World
                 enemy.Defeated += OnEnemyDefeated;
             }
             healReadyAt = 0f;
+            respawnAt = float.PositiveInfinity;
             nextHudRefresh = 0f;
         }
 
@@ -94,6 +98,11 @@ namespace Vhaldren.Gameplay.World
             respawnAt = Time.time + Mathf.Max(0.1f, playerRespawnDelay);
             if (playerMotor != null)
                 playerMotor.enabled = false;
+            if (playerShooter != null)
+            {
+                playerShooterWasEnabled = playerShooter.enabled;
+                playerShooter.enabled = false;
+            }
         }
 
         private void Update()
@@ -144,6 +153,8 @@ namespace Vhaldren.Gameplay.World
             playerHealth.ResetToFull();
             if (playerMotor != null)
                 playerMotor.enabled = true;
+            if (playerShooter != null)
+                playerShooter.enabled = playerShooterWasEnabled;
             respawnAt = float.PositiveInfinity;
         }
 
