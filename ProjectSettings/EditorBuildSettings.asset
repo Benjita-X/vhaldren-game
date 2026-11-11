@@ -11,5 +11,8 @@ EditorBuildSettings:
   - enabled: 1
     path: Assets/Scenes/KayKitCombat001.unity
     guid: acb098cda596c9a4b85542f2cc694df1
+  - enabled: 1
+    path: Assets/Scenes/WorldPrototype001.unity
+    guid: 4db9daaeea1f9b149b797e833e4110e3
   m_configObjects: {}
   m_UseUCBPForAssetBundles: 0

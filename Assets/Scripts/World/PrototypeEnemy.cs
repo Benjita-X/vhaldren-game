@@ -170,21 +170,38 @@ namespace Vhaldren.Gameplay.World
             controller.Move(velocity * Time.deltaTime);
         }
 
+        private static readonly RaycastHit[] SightHits = new RaycastHit[16];
+
+        /// <summary>
+        /// Hay vision si ningun obstaculo se interpone entre el centro del enemigo y el
+        /// centro del objetivo. Se ignoran los colliders propios y los del objetivo, asi
+        /// que no depende de acertar a una altura concreta de su capsula.
+        /// </summary>
         private bool HasLineOfSight()
         {
             if (target == null || targetHealth == null)
                 return false;
-            Vector3 origin = transform.position + Vector3.up * 0.95f;
-            Vector3 destination = target.position + Vector3.up * 0.9f;
+            Vector3 origin = controller != null && controller.enabled
+                ? controller.bounds.center
+                : transform.position + Vector3.up * 0.9f;
+            Collider targetCollider = target.GetComponent<Collider>();
+            Vector3 destination = targetCollider != null && targetCollider.enabled
+                ? targetCollider.bounds.center
+                : target.position;
             Vector3 difference = destination - origin;
             float distance = difference.magnitude;
             if (distance <= 0.001f)
                 return true;
-            if (!Physics.Raycast(origin, difference / distance, out RaycastHit hit,
-                distance + 0.15f, Physics.DefaultRaycastLayers, QueryTriggerInteraction.Ignore))
+            int count = Physics.RaycastNonAlloc(origin, difference / distance, SightHits, distance,
+                Physics.DefaultRaycastLayers, QueryTriggerInteraction.Ignore);
+            for (int i = 0; i < count; i++)
+            {
+                Transform hit = SightHits[i].collider.transform;
+                if (hit.IsChildOf(transform) || hit.IsChildOf(target))
+                    continue;
                 return false;
-            return hit.collider != null &&
-                hit.collider.GetComponentInParent<CombatHealth>() == targetHealth;
+            }
+            return true;
         }
 
         private void Respawn()
