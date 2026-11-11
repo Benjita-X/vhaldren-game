@@ -125,6 +125,23 @@ namespace Vhaldren.Gameplay.World
                         targetHealth.ApplyDamage(Mathf.Max(0f, attackDamage));
                     }
                 }
+                else
+                {
+                    // Si pierde el aggro, vuelve a su zona en vez de quedarse
+                    // parado a mitad del camino para siempre.
+                    Vector3 home = spawnPosition - transform.position;
+                    home.y = 0f;
+                    if (home.sqrMagnitude > 1.5f * 1.5f)
+                        move = home.normalized;
+                }
+            }
+            else
+            {
+                // Si muere el jugador, los enemigos se retiran hasta su punto de origen.
+                Vector3 home = spawnPosition - transform.position;
+                home.y = 0f;
+                if (home.sqrMagnitude > 1.5f * 1.5f)
+                    move = home.normalized;
             }
 
             if (move.sqrMagnitude > 0.001f)
