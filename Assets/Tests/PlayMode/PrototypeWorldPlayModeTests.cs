@@ -132,10 +132,16 @@ namespace Vhaldren.Tests
             PlayerMotor motor = player.AddComponent<PlayerMotor>();
             LocalPlayerShooter shooter = player.AddComponent<LocalPlayerShooter>();
 
+            // Preparar la sesion inactiva para no depender de GameObject.Find
+            // ni del orden de inicializacion de otras escenas de Test Runner.
             sessionObject = new GameObject("SessionTest");
+            sessionObject.SetActive(false);
             PrototypeGameSession session = sessionObject.AddComponent<PrototypeGameSession>();
+            typeof(PrototypeGameSession).GetField("player",
+                BindingFlags.Instance | BindingFlags.NonPublic).SetValue(session, player.transform);
             typeof(PrototypeGameSession).GetField("playerRespawnDelay",
                 BindingFlags.Instance | BindingFlags.NonPublic).SetValue(session, 0.1f);
+            sessionObject.SetActive(true);
             yield return null;
 
             health.ApplyDamage(1000f);
