@@ -8,7 +8,7 @@ namespace Vhaldren.Gameplay.Player
 {
     /// <summary>
     /// Prototipo local de disparo hitscan. Apunta al primer punto del mundo bajo el cursor;
-    /// el proyectil de prueba solo deja un trazador, sin sistema de dano.
+    /// el proyectil de prueba aplica dano local al primer objetivo valido.
     /// </summary>
     [DisallowMultipleComponent]
     public sealed class LocalPlayerShooter : MonoBehaviour
@@ -34,6 +34,9 @@ namespace Vhaldren.Gameplay.Player
         public Vector3 LastImpactPoint { get; private set; }
         public int ShotsFired { get; private set; }
         public int HitsLanded { get; private set; }
+        /// <summary>Suma de dano realmente descontado de CombatHealth, sin overkill.</summary>
+        public float TotalDamageDealt { get; private set; }
+        public float LastDamageDealt { get; private set; }
 
         private void Awake()
         {
@@ -164,9 +167,16 @@ namespace Vhaldren.Gameplay.Player
                     CombatHealth health = hitCollider.GetComponentInParent<CombatHealth>();
                     float safeDamage = float.IsNaN(testDamage) || float.IsInfinity(testDamage)
                         ? 0f : Mathf.Max(0f, testDamage);
-                    if (health != null && !health.transform.IsChildOf(transform) &&
-                        health.ApplyDamage(safeDamage) > 0f)
-                        HitsLanded++;
+                    if (health != null && !health.transform.IsChildOf(transform))
+                    {
+                        float applied = health.ApplyDamage(safeDamage);
+                        if (applied > 0f)
+                        {
+                            HitsLanded++;
+                            LastDamageDealt = applied;
+                            TotalDamageDealt += applied;
+                        }
+                    }
                 }
             }
 
