@@ -25,6 +25,13 @@ namespace Vhaldren.Gameplay.CameraSystem
         [SerializeField, Min(0.1f)] private float maxZoom = 1.5f;
         [SerializeField, Min(0f)] private float zoomSharpness = 14f;
 
+        [Header("Obstaculos")]
+        [Tooltip("Acerca temporalmente la camara si una pared tapa al personaje.")]
+        [SerializeField] private bool avoidObstacles = true;
+        [SerializeField, Min(0.01f)] private float obstructionRadius = 0.25f;
+        [SerializeField, Min(0f)] private float obstructionPadding = 0.1f;
+        [SerializeField] private LayerMask obstructionLayers = Physics.DefaultRaycastLayers;
+
         private float targetZoom = 1f;
         private float currentZoom = 1f;
 
@@ -75,6 +82,7 @@ namespace Vhaldren.Gameplay.CameraSystem
             Vector3 desiredPosition = target.position + ZoomedOffset(safeOffset, safeLookOffset);
             if (!IsFinite(desiredPosition))
                 return;
+            desiredPosition = AvoidObstacles(desiredPosition, safeLookOffset, out bool obstructed);
 
             // Sharpness = 0 significa seguimiento inmediato, nunca camara congelada.
             float safeSharpness = IsFinite(followSharpness) ? Mathf.Max(0f, followSharpness) : 0f;
@@ -82,7 +90,11 @@ namespace Vhaldren.Gameplay.CameraSystem
                 ? 1f
                 : 1f - Mathf.Exp(-safeSharpness * Time.deltaTime);
             Vector3 currentPosition = IsFinite(transform.position) ? transform.position : desiredPosition;
-            transform.position = Vector3.Lerp(currentPosition, desiredPosition, blend);
+            // Al aparecer una pared, evitar atravesarla incluso durante el suavizado.
+            // Cuando desaparece, recuperar el zoom con el seguimiento habitual.
+            transform.position = obstructed
+                ? desiredPosition
+                : Vector3.Lerp(currentPosition, desiredPosition, blend);
             KeepFixedAngle(safeOffset, safeLookOffset);
         }
 
@@ -126,8 +138,31 @@ namespace Vhaldren.Gameplay.CameraSystem
             if (!IsFinite(desiredPosition))
                 return;
 
-            transform.position = desiredPosition;
+            transform.position = AvoidObstacles(desiredPosition, safeLookOffset, out _);
             KeepFixedAngle(safeOffset, safeLookOffset);
+        }
+
+        private Vector3 AvoidObstacles(Vector3 desiredPosition, Vector3 safeLookOffset, out bool obstructed)
+        {
+            obstructed = false;
+            if (!avoidObstacles || target == null)
+                return desiredPosition;
+
+            Vector3 focus = target.position + safeLookOffset;
+            Vector3 offsetToCamera = desiredPosition - focus;
+            float distance = offsetToCamera.magnitude;
+            if (!IsFinite(distance) || distance <= 0.001f)
+                return desiredPosition;
+
+            Vector3 direction = offsetToCamera / distance;
+            float radius = IsFinite(obstructionRadius) ? Mathf.Max(0.01f, obstructionRadius) : 0.25f;
+            if (!Physics.SphereCast(focus, radius, direction, out RaycastHit hit, distance,
+                obstructionLayers, QueryTriggerInteraction.Ignore))
+                return desiredPosition;
+
+            obstructed = true;
+            float padding = IsFinite(obstructionPadding) ? Mathf.Max(0f, obstructionPadding) : 0.1f;
+            return focus + direction * Mathf.Max(0f, hit.distance - padding);
         }
 
         private static bool IsFinite(float value) =>

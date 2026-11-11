@@ -13,6 +13,7 @@ namespace Vhaldren.Gameplay.Player
     public sealed class LocalPlayerShooter : MonoBehaviour
     {
         private const int AimHitCapacity = 32;
+        private const int MaxAimHitCapacity = 256;
 
         [SerializeField] private Camera viewCamera;
         [SerializeField] private Transform shotOrigin;
@@ -20,7 +21,7 @@ namespace Vhaldren.Gameplay.Player
         [SerializeField, Min(1f)] private float maxRange = 100f;
         [SerializeField] private LayerMask aimLayers = Physics.DefaultRaycastLayers;
 
-        private readonly RaycastHit[] aimHits = new RaycastHit[AimHitCapacity];
+        private RaycastHit[] aimHits = new RaycastHit[AimHitCapacity];
         private LineRenderer tracer;
         private Material tracerMaterial;
         private float tracerTimeRemaining;
@@ -151,19 +152,36 @@ namespace Vhaldren.Gameplay.Player
             point = Vector3.zero;
             int hitCount = Physics.RaycastNonAlloc(ray, aimHits, range, aimLayers,
                 QueryTriggerInteraction.Ignore);
+            // RaycastNonAlloc no garantiza orden ni exhaustividad al llenar el buffer.
+            // Ampliar una sola vez el buffer reutilizable antes de recurrir a RaycastAll.
+            while (hitCount == aimHits.Length && aimHits.Length < MaxAimHitCapacity)
+            {
+                System.Array.Resize(ref aimHits, aimHits.Length * 2);
+                hitCount = Physics.RaycastNonAlloc(ray, aimHits, range, aimLayers,
+                    QueryTriggerInteraction.Ignore);
+            }
+            RaycastHit[] hits = aimHits;
+            if (hitCount == hits.Length)
+            {
+                // Limitar el buffer persistente y garantizar exhaustividad incluso
+                // si hay mas de 256 colliders; solo en este caso se asigna memoria.
+                hits = Physics.RaycastAll(ray, range, aimLayers, QueryTriggerInteraction.Ignore);
+                hitCount = hits.Length;
+            }
+
             float nearestDistance = float.PositiveInfinity;
             bool found = false;
             for (int i = 0; i < hitCount; i++)
             {
-                Collider hitCollider = aimHits[i].collider;
+                Collider hitCollider = hits[i].collider;
                 if (hitCollider == null || hitCollider.transform == transform ||
                     hitCollider.transform.IsChildOf(transform))
                     continue;
 
-                if (aimHits[i].distance < nearestDistance)
+                if (hits[i].distance < nearestDistance)
                 {
-                    nearestDistance = aimHits[i].distance;
-                    point = aimHits[i].point;
+                    nearestDistance = hits[i].distance;
+                    point = hits[i].point;
                     found = true;
                 }
             }
