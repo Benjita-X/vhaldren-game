@@ -11,12 +11,15 @@ namespace Vhaldren.Tests
     {
         private GameObject player;
         private GameObject enemyObject;
+        private GameObject ground;
 
         [UnityTearDown]
         public IEnumerator TearDown()
         {
             if (enemyObject != null)
                 Object.Destroy(enemyObject);
+            if (ground != null)
+                Object.Destroy(ground);
             if (player != null)
                 Object.Destroy(player);
             yield return null;
@@ -24,6 +27,9 @@ namespace Vhaldren.Tests
 
         private PrototypeEnemy CreateEnemy(float distance, out CombatHealth enemyHealth)
         {
+            ground = GameObject.CreatePrimitive(PrimitiveType.Cube);
+            ground.transform.position = new Vector3(0f, -0.5f, 0f);
+            ground.transform.localScale = new Vector3(60f, 1f, 60f);
             player = new GameObject("PlayerRoot");
             player.transform.position = new Vector3(0f, 1.08f, 0f);
             CharacterController playerCollider = player.AddComponent<CharacterController>();
