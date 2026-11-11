@@ -140,6 +140,22 @@ namespace Vhaldren.Tests
             yield break;
         }
 
+        [UnityTest]
+        public IEnumerator CameraKeepsItsDistanceWhenALowWallIsBetween()
+        {
+            // Justo detras de la pared de 2 m: desde la camara elevada el personaje se sigue
+            // viendo. La camara no debe lanzarse contra su cabeza en cada pared baja.
+            Camera view = Camera.main;
+            Assert.That(view, Is.Not.Null);
+            Teleport(new Vector3(0f, RestHeight, 6.2f));
+            for (int i = 0; i < 30; i++)
+                yield return null;
+
+            float distance = Vector3.Distance(view.transform.position, player.position);
+            Assert.That(distance, Is.GreaterThan(9f),
+                "La camara se acerco de golpe por una pared baja (distancia " + distance.ToString("0.0") + " m).");
+        }
+
         private void Walk(Vector3 direction, float seconds)
         {
             int steps = Mathf.RoundToInt(seconds / Step);
