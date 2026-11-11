@@ -45,7 +45,7 @@ Esta rama incluye modelos originales KayKit Dungeon Remastered (licencia CC0, ve
 
 La primera generación también crea `Assets/ThirdParty/KayKitDungeon/KayKitAtlas.mat`; si decides guardar la escena en Git, añade ambos archivos generados y sus `.meta` después de verificarla.
 
-**Advertencia:** este combate funciona solo en local y no incorpora AnyRPG ni FishNet. Faltan compilación y ejecución de las pruebas en Unity. Consulta [auditoría de sistemas externos e integración](docs/004-AUDITORIA-EXTERNOS-E-INTEGRACION.md) antes de fusionar o añadir multiplayer.
+**Advertencia:** este combate funciona solo en local y no incorpora AnyRPG ni FishNet. Faltan compilación y ejecución de las pruebas en Unity. Consulta [auditoría de sistemas externos e integración](docs/004-AUDITORIA-EXTERNOS-E-INTEGRACION.md) y [auditoría de conexiones, posibles fugas y futuras habilidades](docs/005-CONEXIONES-FUGAS-Y-HABILIDADES.md) antes de fusionar o añadir multiplayer.
 
 ## Cómo está organizado el código
 
