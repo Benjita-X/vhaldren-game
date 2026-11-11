@@ -34,6 +34,8 @@ namespace Vhaldren.Gameplay.Player
         private InputAction moveRightAction;
         private InputAction moveBackAction;
         private InputAction moveForwardAction;
+        private InputAction dashAction;
+        private bool dashRequested;
 #endif
 
         private void Awake()
@@ -77,6 +79,8 @@ namespace Vhaldren.Gameplay.Player
             moveRightAction = new InputAction("MoveRight", InputActionType.Button, "<Keyboard>/d");
             moveBackAction = new InputAction("MoveBack", InputActionType.Button, "<Keyboard>/s");
             moveForwardAction = new InputAction("MoveForward", InputActionType.Button, "<Keyboard>/w");
+            dashAction = new InputAction("Dash", InputActionType.Button, "<Keyboard>/space");
+            dashAction.performed += HandleDashPressed;
 
             moveLeftAction.performed += HandleMovementKeyPressed;
             moveRightAction.performed += HandleMovementKeyPressed;
@@ -94,6 +98,7 @@ namespace Vhaldren.Gameplay.Player
             moveRightAction.Enable();
             moveBackAction.Enable();
             moveForwardAction.Enable();
+            dashAction.Enable();
         }
 
         private void DisableMovementActions()
@@ -102,6 +107,7 @@ namespace Vhaldren.Gameplay.Player
             moveRightAction?.Disable();
             moveBackAction?.Disable();
             moveForwardAction?.Disable();
+            dashAction?.Disable();
         }
 
         private void DisposeMovementActions()
@@ -110,7 +116,15 @@ namespace Vhaldren.Gameplay.Player
             moveRightAction?.Dispose();
             moveBackAction?.Dispose();
             moveForwardAction?.Dispose();
+            dashAction?.Dispose();
             moveLeftAction = moveRightAction = moveBackAction = moveForwardAction = null;
+            dashAction = null;
+        }
+
+        private void HandleDashPressed(InputAction.CallbackContext context)
+        {
+            // Igual que WASD, conservar una pulsacion corta hasta que el motor la lea.
+            dashRequested = true;
         }
 
         private void HandleMovementKeyPressed(InputAction.CallbackContext context)
@@ -160,6 +174,9 @@ namespace Vhaldren.Gameplay.Player
             keyboardMovement.Reset();
             horizontalKeys.Reset();
             verticalKeys.Reset();
+#if ENABLE_INPUT_SYSTEM
+            dashRequested = false;
+#endif
         }
 
         /// <summary>
@@ -250,10 +267,12 @@ namespace Vhaldren.Gameplay.Player
             return Vector2.ClampMagnitude(axes, 1f);
         }
 
-        private static bool ReadDashPressed()
+        private bool ReadDashPressed()
         {
 #if ENABLE_INPUT_SYSTEM
-            return Keyboard.current != null && Keyboard.current.spaceKey.wasPressedThisFrame;
+            bool requested = dashRequested;
+            dashRequested = false;
+            return requested;
 #elif ENABLE_LEGACY_INPUT_MANAGER
             return Input.GetKeyDown(KeyCode.Space);
 #else
