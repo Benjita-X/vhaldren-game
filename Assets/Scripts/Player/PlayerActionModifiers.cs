@@ -41,10 +41,12 @@ namespace Vhaldren.Gameplay.Player
         {
             get
             {
-                float combined = 1f;
+                // Clamp al final: sprint + slow da el mismo resultado
+                // independientemente del orden en el diccionario.
+                double combined = 1d;
                 foreach (Entry effect in effects.Values)
-                    combined = Mathf.Min(4f, combined * effect.SpeedMultiplier);
-                return combined;
+                    combined *= effect.SpeedMultiplier;
+                return (float)System.Math.Min(4d, combined);
             }
         }
 
@@ -57,12 +59,16 @@ namespace Vhaldren.Gameplay.Player
         {
             float safeSpeed = float.IsNaN(speedMultiplier) || float.IsInfinity(speedMultiplier)
                 ? 1f : Mathf.Clamp(speedMultiplier, 0f, 4f);
-            int id = nextId++;
             if (nextId <= 0)
                 nextId = 1;
+            int id = nextId++;
             // En caso de wrap-around, nunca reemplazar silenciosamente otro efecto.
-            while (effects.ContainsKey(id))
+            while (id <= 0 || effects.ContainsKey(id))
+            {
+                if (nextId <= 0)
+                    nextId = 1;
                 id = nextId++;
+            }
             effects.Add(id, new Entry { Locks = locks, SpeedMultiplier = safeSpeed });
             return id;
         }
@@ -71,8 +77,8 @@ namespace Vhaldren.Gameplay.Player
 
         public void ClearModifiers()
         {
+            // Conservar el contador para evitar reutilizar tokens antiguos.
             effects.Clear();
-            nextId = 1;
         }
 
         private void OnDisable() => ClearModifiers();
