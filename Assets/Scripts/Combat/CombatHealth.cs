@@ -57,8 +57,9 @@ namespace Vhaldren.Gameplay.Combat
             if (!IsFinite(amount) || amount <= 0f || currentHealth <= 0f)
                 return 0f;
 
-            float applied = Mathf.Min(MaximumHealth - currentHealth, amount);
-            currentHealth += applied;
+            float available = Mathf.Max(0f, MaximumHealth - currentHealth);
+            float applied = Mathf.Min(available, amount);
+            currentHealth = Mathf.Min(MaximumHealth, currentHealth + applied);
             return applied;
         }
 
