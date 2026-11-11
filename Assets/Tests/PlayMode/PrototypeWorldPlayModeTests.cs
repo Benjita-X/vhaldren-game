@@ -167,9 +167,9 @@ namespace Vhaldren.Tests
         {
             PrototypeEnemy enemy = CreateEnemy(8f, out _);
             float initialDistance = Vector3.Distance(enemy.transform.position, player.transform.position);
-            // El enemigo debe iniciar persecucion sin NavMesh.
-            for (int i = 0; i < 30; i++)
-                yield return null;
+            // El enemigo debe iniciar persecucion sin NavMesh. Se espera tiempo real,
+            // no frames: en modo batch 30 frames duran apenas milisegundos.
+            yield return new WaitForSeconds(0.5f);
             float distance = Vector3.Distance(enemy.transform.position, player.transform.position);
             Assert.That(distance, Is.LessThan(initialDistance - 0.1f));
         }
