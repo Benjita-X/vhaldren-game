@@ -51,6 +51,11 @@ namespace Vhaldren.EditorTools
             if (player == null || camera == null)
                 throw new InvalidOperationException("La escena base no contiene jugador o camara.");
 
+            // Convertir PRIMERO la escena activa en el destino. Si una importacion
+            // o generacion falla, la escena Movement001 original sigue intacta.
+            if (!EditorSceneManager.SaveScene(scene, Destination))
+                throw new InvalidOperationException("No se pudo crear una copia segura del mundo.");
+
             // Borrar solo el circuito de pruebas DENTRO de la copia en memoria.
             foreach (string name in new[] { "Ground", "WallObstacle", "TestCourse" })
             {
@@ -64,6 +69,7 @@ namespace Vhaldren.EditorTools
             if (playerHealth == null)
                 playerHealth = player.AddComponent<CombatHealth>();
             SetFloat(playerHealth, "maximumHealth", 150f);
+            playerHealth.ResetToFull();
 
             Material ground = Mat("SueloBasico", new Color(0.19f, 0.17f, 0.18f));
             Material forest = Mat("Bosque", new Color(0.11f, 0.18f, 0.14f));
@@ -117,6 +123,11 @@ namespace Vhaldren.EditorTools
                 float z = -40f + (float)rng.NextDouble() * 78f;
                 // Zona de entrada y ruta a la diana libre de arboles densos.
                 if (x > -24f && Mathf.Abs(z) < 9f)
+                    continue;
+                // Dejar espacio alrededor de los guardianes para que no
+                // aparezcan atrapados dentro de un tronco aleatorio.
+                if ((new Vector2(x + 21f, z + 7f)).sqrMagnitude < 25f ||
+                    (new Vector2(x + 34f, z - 12f)).sqrMagnitude < 25f)
                     continue;
                 float size = 0.75f + (float)rng.NextDouble() * 0.8f;
                 Tree(props, new Vector3(x, 0f, z), size, bark, leaves);
@@ -330,6 +341,7 @@ namespace Vhaldren.EditorTools
             body.minMoveDistance = 0f;
             CombatHealth health = root.AddComponent<CombatHealth>();
             SetFloat(health, "maximumHealth", hp);
+            health.ResetToFull();
 
             GameObject model = Primitive("Visual enemigo", PrimitiveType.Capsule, root.transform,
                 position, boss ? new Vector3(1.4f, 1.5f, 1.4f) :
