@@ -11,13 +11,14 @@ Actualizado: 11 de noviembre de 2026, por Claude. Si retomas (Claude o Codex), l
 | `audit/correcciones-control-camara-2026-11-10` | #3 | Cámara evita paredes (Codex) |
 | `feature/004-kaykit-combat-slice` | #5 | Sala KayKit, vida y daño, modificadores (Codex) |
 | `audit/claude-004` | #4 | Arreglo de importación KayKit y modificadores conectados al motor |
-| `feature/006-personaje-kaykit` | #6 | **La más completa.** Personaje Rogue encapuchado animado |
+| `feature/006-personaje-kaykit` | #6 | Personaje Rogue encapuchado animado |
+| `feature/007-integracion` | #7 | **La más completa.** 006 + las 14 correcciones finales de Codex en 004 |
 
-Para probar todo: abrir en Unity una copia de `feature/006-personaje-kaykit` y pulsar Play en `Movement001` o `KayKitCombat001`.
+Para probar todo: abrir en Unity una copia de `feature/007-integracion` y pulsar Play en `Movement001` o `KayKitCombat001`.
 
 ## Última verificación
 
-Unity 6000.2.12f1, modo batch, rama 006: EditMode 55 de 55, PlayMode 37 de 37. Nadie ha jugado todavía nada posterior a la rama 001.
+Unity 6000.2.12f1, modo batch, rama 007 con Library limpia: EditMode 60 de 60, PlayMode 39 de 39. Nadie ha jugado todavía nada posterior a la rama 001.
 
 ## Personaje animado (rama 006)
 
@@ -30,10 +31,15 @@ Unity 6000.2.12f1, modo batch, rama 006: EditMode 55 de 55, PlayMode 37 de 37. N
 
 1. Que el dueño juegue la rama 006 y diga qué se siente mal.
 2. Enemigo esqueleto CC0 (ya descargado en `work/terceros/KayKit-Character-Pack-Skeletons-1.0`) que persiga y ataque, usando `CombatHealth`.
-3. Multijugador cooperativo (Netcode for GameObjects) antes de sumar muchas habilidades.
+3. Multijugador cooperativo: elegir UNA red (Netcode for GameObjects o FishNet) con un prototipo de 2 jugadores; el disparo debe validarse en el servidor.
 
 ## Reglas
 
 - No fusionar a `main` sin que el dueño lo apruebe jugando.
 - Cada arreglo con una prueba que fallaba antes. Anotar resultados reales.
 - Dos agentes no deben trabajar en la misma carpeta a la vez.
+
+## Lecciones
+
+- No copiar `Library` de otra carpeta: deja scripts "missing" en las escenas. Borrarla y dejar que Unity reimporte.
+- En EditMode Unity no llama `OnDisable` al cambiar `enabled`.

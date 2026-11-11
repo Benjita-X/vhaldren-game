@@ -40,11 +40,10 @@ namespace Vhaldren.Gameplay.Player
         [SerializeField] private Transform visualRoot;
 
         private CharacterController controller;
+        private PlayerActionModifiers actionModifiers;
         private float verticalSpeed;
         private Vector3 horizontalVelocity;
         private PlayerDash dash;
-        // Opcional: bloqueos y cambios de velocidad que aplican habilidades y estados.
-        private PlayerActionModifiers modifiers;
 
         public Vector3 HorizontalVelocity => horizontalVelocity;
         public bool IsDashing => dash.IsActive;
@@ -59,7 +58,7 @@ namespace Vhaldren.Gameplay.Player
         private void Awake()
         {
             controller = GetComponent<CharacterController>();
-            modifiers = GetComponent<PlayerActionModifiers>();
+            actionModifiers = GetComponent<PlayerActionModifiers>();
             // Con el valor por defecto (1 mm) el CharacterController descarta los pasos
             // pequenos. A muchos FPS todos los pasos de arranque son menores que eso y
             // el personaje no llegaba a moverse nunca. Cero es el valor que recomienda Unity.
@@ -84,6 +83,11 @@ namespace Vhaldren.Gameplay.Player
         {
             dash.Cancel();
             DashMovedThisStep = false;
+            // Evitar que el movimiento anterior reviva al reactivar/respawnear.
+            horizontalVelocity = Vector3.zero;
+            verticalSpeed = 0f;
+            ActualVelocity = Vector3.zero;
+            IsGrounded = false;
         }
 
         /// <summary>
@@ -99,23 +103,21 @@ namespace Vhaldren.Gameplay.Player
             Vector3 move = IsFinite(command.MoveWorld) ? command.MoveWorld : Vector3.zero;
             move.y = 0f;
             move = ClampPlanarMagnitude(move, 1f);
-
-            // Estados como aturdimiento o enraizado: se respetan aqui, en un solo sitio,
-            // para que ninguna habilidad tenga que tocar el motor.
-            bool hasModifiers = modifiers != null && modifiers.isActiveAndEnabled;
-            if (hasModifiers && !modifiers.AllowsMovement)
+            if (actionModifiers != null && !actionModifiers.AllowsMovement)
+            {
+                // Un stun/root debe bloquear de inmediato incluso si hay inercia opcional.
                 move = Vector3.zero;
-            bool dashRequested = command.Dash && (!hasModifiers || modifiers.AllowsDash);
-            float speedMultiplier = hasModifiers ? modifiers.SpeedMultiplier : 1f;
-            if (!IsFinite(speedMultiplier) || speedMultiplier < 0f)
-                speedMultiplier = 1f;
+                horizontalVelocity = Vector3.zero;
+            }
 
             // Mantener contacto estable con el suelo.
             if (controller.isGrounded && verticalSpeed < 0f)
                 verticalSpeed = -2f;
 
             // Suavizar solo el desplazamiento: apuntar con el mouse sigue siendo independiente.
-            float speed = (IsFinite(movementSpeed) ? Mathf.Max(0f, movementSpeed) : 0f) * speedMultiplier;
+            float speed = IsFinite(movementSpeed) ? Mathf.Max(0f, movementSpeed) : 0f;
+            if (actionModifiers != null)
+                speed *= actionModifiers.SpeedMultiplier;
             Vector3 targetHorizontalVelocity = move * speed;
 
             Vector3 facing = IsFinite(command.FaceWorld) ? command.FaceWorld : Vector3.zero;
@@ -126,8 +128,12 @@ namespace Vhaldren.Gameplay.Player
             Vector3 dashPreference = move.sqrMagnitude > 0.0001f
                 ? move
                 : facing != Vector3.zero ? facing : CurrentFacing;
+            bool dashAllowed = actionModifiers == null || actionModifiers.AllowsDash;
+            if (!dashAllowed && dash.IsActive)
+                dash.Cancel();
             float dashTime = dash.Step(
-                dashRequested, dashPreference, dashDuration, dashCooldown, dashBufferTime, deltaTime);
+                dashAllowed && command.Dash, dashPreference, dashDuration,
+                dashCooldown, dashBufferTime, deltaTime);
             DashMovedThisStep = dashTime > 0f;
 
             Vector3 stepHorizontalVelocity;
@@ -188,7 +194,8 @@ namespace Vhaldren.Gameplay.Player
                 horizontalVelocity = Vector3.ClampMagnitude(achieved, horizontalVelocity.magnitude);
             }
 
-            if (facing == Vector3.zero || (hasModifiers && !modifiers.AllowsFacing))
+            if (facing == Vector3.zero ||
+                (actionModifiers != null && !actionModifiers.AllowsFacing))
                 return;
 
             CurrentFacing = facing;

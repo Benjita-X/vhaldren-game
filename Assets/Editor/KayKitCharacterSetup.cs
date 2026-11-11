@@ -18,6 +18,7 @@ namespace Vhaldren.EditorTools
         public const string TexturePath = Folder + "rogue_texture.png";
         public const string MaterialPath = Folder + "RogueHooded.mat";
         public const string ControllerPath = Folder + "RogueHooded.controller";
+        private const string TempControllerPath = Folder + "RogueHooded.tmp.controller";
 
         // Altura del modelo importado (~2,44 m con capucha) llevada a la capsula de 2 m.
         private const float ModelScale = 0.82f;
@@ -142,8 +143,10 @@ namespace Vhaldren.EditorTools
         private static void BuildController()
         {
             Dictionary<string, AnimationClip> clips = LoadClips();
-            AssetDatabase.DeleteAsset(ControllerPath);
-            AnimatorController controller = AnimatorController.CreateAnimatorControllerAtPath(ControllerPath);
+            // Se construye en un archivo temporal y luego se copia encima del existente:
+            // asi el .meta (y su GUID) se conserva y las escenas no pierden la referencia.
+            AssetDatabase.DeleteAsset(TempControllerPath);
+            AnimatorController controller = AnimatorController.CreateAnimatorControllerAtPath(TempControllerPath);
             controller.AddParameter("MoveX", AnimatorControllerParameterType.Float);
             controller.AddParameter("MoveY", AnimatorControllerParameterType.Float);
             controller.AddParameter("Dodge", AnimatorControllerParameterType.Trigger);
@@ -198,6 +201,15 @@ namespace Vhaldren.EditorTools
             shootExit.duration = 0.12f;
 
             EditorUtility.SetDirty(controller);
+            AssetDatabase.SaveAssets();
+            if (AssetDatabase.LoadAssetAtPath<AnimatorController>(ControllerPath) == null)
+            {
+                AssetDatabase.MoveAsset(TempControllerPath, ControllerPath);
+                return;
+            }
+            System.IO.File.Copy(TempControllerPath, ControllerPath, true);
+            AssetDatabase.DeleteAsset(TempControllerPath);
+            AssetDatabase.ImportAsset(ControllerPath, ImportAssetOptions.ForceUpdate);
         }
 
         private static Dictionary<string, AnimationClip> LoadClips()

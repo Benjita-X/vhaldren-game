@@ -15,6 +15,9 @@ namespace Vhaldren.Gameplay.Combat
 
         private CombatHealth health;
         private float respawnAt = float.PositiveInfinity;
+        private float displayedHealth = float.NaN;
+        private float displayedMaximum = float.NaN;
+        private string displayedLabel;
 
         private void OnEnable()
         {
@@ -65,10 +68,19 @@ namespace Vhaldren.Gameplay.Combat
             GUI.color = health.IsDefeated
                 ? new Color(0.9f, 0.55f, 0.55f)
                 : new Color(0.85f, 1f, 0.8f);
-            string label = health.IsDefeated
-                ? "Objetivo derrotado"
-                : $"Diana: {health.CurrentHealth:0}/{health.MaximumHealth:0} PV";
-            GUI.Box(rect, label);
+            // OnGUI puede ejecutarse varias veces por frame. Solo construir texto
+            // al cambiar la vida, en vez de generar basura de GC en cada repaint.
+            float current = health.CurrentHealth;
+            float maximum = health.MaximumHealth;
+            if (displayedLabel == null || current != displayedHealth || maximum != displayedMaximum)
+            {
+                displayedHealth = current;
+                displayedMaximum = maximum;
+                displayedLabel = health.IsDefeated
+                    ? "Objetivo derrotado"
+                    : $"Diana: {current:0}/{maximum:0} PV";
+            }
+            GUI.Box(rect, displayedLabel);
             GUI.color = previousColor;
         }
     }
