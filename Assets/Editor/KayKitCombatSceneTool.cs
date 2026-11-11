@@ -5,6 +5,7 @@ using UnityEditor.SceneManagement;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using Vhaldren.Gameplay.Combat;
+using Vhaldren.Gameplay.Player;
 
 namespace Vhaldren.EditorTools
 {
@@ -47,6 +48,19 @@ namespace Vhaldren.EditorTools
                 return;
 
             Scene scene = EditorSceneManager.OpenScene(SourceScene, OpenSceneMode.Single);
+            GameObject player = null;
+            foreach (GameObject sceneRoot in scene.GetRootGameObjects())
+            {
+                if (sceneRoot.name == "PlayerRoot")
+                {
+                    player = sceneRoot;
+                    break;
+                }
+            }
+            if (player == null)
+                throw new InvalidOperationException("Movement001 no contiene PlayerRoot.");
+            if (player.GetComponent<PlayerActionModifiers>() == null)
+                player.AddComponent<PlayerActionModifiers>();
             Material atlas = GetOrCreateAtlasMaterial();
 
             GameObject root = new GameObject("KayKit Combat 001 - CC0");
@@ -72,11 +86,12 @@ namespace Vhaldren.EditorTools
 
             List<EditorBuildSettingsScene> buildScenes =
                 new List<EditorBuildSettingsScene>(EditorBuildSettings.scenes);
-            if (!buildScenes.Exists(entry => entry.path == CombatScene))
-            {
+            int buildIndex = buildScenes.FindIndex(entry => entry.path == CombatScene);
+            if (buildIndex < 0)
                 buildScenes.Add(new EditorBuildSettingsScene(CombatScene, true));
-                EditorBuildSettings.scenes = buildScenes.ToArray();
-            }
+            else if (!buildScenes[buildIndex].enabled)
+                buildScenes[buildIndex] = new EditorBuildSettingsScene(CombatScene, true);
+            EditorBuildSettings.scenes = buildScenes.ToArray();
 
             AssetDatabase.SaveAssets();
             Debug.Log("[Vhaldren] KayKitCombat001 creada. En Play: WASD, Espacio y clic izquierdo sobre las dianas.");
