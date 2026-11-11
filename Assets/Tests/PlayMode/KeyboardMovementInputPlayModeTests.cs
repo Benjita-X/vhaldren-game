@@ -97,6 +97,72 @@ namespace Vhaldren.Tests
             }
         }
 
+        [Test]
+        public void SpaceTapPressedAndReleasedBeforeMotorUpdateStillStartsDash()
+        {
+            Keyboard keyboard = InputSystem.AddDevice<Keyboard>();
+            GameObject player = new GameObject("DashTapTestPlayer");
+            player.AddComponent<CharacterController>();
+            PlayerMotor motor = player.AddComponent<PlayerMotor>();
+            LocalPlayerInput input = player.AddComponent<LocalPlayerInput>();
+
+            try
+            {
+                InputSystem.QueueStateEvent(keyboard, new KeyboardState(Key.Space));
+                InputSystem.QueueStateEvent(keyboard, new KeyboardState());
+                InputSystem.Update();
+
+                // Un toque muy corto no debe perderse antes de leer el comando.
+                InvokeUpdate(input);
+                Assert.That(motor.DashMovedThisStep, Is.True,
+                    "Un tap de Espacio debe iniciar la esquiva aunque se suelte antes de Update.");
+                Assert.That(motor.IsDashReady, Is.False,
+                    "La esquiva debe activar la espera despues del toque.");
+                Assert.That(ReadDashPressed(input), Is.False,
+                    "La pulsacion guardada debe consumirse una sola vez.");
+            }
+            finally
+            {
+                Object.DestroyImmediate(player);
+            }
+        }
+
+        [Test]
+        public void LosingFocusClearsBufferedSpaceTap()
+        {
+            Keyboard keyboard = InputSystem.AddDevice<Keyboard>();
+            GameObject player = new GameObject("DashFocusTestPlayer");
+            player.AddComponent<CharacterController>();
+            PlayerMotor motor = player.AddComponent<PlayerMotor>();
+            LocalPlayerInput input = player.AddComponent<LocalPlayerInput>();
+
+            try
+            {
+                InputSystem.QueueStateEvent(keyboard, new KeyboardState(Key.Space));
+                InputSystem.QueueStateEvent(keyboard, new KeyboardState());
+                InputSystem.Update();
+
+                const BindingFlags flags = BindingFlags.Instance | BindingFlags.NonPublic;
+                typeof(LocalPlayerInput).GetMethod("OnApplicationFocus", flags)
+                    .Invoke(input, new object[] { false });
+                InvokeUpdate(input);
+                Assert.That(motor.DashMovedThisStep, Is.False,
+                    "No se debe lanzar una esquiva pendiente cuando la ventana pierde el foco.");
+                Assert.That(motor.IsDashReady, Is.True);
+            }
+            finally
+            {
+                Object.DestroyImmediate(player);
+            }
+        }
+
+        private static bool ReadDashPressed(LocalPlayerInput input)
+        {
+            const BindingFlags flags = BindingFlags.Instance | BindingFlags.NonPublic;
+            MethodInfo readDash = typeof(LocalPlayerInput).GetMethod("ReadDashPressed", flags);
+            return (bool)readDash.Invoke(input, null);
+        }
+
         private static void InvokeUpdate(LocalPlayerInput input)
         {
             const System.Reflection.BindingFlags flags =
