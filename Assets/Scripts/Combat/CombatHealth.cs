@@ -73,6 +73,8 @@ namespace Vhaldren.Gameplay.Combat
         {
             if (!initialized)
                 ResetToFull();
+            else
+                currentHealth = Mathf.Clamp(currentHealth, 0f, MaximumHealth);
         }
 
         private static bool IsFinite(float value) =>
