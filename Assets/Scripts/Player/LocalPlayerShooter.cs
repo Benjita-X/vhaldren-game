@@ -13,6 +13,7 @@ namespace Vhaldren.Gameplay.Player
     public sealed class LocalPlayerShooter : MonoBehaviour
     {
         private const int AimHitCapacity = 32;
+        private const int MaxAimHitCapacity = 256;
 
         [SerializeField] private Camera viewCamera;
         [SerializeField] private Transform shotOrigin;
@@ -20,7 +21,7 @@ namespace Vhaldren.Gameplay.Player
         [SerializeField, Min(1f)] private float maxRange = 100f;
         [SerializeField] private LayerMask aimLayers = Physics.DefaultRaycastLayers;
 
-        private readonly RaycastHit[] aimHits = new RaycastHit[AimHitCapacity];
+        private RaycastHit[] aimHits = new RaycastHit[AimHitCapacity];
         private LineRenderer tracer;
         private Material tracerMaterial;
         private float tracerTimeRemaining;
@@ -151,12 +152,19 @@ namespace Vhaldren.Gameplay.Player
             point = Vector3.zero;
             int hitCount = Physics.RaycastNonAlloc(ray, aimHits, range, aimLayers,
                 QueryTriggerInteraction.Ignore);
-            // RaycastNonAlloc no garantiza el orden y puede truncar resultados al llenar
-            // el buffer. En ese caso, recuperar TODOS los impactos para no perder el
-            // obstaculo mas cercano. RaycastAll solo asigna memoria en escenas densas.
-            RaycastHit[] hits = aimHits;
-            if (hitCount == aimHits.Length)
+            // RaycastNonAlloc no garantiza orden ni exhaustividad al llenar el buffer.
+            // Ampliar una sola vez el buffer reutilizable antes de recurrir a RaycastAll.
+            while (hitCount == aimHits.Length && aimHits.Length < MaxAimHitCapacity)
             {
+                System.Array.Resize(ref aimHits, aimHits.Length * 2);
+                hitCount = Physics.RaycastNonAlloc(ray, aimHits, range, aimLayers,
+                    QueryTriggerInteraction.Ignore);
+            }
+            RaycastHit[] hits = aimHits;
+            if (hitCount == hits.Length)
+            {
+                // Limitar el buffer persistente y garantizar exhaustividad incluso
+                // si hay mas de 256 colliders; solo en este caso se asigna memoria.
                 hits = Physics.RaycastAll(ray, range, aimLayers, QueryTriggerInteraction.Ignore);
                 hitCount = hits.Length;
             }
