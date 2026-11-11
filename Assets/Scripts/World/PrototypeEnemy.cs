@@ -33,6 +33,7 @@ namespace Vhaldren.Gameplay.World
         private float respawnAt = float.PositiveInfinity;
         private float provokedUntil;
         private bool defeated;
+        private bool returningHome;
 
         public bool IsBoss => isBoss;
         public bool IsDefeated => defeated;
@@ -73,6 +74,7 @@ namespace Vhaldren.Gameplay.World
         private void HandleDamaged(float damage)
         {
             provokedUntil = Time.time + 12f;
+            returningHome = false;
         }
 
         private void HandleDefeated()
@@ -83,6 +85,7 @@ namespace Vhaldren.Gameplay.World
             respawnAt = Time.time + Mathf.Max(1f, respawnSeconds);
             if (controller != null)
                 controller.enabled = false;
+            returningHome = false;
             if (modelRoot != null)
                 modelRoot.SetActive(false);
             Defeated?.Invoke(this);
@@ -110,10 +113,19 @@ namespace Vhaldren.Gameplay.World
                 fromHome.y = 0f;
 
                 if (fromHome.sqrMagnitude > leashRange * leashRange)
+                    returningHome = true;
+
+                // Una vez fuera de su territorio, volver realmente al origen.
+                // No alternar perseguir/volver cada frame al cruzar el limite.
+                if (returningHome)
                 {
-                    move = (spawnPosition - transform.position);
-                    move.y = 0f;
-                    move = move.sqrMagnitude > 0.001f ? move.normalized : Vector3.zero;
+                    if (fromHome.sqrMagnitude <= 1.5f * 1.5f)
+                    {
+                        returningHome = false;
+                        provokedUntil = 0f;
+                    }
+                    else
+                        move = -fromHome.normalized;
                 }
                 else if (distance <= aggroRange || Time.time < provokedUntil)
                 {
@@ -182,6 +194,7 @@ namespace Vhaldren.Gameplay.World
             fallingSpeed = 0f;
             nextAttackTime = Time.time + 1f;
             provokedUntil = 0f;
+            returningHome = false;
             health.ResetToFull();
             if (modelRoot != null)
                 modelRoot.SetActive(true);
