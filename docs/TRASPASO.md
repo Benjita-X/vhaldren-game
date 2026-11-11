@@ -9,7 +9,7 @@ Actualizado: 11 de noviembre de 2026, por Claude. Si retomas (Claude o Codex), l
 | `feature/001-movimiento-base` | #1 | Control base, circuito de prueba |
 | `feature/002-esquiva-zoom` | #2 | Esquiva y zoom |
 | `audit/correcciones-control-camara-2026-11-10` | #3 | Cámara evita paredes (Codex) |
-| `feature/004-kaykit-combat-slice` | — | Sala KayKit, vida y daño, modificadores (Codex) |
+| `feature/004-kaykit-combat-slice` | #5 | Sala KayKit, vida y daño, modificadores (Codex) |
 | `audit/claude-004` | #4 | Arreglo de importación KayKit y modificadores conectados al motor |
 | `feature/006-personaje-kaykit` | #6 | **La más completa.** Personaje Rogue encapuchado animado |
 
