@@ -6,6 +6,7 @@ using NUnit.Framework;
 using UnityEngine;
 using UnityEngine.TestTools;
 using Vhaldren.Gameplay.Player;
+using Vhaldren.Gameplay.Combat;
 
 namespace Vhaldren.Tests
 {
@@ -224,6 +225,51 @@ namespace Vhaldren.Tests
             Assert.That(shooter.TryGetAimPoint(cursor, out Vector3 aimPoint), Is.True);
             Assert.That(Vector3.Distance(aimPoint, expected), Is.LessThan(0.001f),
                 "El resultado debe ser el mas cercano, incluso con mas de 32 colisiones.");
+        }
+
+        [UnityTest]
+        public IEnumerator TestShotDamagesOnlyTheHitTrainingTarget()
+        {
+            CreateGround(40f);
+            GameObject cameraObject = new GameObject("DamageAimCamera");
+            cameraObject.transform.position = new Vector3(0f, 10f, -10f);
+            cameraObject.transform.rotation = Quaternion.Euler(45f, 0f, 0f);
+            Camera camera = cameraObject.AddComponent<Camera>();
+            createdObjects.Add(cameraObject);
+
+            GameObject player = CreatePlayer(new Vector3(3f, 1.08f, 0f));
+            LocalPlayerShooter shooter = player.AddComponent<LocalPlayerShooter>();
+            SetShooterField(shooter, "viewCamera", camera);
+
+            GameObject target = GameObject.CreatePrimitive(PrimitiveType.Cube);
+            target.name = "DamageableTarget";
+            target.transform.position = new Vector3(0f, 1f, 0f);
+            target.transform.localScale = new Vector3(2f, 2f, 2f);
+            CombatHealth health = target.AddComponent<CombatHealth>();
+            health.ResetToFull();
+            createdObjects.Add(target);
+
+            GameObject other = GameObject.CreatePrimitive(PrimitiveType.Cube);
+            other.name = "OtherDamageableTarget";
+            other.transform.position = new Vector3(6f, 1f, 0f);
+            CombatHealth otherHealth = other.AddComponent<CombatHealth>();
+            otherHealth.ResetToFull();
+            createdObjects.Add(other);
+
+            Physics.SyncTransforms();
+            yield return null;
+
+            Vector2 cursor = new Vector2(Screen.width * 0.5f, Screen.height * 0.5f);
+            Assert.That(shooter.TryGetAimPoint(cursor, out Vector3 point), Is.True);
+            Assert.That(point.x, Is.EqualTo(0f).Within(0.1f));
+            Assert.That(shooter.FireAtScreenPosition(cursor), Is.True);
+
+            Assert.That(health.CurrentHealth, Is.EqualTo(75f).Within(0.01f),
+                "El primer objetivo bajo el cursor debe recibir los 25 PV de dano de prueba.");
+            Assert.That(otherHealth.CurrentHealth, Is.EqualTo(100f),
+                "No se deben aplicar danos a objetivos que no reciben el disparo.");
+            Assert.That(shooter.HitsLanded, Is.EqualTo(1));
+            Assert.That(shooter.ShotsFired, Is.EqualTo(1));
         }
 
         [UnityTest]
