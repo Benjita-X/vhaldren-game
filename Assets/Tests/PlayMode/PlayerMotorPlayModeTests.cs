@@ -299,7 +299,7 @@ namespace Vhaldren.Tests
 
             Assert.That(player.transform.position.z, Is.EqualTo(beforeLock).Within(0.002f),
                 "Bloquear movimiento debe detener inmediatamente tambien la inercia.");
-            Assert.That(motor.HorizontalVelocity.z, Is.Zero.Within(0.001f));
+            Assert.That(motor.HorizontalVelocity.z, Is.EqualTo(0f).Within(0.001f));
             Assert.That(motor.DashMovedThisStep, Is.False,
                 "Un aturdimiento debe poder prohibir una nueva esquiva.");
             Assert.That(modifiers.RemoveModifier(stun), Is.True);
