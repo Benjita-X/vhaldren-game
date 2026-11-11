@@ -46,6 +46,8 @@ namespace Vhaldren.Gameplay.Player
 
         public Vector3 HorizontalVelocity => horizontalVelocity;
         public bool IsDashing => dash.IsActive;
+        // Incluye el ultimo paso, cuando la duracion restante llega exactamente a cero.
+        public bool DashMovedThisStep { get; private set; }
         public bool IsDashReady => dash.IsReady;
         public float DashCooldownRemaining => dash.CooldownRemaining;
         public Vector3 CurrentFacing { get; private set; } = Vector3.forward;
@@ -78,6 +80,7 @@ namespace Vhaldren.Gameplay.Player
         private void OnDisable()
         {
             dash.Cancel();
+            DashMovedThisStep = false;
         }
 
         /// <summary>
@@ -112,6 +115,7 @@ namespace Vhaldren.Gameplay.Player
                 : facing != Vector3.zero ? facing : CurrentFacing;
             float dashTime = dash.Step(
                 command.Dash, dashPreference, dashDuration, dashCooldown, dashBufferTime, deltaTime);
+            DashMovedThisStep = dashTime > 0f;
 
             Vector3 stepHorizontalVelocity;
             if (dashTime > 0f)
