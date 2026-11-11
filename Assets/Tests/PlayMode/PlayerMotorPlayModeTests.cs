@@ -273,6 +273,81 @@ namespace Vhaldren.Tests
         }
 
         [UnityTest]
+        public IEnumerator SkillLocksMovementAndDashWithoutStoppingGravity()
+        {
+            CreateGround(40f);
+            GameObject player = new GameObject("PlayerWithSkillModifiers");
+            player.transform.position = new Vector3(0f, 1.08f, 0f);
+            CharacterController controller = player.AddComponent<CharacterController>();
+            controller.height = 2f;
+            controller.radius = 0.4f;
+            PlayerActionModifiers modifiers = player.AddComponent<PlayerActionModifiers>();
+            PlayerMotor motor = player.AddComponent<PlayerMotor>();
+            createdObjects.Add(player);
+            SetField(motor, "instantHorizontalMovement", false);
+            Physics.SyncTransforms();
+            yield return null;
+
+            for (int i = 0; i < 20; i++)
+                motor.Simulate(new PlayerMotionCommand(Vector3.forward, Vector3.forward), 1f / 60f);
+
+            float beforeLock = player.transform.position.z;
+            int stun = modifiers.AddModifier(
+                PlayerActionModifiers.LockedAction.Movement |
+                PlayerActionModifiers.LockedAction.Dash);
+            motor.Simulate(new PlayerMotionCommand(Vector3.forward, Vector3.forward, true), 1f / 60f);
+
+            Assert.That(player.transform.position.z, Is.EqualTo(beforeLock).Within(0.002f),
+                "Bloquear movimiento debe detener inmediatamente tambien la inercia.");
+            Assert.That(motor.HorizontalVelocity.z, Is.Zero.Within(0.001f));
+            Assert.That(motor.DashMovedThisStep, Is.False,
+                "Un aturdimiento debe poder prohibir una nueva esquiva.");
+            Assert.That(modifiers.RemoveModifier(stun), Is.True);
+
+            motor.Simulate(new PlayerMotionCommand(Vector3.forward, Vector3.forward), 1f / 60f);
+            Assert.That(motor.HorizontalVelocity.z, Is.GreaterThan(0f));
+            Assert.That(player.transform.position.z, Is.GreaterThan(beforeLock));
+        }
+
+        [UnityTest]
+        public IEnumerator SkillCanDisableShotWithoutChangingAimOrHealth()
+        {
+            CreateGround(40f);
+            GameObject cameraObject = new GameObject("AbilityBlockCamera");
+            cameraObject.transform.position = new Vector3(0f, 10f, -10f);
+            cameraObject.transform.rotation = Quaternion.Euler(45f, 0f, 0f);
+            Camera camera = cameraObject.AddComponent<Camera>();
+            createdObjects.Add(cameraObject);
+
+            GameObject player = new GameObject("AbilityBlockPlayer");
+            player.transform.position = new Vector3(3f, 1.08f, 0f);
+            PlayerActionModifiers modifiers = player.AddComponent<PlayerActionModifiers>();
+            LocalPlayerShooter shooter = player.AddComponent<LocalPlayerShooter>();
+            SetShooterField(shooter, "viewCamera", camera);
+            createdObjects.Add(player);
+
+            GameObject target = GameObject.CreatePrimitive(PrimitiveType.Cube);
+            target.transform.position = new Vector3(0f, 1f, 0f);
+            target.transform.localScale = new Vector3(2f, 2f, 2f);
+            CombatHealth health = target.AddComponent<CombatHealth>();
+            createdObjects.Add(target);
+            Physics.SyncTransforms();
+            yield return null;
+
+            int silence = modifiers.AddModifier(PlayerActionModifiers.LockedAction.Attack);
+            Vector2 cursor = new Vector2(Screen.width * 0.5f, Screen.height * 0.5f);
+            Assert.That(shooter.TryGetAimPoint(cursor, out _), Is.True);
+            Assert.That(shooter.FireAtScreenPosition(cursor), Is.False);
+            Assert.That(shooter.ShotsFired, Is.Zero);
+            Assert.That(health.CurrentHealth, Is.EqualTo(100f));
+            modifiers.RemoveModifier(silence);
+
+            Assert.That(shooter.FireAtScreenPosition(cursor), Is.True);
+            Assert.That(shooter.ShotsFired, Is.EqualTo(1));
+            Assert.That(health.CurrentHealth, Is.EqualTo(75f));
+        }
+
+        [UnityTest]
         public IEnumerator CameraRecoversFromNonFiniteOffsetsAndSharpness()
         {
             GameObject target = new GameObject("CameraTarget");
