@@ -37,7 +37,7 @@ namespace Vhaldren.Gameplay.Player
                 return;
 
             if (trail != null)
-                trail.emitting = motor.IsDashing;
+                trail.emitting = motor.IsDashing || motor.DashMovedThisStep;
 
             if (readyIndicator == null)
                 return;
