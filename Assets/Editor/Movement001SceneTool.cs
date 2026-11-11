@@ -137,8 +137,10 @@ namespace Vhaldren.EditorTools
                 Debug.LogError("[Vhaldren] No se pudo crear la malla de la capa.");
                 return;
             }
-            BuildDarkFantasyCharacter(visual.transform, playerMaterial, armorMaterial,
-                capeMaterial, skinMaterial, metalMaterial, leatherMaterial, capeMesh);
+            // Personaje animado CC0 si esta en el proyecto; si no, el muneco de formas basicas.
+            if (!KayKitCharacterSetup.TryAttach(player, visual.transform, motor))
+                BuildDarkFantasyCharacter(visual.transform, playerMaterial, armorMaterial,
+                    capeMaterial, skinMaterial, metalMaterial, leatherMaterial, capeMesh);
             AssignObjectReference(motor, "visualRoot", visual.transform);
 
             GameObject shotOrigin = new GameObject("ShotOrigin");
@@ -277,7 +279,7 @@ namespace Vhaldren.EditorTools
                          player.GetComponent<DashFeedback>() != null &&
                          player.transform.Find("DashTrail") != null &&
                          player.transform.Find("DashTrail").GetComponent<TrailRenderer>() != null &&
-                         visual.GetComponentsInChildren<Renderer>().Length >= 10;
+                         visual.GetComponentsInChildren<Renderer>().Length >= 6;
 
             valid = valid && motor != null && follow != null &&
                     HasValidMovementSettings(motor) && HasValidCameraSettings(follow);

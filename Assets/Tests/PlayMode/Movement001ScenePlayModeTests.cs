@@ -156,6 +156,29 @@ namespace Vhaldren.Tests
                 "La camara se acerco de golpe por una pared baja (distancia " + distance.ToString("0.0") + " m).");
         }
 
+        [UnityTest]
+        public IEnumerator AnimatedCharacterLegsFollowMovementRelativeToAim()
+        {
+            Animator animator = player.GetComponentInChildren<Animator>();
+            Assert.That(animator, Is.Not.Null, "El jugador debe tener el personaje animado.");
+            Assert.That(animator.runtimeAnimatorController, Is.Not.Null);
+            Assert.That(animator.applyRootMotion, Is.False);
+            PlayerAnimationDriver driver = player.GetComponent<PlayerAnimationDriver>();
+            // Sin suavizado: la prueba mide la direccion, no la duracion de la mezcla.
+            typeof(PlayerAnimationDriver)
+                .GetField("dampTime", System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic)
+                .SetValue(driver, 0f);
+
+            // Camina hacia atras (-Z) mirando hacia delante (+Z): piernas hacia atras.
+            for (int i = 0; i < 30; i++)
+            {
+                motor.Simulate(new PlayerMotionCommand(Vector3.back, Vector3.forward), Step);
+                yield return null;
+            }
+            Assert.That(animator.GetFloat("MoveY"), Is.LessThan(-0.5f));
+            Assert.That(Mathf.Abs(animator.GetFloat("MoveX")), Is.LessThan(0.2f));
+        }
+
         private void Walk(Vector3 direction, float seconds)
         {
             int steps = Mathf.RoundToInt(seconds / Step);
