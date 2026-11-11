@@ -467,12 +467,28 @@ namespace Vhaldren.Tests
             Quaternion originalAngle = cameraObject.transform.rotation;
             Assert.That(cameraObject.transform.position.z, Is.GreaterThan(-4f),
                 "La camara debe situarse delante del obstaculo.");
-            Assert.That(Quaternion.Angle(originalAngle, cameraObject.transform.rotation), Is.LessThan(0.01f));
-
             wall.SetActive(false);
             follow.SetTarget(target.transform);
             Assert.That(cameraObject.transform.position.z, Is.EqualTo(-10f).Within(0.01f),
                 "La camara debe recuperar su distancia configurada al eliminar la pared.");
+            Assert.That(Quaternion.Angle(originalAngle, cameraObject.transform.rotation), Is.LessThan(0.01f),
+                "La oclusion no debe cambiar el angulo de la camara.");
+            yield break;
+        }
+
+        [UnityTest]
+        public IEnumerator CameraIgnoresItsOwnPlayerCollider()
+        {
+            GameObject player = CreatePlayer(new Vector3(0f, 1.08f, 0f));
+            GameObject cameraObject = new GameObject("CameraSelfColliderTest");
+            cameraObject.AddComponent<Camera>();
+            SimpleFollowCamera follow = cameraObject.AddComponent<SimpleFollowCamera>();
+            createdObjects.Add(cameraObject);
+            Physics.SyncTransforms();
+
+            follow.SetTarget(player.transform);
+            Assert.That(cameraObject.transform.position.z, Is.EqualTo(-10f).Within(0.01f),
+                "La capsula del jugador no debe tratarse como una pared.");
             yield break;
         }
 
