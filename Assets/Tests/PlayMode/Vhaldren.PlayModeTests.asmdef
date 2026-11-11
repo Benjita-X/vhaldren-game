@@ -2,7 +2,9 @@
   "name": "Vhaldren.PlayModeTests",
   "rootNamespace": "Vhaldren.Tests",
   "references": [
-    "Vhaldren.Gameplay"
+    "Vhaldren.Gameplay",
+    "Unity.InputSystem",
+    "Unity.InputSystem.TestFramework"
   ],
   "includePlatforms": [],
   "excludePlatforms": [],

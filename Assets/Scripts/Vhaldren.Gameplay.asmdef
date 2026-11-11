@@ -1,7 +1,9 @@
 {
   "name": "Vhaldren.Gameplay",
   "rootNamespace": "Vhaldren.Gameplay",
-  "references": [],
+  "references": [
+    "Unity.InputSystem"
+  ],
   "includePlatforms": [],
   "excludePlatforms": [],
   "allowUnsafeCode": false,

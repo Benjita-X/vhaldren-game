@@ -4,6 +4,8 @@ Juego de acción de fantasía oscura con cámara elevada: te mueves con WASD y a
 
 Esta rama contiene la **base de control**: movimiento, esquiva, apuntado, zoom de cámara, un disparo de prueba y una escena-gimnasio para probarlos. Todavía no hay daño, habilidades, animación ni red.
 
+El proyecto usa el paquete Unity Input System 1.18.0 con `Active Input Handling` en Both. Al abrirlo, deja que Unity resuelva el paquete y acepta reiniciar el Editor si lo solicita. Las pulsaciones de WASD se guardan en orden hasta la siguiente lectura para que los taps rápidos no desaparezcan.
+
 - Estado actual, qué está comprobado y qué sigue: [docs/ESTADO.md](docs/ESTADO.md)
 - Qué debe cumplir el control y cómo se verifica: [docs/001-movimiento-contrato.md](docs/001-movimiento-contrato.md)
 
@@ -40,6 +42,7 @@ Si cambias el generador, la escena se vuelve a crear con **Vhaldren → Crear es
 | Archivo | Responsabilidad |
 |---|---|
 | `Assets/Scripts/Player/LocalPlayerInput.cs` | Lee teclado y mouse del jugador local y los convierte en una intención |
+| `Assets/Scripts/Player/KeyboardMovementBuffer.cs` | Conserva el orden de pulsar/soltar WASD cuando varios eventos llegan entre dos lecturas |
 | `Assets/Scripts/Player/OpposingKeysAxis.cs` | Resuelve teclas opuestas pulsadas a la vez (manda la última) |
 | `Assets/Scripts/Player/PlayerMotionCommand.cs` | La intención: hacia dónde moverse y hacia dónde mirar |
 | `Assets/Scripts/Player/PlayerMotor.cs` | Mueve la cápsula física, aplica gravedad y gira el modelo. No lee teclado ni mouse |

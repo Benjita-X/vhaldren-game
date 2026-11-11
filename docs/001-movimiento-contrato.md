@@ -8,8 +8,8 @@ Qué debe cumplir el control del personaje y con qué se comprueba. Si el códig
 |---|---|---|
 | 1 | WASD mueve en direcciones relativas a la cámara | Jugando |
 | 2 | La diagonal no es más rápida que una dirección recta | `DiagonalInputDoesNotExceedConfiguredSpeed` |
-| 3 | Un toque de un solo paso mueve al personaje y acepta la dirección contraria de inmediato | `OneFrameMovementTapsRespondImmediatelyAndReverseDirection` |
-| 4 | Con dos teclas opuestas pulsadas manda la última; mientras haya una tecla pulsada, el personaje no se detiene | `OpposingKeysAxisTests` |
+| 3 | Un toque, incluso si se pulsa y suelta entre lecturas, mueve al personaje una vez y acepta la dirección contraria de inmediato | `OneFrameMovementTapsRespondImmediatelyAndReverseDirection`, `TapPressedAndReleasedBeforeReadStillMovesForOneStep` |
+| 4 | Con dos teclas opuestas pulsadas manda el último evento; los taps A/D dentro de una misma actualización conservan el orden | `OpposingKeysAxisTests`, `KeyboardMovementInputPlayModeTests` |
 | 5 | El movimiento no depende de los FPS: arranca y alcanza su velocidad también a 1000 FPS | `AcceleratedMovementStartsAtHighFrameRates`, `AcceleratedMovementKeepsSpeedAndStopsCleanly` |
 | 6 | El personaje no atraviesa paredes y se desliza a lo largo de ellas | `CharacterControllerStopsAtWallAndSlidesAlongIt`, `SlidesAlongTheDiagonalWallWithoutCrossingIt` |
 | 7 | Pasa por un hueco de 1,4 m, sube un escalón de 25 cm, sube una rampa de 12° y cae al suelo | `Movement001ScenePlayModeTests` |
@@ -29,9 +29,10 @@ Qué debe cumplir el control del personaje y con qué se comprueba. Si el códig
 
 ## Estructura
 
-`LocalPlayerInput` → `PlayerMotionCommand` → `PlayerMotor`. La cámara es independiente.
+`LocalPlayerInput` → `KeyboardMovementBuffer` / `PlayerMotionCommand` → `PlayerMotor`. La cámara es independiente.
 
 - El motor no lee teclado, mouse ni cámara: solo recibe intenciones en espacio del mundo. Así, más adelante, la misma intención podrá venir de la red o de una IA.
+- El adaptador local usa Input System `InputAction` para recibir cada pulsar/soltar, y conserva un tap hasta que el motor lo lea; los callbacks se prueban en PlayMode con cuatro eventos dentro de una sola actualización.
 - `VisualRoot` es hijo de `PlayerRoot`. El modelo gira; la cápsula de colisión no.
 - La única colisión del jugador es el `CharacterController`. Las piezas del modelo no llevan colliders.
 - `CurrentFacing` es la dirección **objetivo**; el giro visible del modelo la alcanza a 1080°/s.

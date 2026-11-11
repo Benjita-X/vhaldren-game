@@ -25,8 +25,16 @@ namespace Vhaldren.Gameplay.Player
         private LocalPlayerShooter shooter;
         private OpposingKeysAxis horizontalKeys;
         private OpposingKeysAxis verticalKeys;
+        private readonly KeyboardMovementBuffer keyboardMovement = new KeyboardMovementBuffer();
         private SimpleFollowCamera followCamera;
         private Camera followCameraSource;
+
+#if ENABLE_INPUT_SYSTEM
+        private InputAction moveLeftAction;
+        private InputAction moveRightAction;
+        private InputAction moveBackAction;
+        private InputAction moveForwardAction;
+#endif
 
         private void Awake()
         {
@@ -42,17 +50,114 @@ namespace Vhaldren.Gameplay.Player
         private void OnDisable()
         {
             ForgetHeldKeys();
+#if ENABLE_INPUT_SYSTEM
+            DisableMovementActions();
+#endif
         }
+
+#if ENABLE_INPUT_SYSTEM
+        private void OnEnable()
+        {
+            CreateMovementActions();
+            EnableMovementActions();
+            SynchronizeHeldKeys();
+        }
+
+        private void OnDestroy()
+        {
+            DisposeMovementActions();
+        }
+
+        private void CreateMovementActions()
+        {
+            if (moveLeftAction != null)
+                return;
+
+            moveLeftAction = new InputAction("MoveLeft", InputActionType.Button, "<Keyboard>/a");
+            moveRightAction = new InputAction("MoveRight", InputActionType.Button, "<Keyboard>/d");
+            moveBackAction = new InputAction("MoveBack", InputActionType.Button, "<Keyboard>/s");
+            moveForwardAction = new InputAction("MoveForward", InputActionType.Button, "<Keyboard>/w");
+
+            moveLeftAction.performed += HandleMovementKeyPressed;
+            moveRightAction.performed += HandleMovementKeyPressed;
+            moveBackAction.performed += HandleMovementKeyPressed;
+            moveForwardAction.performed += HandleMovementKeyPressed;
+            moveLeftAction.canceled += HandleMovementKeyReleased;
+            moveRightAction.canceled += HandleMovementKeyReleased;
+            moveBackAction.canceled += HandleMovementKeyReleased;
+            moveForwardAction.canceled += HandleMovementKeyReleased;
+        }
+
+        private void EnableMovementActions()
+        {
+            moveLeftAction.Enable();
+            moveRightAction.Enable();
+            moveBackAction.Enable();
+            moveForwardAction.Enable();
+        }
+
+        private void DisableMovementActions()
+        {
+            moveLeftAction?.Disable();
+            moveRightAction?.Disable();
+            moveBackAction?.Disable();
+            moveForwardAction?.Disable();
+        }
+
+        private void DisposeMovementActions()
+        {
+            moveLeftAction?.Dispose();
+            moveRightAction?.Dispose();
+            moveBackAction?.Dispose();
+            moveForwardAction?.Dispose();
+            moveLeftAction = moveRightAction = moveBackAction = moveForwardAction = null;
+        }
+
+        private void HandleMovementKeyPressed(InputAction.CallbackContext context)
+        {
+            keyboardMovement.SetPressed(GetMovementKey(context.action), true);
+        }
+
+        private void HandleMovementKeyReleased(InputAction.CallbackContext context)
+        {
+            keyboardMovement.SetPressed(GetMovementKey(context.action), false);
+        }
+
+        private KeyboardMovementBuffer.Key GetMovementKey(InputAction action)
+        {
+            if (action == moveLeftAction) return KeyboardMovementBuffer.Key.Left;
+            if (action == moveRightAction) return KeyboardMovementBuffer.Key.Right;
+            if (action == moveBackAction) return KeyboardMovementBuffer.Key.Back;
+            return KeyboardMovementBuffer.Key.Forward;
+        }
+
+        private void SynchronizeHeldKeys()
+        {
+            Keyboard keyboard = Keyboard.current;
+            if (keyboard == null)
+                return;
+
+            keyboardMovement.SetPressed(KeyboardMovementBuffer.Key.Left, keyboard.aKey.isPressed);
+            keyboardMovement.SetPressed(KeyboardMovementBuffer.Key.Right, keyboard.dKey.isPressed);
+            keyboardMovement.SetPressed(KeyboardMovementBuffer.Key.Back, keyboard.sKey.isPressed);
+            keyboardMovement.SetPressed(KeyboardMovementBuffer.Key.Forward, keyboard.wKey.isPressed);
+        }
+#endif
 
         private void OnApplicationFocus(bool hasFocus)
         {
             // Una tecla soltada fuera de la ventana no debe seguir contando como pulsada.
             if (!hasFocus)
                 ForgetHeldKeys();
+#if ENABLE_INPUT_SYSTEM
+            else
+                SynchronizeHeldKeys();
+#endif
         }
 
         private void ForgetHeldKeys()
         {
+            keyboardMovement.Reset();
             horizontalKeys.Reset();
             verticalKeys.Reset();
         }
@@ -127,28 +232,21 @@ namespace Vhaldren.Gameplay.Player
 
         private Vector2 ReadMovement()
         {
-            bool left = false, right = false, back = false, forward = false;
-            // "Pulsada ahora" o "bajo en este frame": un toque mas corto que un frame
-            // (se pulsa y se suelta entre dos lecturas) tambien cuenta como un paso.
 #if ENABLE_INPUT_SYSTEM
-            Keyboard keyboard = Keyboard.current;
-            if (keyboard != null)
-            {
-                left = keyboard.aKey.isPressed || keyboard.aKey.wasPressedThisFrame;
-                right = keyboard.dKey.isPressed || keyboard.dKey.wasPressedThisFrame;
-                back = keyboard.sKey.isPressed || keyboard.sKey.wasPressedThisFrame;
-                forward = keyboard.wKey.isPressed || keyboard.wKey.wasPressedThisFrame;
-            }
+            keyboardMovement.Consume(out float horizontal, out float vertical);
+            Vector2 axes = new Vector2(horizontal, vertical);
 #elif ENABLE_LEGACY_INPUT_MANAGER
-            left = Input.GetKey(KeyCode.A) || Input.GetKeyDown(KeyCode.A);
-            right = Input.GetKey(KeyCode.D) || Input.GetKeyDown(KeyCode.D);
-            back = Input.GetKey(KeyCode.S) || Input.GetKeyDown(KeyCode.S);
-            forward = Input.GetKey(KeyCode.W) || Input.GetKeyDown(KeyCode.W);
-#endif
+            bool left = Input.GetKey(KeyCode.A) || Input.GetKeyDown(KeyCode.A);
+            bool right = Input.GetKey(KeyCode.D) || Input.GetKeyDown(KeyCode.D);
+            bool back = Input.GetKey(KeyCode.S) || Input.GetKeyDown(KeyCode.S);
+            bool forward = Input.GetKey(KeyCode.W) || Input.GetKeyDown(KeyCode.W);
             // Teclas opuestas a la vez: manda la ultima pulsada (ver OpposingKeysAxis).
             Vector2 axes = new Vector2(
                 horizontalKeys.Resolve(left, right),
                 verticalKeys.Resolve(back, forward));
+#else
+            Vector2 axes = Vector2.zero;
+#endif
             return Vector2.ClampMagnitude(axes, 1f);
         }
 
