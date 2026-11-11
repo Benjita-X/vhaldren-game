@@ -70,6 +70,10 @@ namespace Vhaldren.EditorTools
                 playerHealth = player.AddComponent<CombatHealth>();
             SetFloat(playerHealth, "maximumHealth", 150f);
             playerHealth.ResetToFull();
+            CombatDamageFeedback playerFeedback = player.GetComponent<CombatDamageFeedback>();
+            if (playerFeedback == null)
+                playerFeedback = player.AddComponent<CombatDamageFeedback>();
+            playerFeedback.ConfigureForPlayer();
 
             Material ground = Mat("SueloBasico", new Color(0.19f, 0.17f, 0.18f));
             Material forest = Mat("Bosque", new Color(0.11f, 0.18f, 0.14f));
@@ -418,6 +422,9 @@ namespace Vhaldren.EditorTools
             CombatHealth health = root.AddComponent<CombatHealth>();
             SetFloat(health, "maximumHealth", hp);
             health.ResetToFull();
+            // Persistir el feedback en escenas nuevas; las escenas existentes
+            // tambien quedan cubiertas por PrototypeEnemy.Awake.
+            root.AddComponent<CombatDamageFeedback>().ConfigureForEnemy(boss);
 
             GameObject model = Primitive("Visual enemigo", PrimitiveType.Capsule, root.transform,
                 position, boss ? new Vector3(1.4f, 1.5f, 1.4f) :

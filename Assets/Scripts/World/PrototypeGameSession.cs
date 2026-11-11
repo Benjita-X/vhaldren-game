@@ -31,6 +31,7 @@ namespace Vhaldren.Gameplay.World
         private float respawnAt = float.PositiveInfinity;
         private string statusText = "";
         private string healText = "";
+        private string combatText = "";
         private float nextHudRefresh;
         private int minionCount;
         private bool bossDefeated;
@@ -50,6 +51,13 @@ namespace Vhaldren.Gameplay.World
             playerHealth = player.GetComponent<CombatHealth>();
             playerMotor = player.GetComponent<PlayerMotor>();
             playerShooter = player.GetComponent<LocalPlayerShooter>();
+            if (playerHealth != null)
+            {
+                CombatDamageFeedback incoming = player.GetComponent<CombatDamageFeedback>();
+                if (incoming == null)
+                    incoming = player.gameObject.AddComponent<CombatDamageFeedback>();
+                incoming.ConfigureForPlayer();
+            }
             if (playerHealth != null)
                 playerHealth.Defeated += OnPlayerDefeated;
 
@@ -144,6 +152,11 @@ namespace Vhaldren.Gameplay.World
                     (bossDefeated ? "DERROTADO" : "PENDIENTE");
                 healText = Time.time >= healReadyAt ? "Q: curar +35 PV" :
                     "Q: pocion en " + Mathf.CeilToInt(healReadyAt - Time.time) + " s";
+                combatText = playerShooter != null
+                    ? "IMPACTOS: " + playerShooter.HitsLanded +
+                      "  |  DANO TOTAL: " + playerShooter.TotalDamageDealt.ToString("0.#") +
+                      " PV  |  ULTIMO GOLPE: " + playerShooter.LastDamageDealt.ToString("0.#")
+                    : "Sin arma equipada";
             }
         }
 
@@ -167,11 +180,12 @@ namespace Vhaldren.Gameplay.World
         {
             if (playerHealth == null)
                 return;
-            const float height = 75f;
-            Rect box = new Rect(12f, 12f, Mathf.Min(Screen.width - 24f, 850f), height);
+            const float height = 100f;
+            Rect box = new Rect(12f, 12f, Mathf.Max(240f, Mathf.Min(Screen.width - 24f, 900f)), height);
             GUI.Box(box, "");
             GUI.Label(new Rect(22f, 16f, box.width - 20f, 22f), statusText);
-            GUI.Label(new Rect(22f, 37f, box.width - 20f, 22f),
+            GUI.Label(new Rect(22f, 40f, box.width - 20f, 22f), combatText);
+            GUI.Label(new Rect(22f, 65f, box.width - 20f, 22f),
                 "WASD mover | Espacio esquivar | Mouse apuntar/disparar | " + healText);
             if (playerHealth.IsDefeated)
                 GUI.Box(new Rect(Screen.width / 2f - 165f, Screen.height / 2f - 40f,
