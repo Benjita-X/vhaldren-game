@@ -83,7 +83,7 @@ namespace Vhaldren.EditorTools
             Material purple = Mat("Jefe", new Color(0.42f, 0.16f, 0.52f));
             Material atlas = AssetDatabase.LoadAssetAtPath<Material>(AtlasPath);
 
-            GameObject world = new GameObject("World008 - 90x90 - Dark Fantasy");
+            GameObject world = new GameObject("World008 - 92x92 - Dark Fantasy");
             Transform root = world.transform;
             Transform environment = ChildRoot(root, "Terreno y regiones");
             Transform props = ChildRoot(root, "Naturaleza y ruinas");
@@ -180,7 +180,12 @@ namespace Vhaldren.EditorTools
             Enemy("JEFE - Caballero de sangre", enemies, player.transform, new Vector3(0f, 1.08f, 32f),
                 purple, 320f, 18f, 2.5f, true);
 
-            world.AddComponent<PrototypeGameSession>();
+            PrototypeGameSession session = world.AddComponent<PrototypeGameSession>();
+            // Guardar la referencia real en la escena. No depender de una
+            // busqueda global por nombre cuando se cargan varias escenas.
+            SerializedObject sessionData = new SerializedObject(session);
+            sessionData.FindProperty("player").objectReferenceValue = player.transform;
+            sessionData.ApplyModifiedPropertiesWithoutUndo();
 
             if (!EditorSceneManager.SaveScene(scene, Destination))
                 throw new InvalidOperationException("No se pudo guardar WorldPrototype001.");
@@ -196,8 +201,79 @@ namespace Vhaldren.EditorTools
             }
             EditorBuildSettings.scenes = settings.ToArray();
             AssetDatabase.SaveAssets();
+            if (!ValidateWorldScene(false))
+                throw new InvalidOperationException("El mundo generado no supero la validacion estructural.");
             Debug.Log("[Vhaldren] Mundo 008 generado: abre WorldPrototype001. " +
                 "Recorre bosque, ruinas y altar, combate 6 enemigos y usa Q para curarte.");
+        }
+
+        [MenuItem("Vhaldren/Validar mundo jugable 008")]
+        public static void ValidateWorld()
+        {
+            ValidateWorldScene(true);
+        }
+
+        private static bool ValidateWorldScene(bool showSuccess)
+        {
+            Scene scene = SceneManager.GetActiveScene();
+            if (scene.path != Destination)
+            {
+                Debug.LogError("[Vhaldren] Abre WorldPrototype001 para validar el mapa.");
+                return false;
+            }
+
+            GameObject player = GetRoot(scene, "PlayerRoot");
+            GameObject camera = GetRoot(scene, "MainCamera");
+            GameObject world = GetRoot(scene, "World008 - 92x92 - Dark Fantasy");
+            if (player == null || camera == null || world == null)
+            {
+                Debug.LogError("[Vhaldren] Faltan el jugador, la camara o el mundo generado.");
+                return false;
+            }
+
+            PrototypeGameSession session = world.GetComponent<PrototypeGameSession>();
+            Transform ground = world.transform.Find("Terreno y regiones/Suelo fisico");
+            PrototypeEnemy[] enemies = world.GetComponentsInChildren<PrototypeEnemy>(true);
+            CombatHealth health = player.GetComponent<CombatHealth>();
+            bool valid = player.GetComponent<PlayerMotor>() != null &&
+                player.GetComponent<LocalPlayerShooter>() != null &&
+                player.GetComponent<CharacterController>() != null &&
+                health != null && health.MaximumHealth >= 150f &&
+                camera.GetComponent<Camera>() != null &&
+                session != null &&
+                ground != null && ground.GetComponent<Collider>() != null &&
+                enemies.Length == 6;
+
+            int bosses = 0;
+            foreach (PrototypeEnemy enemy in enemies)
+            {
+                if (enemy == null || enemy.GetComponent<CharacterController>() == null ||
+                    enemy.GetComponent<CombatHealth>() == null)
+                    valid = false;
+                if (enemy != null)
+                {
+                    if (enemy.IsBoss)
+                        bosses++;
+                    SerializedProperty targetProperty =
+                        new SerializedObject(enemy).FindProperty("target");
+                    if (targetProperty == null || targetProperty.objectReferenceValue != player.transform)
+                        valid = false;
+                }
+            }
+            valid = valid && bosses == 1;
+            if (session != null)
+            {
+                SerializedProperty playerProperty =
+                    new SerializedObject(session).FindProperty("player");
+                valid = valid && playerProperty != null &&
+                    playerProperty.objectReferenceValue == player.transform;
+            }
+
+            if (!valid)
+                Debug.LogError("[Vhaldren] Validacion fallida: revisar vida, enemigos, suelo o referencias.");
+            else if (showSuccess)
+                Debug.Log("[Vhaldren] Estructura del mundo correcta: 6 enemigos, jefe, suelo y referencias.");
+            return valid;
         }
 
         private static Transform ChildRoot(Transform parent, string name)
