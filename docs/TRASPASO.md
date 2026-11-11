@@ -11,7 +11,7 @@ Actualizado: 11 de noviembre de 2026, por Claude. Si retomas (Claude o Codex), l
 | `audit/correcciones-control-camara-2026-11-10` | #3 | Cámara evita paredes (Codex) |
 | `feature/004-kaykit-combat-slice` | — | Sala KayKit, vida y daño, modificadores (Codex) |
 | `audit/claude-004` | #4 | Arreglo de importación KayKit y modificadores conectados al motor |
-| `feature/006-personaje-kaykit` | #5 | **La más completa.** Personaje Rogue encapuchado animado |
+| `feature/006-personaje-kaykit` | #6 | **La más completa.** Personaje Rogue encapuchado animado |
 
 Para probar todo: abrir en Unity una copia de `feature/006-personaje-kaykit` y pulsar Play en `Movement001` o `KayKitCombat001`.
 
