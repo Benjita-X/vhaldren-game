@@ -151,19 +151,29 @@ namespace Vhaldren.Gameplay.Player
             point = Vector3.zero;
             int hitCount = Physics.RaycastNonAlloc(ray, aimHits, range, aimLayers,
                 QueryTriggerInteraction.Ignore);
+            // RaycastNonAlloc no garantiza el orden y puede truncar resultados al llenar
+            // el buffer. En ese caso, recuperar TODOS los impactos para no perder el
+            // obstaculo mas cercano. RaycastAll solo asigna memoria en escenas densas.
+            RaycastHit[] hits = aimHits;
+            if (hitCount == aimHits.Length)
+            {
+                hits = Physics.RaycastAll(ray, range, aimLayers, QueryTriggerInteraction.Ignore);
+                hitCount = hits.Length;
+            }
+
             float nearestDistance = float.PositiveInfinity;
             bool found = false;
             for (int i = 0; i < hitCount; i++)
             {
-                Collider hitCollider = aimHits[i].collider;
+                Collider hitCollider = hits[i].collider;
                 if (hitCollider == null || hitCollider.transform == transform ||
                     hitCollider.transform.IsChildOf(transform))
                     continue;
 
-                if (aimHits[i].distance < nearestDistance)
+                if (hits[i].distance < nearestDistance)
                 {
-                    nearestDistance = aimHits[i].distance;
-                    point = aimHits[i].point;
+                    nearestDistance = hits[i].distance;
+                    point = hits[i].point;
                     found = true;
                 }
             }
