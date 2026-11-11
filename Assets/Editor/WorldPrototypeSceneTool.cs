@@ -319,7 +319,10 @@ namespace Vhaldren.EditorTools
         {
             GameObject root = new GameObject(name);
             root.transform.SetParent(parent, false);
-            root.transform.position = position;
+            // El jefe mide 2,8 m: ajustar altura inicial para no enterrarlo.
+            root.transform.position = boss
+                ? new Vector3(position.x, 1.48f, position.z)
+                : position;
             CharacterController body = root.AddComponent<CharacterController>();
             body.height = boss ? 2.8f : 2f;
             body.radius = boss ? 0.65f : 0.42f;
