@@ -180,6 +180,53 @@ namespace Vhaldren.Tests
         }
 
         [UnityTest]
+        public IEnumerator AimUsesNearestHitEvenWhenMoreThan32CollidersOverlapTheRay()
+        {
+            GameObject cameraObject = new GameObject("DenseAimCamera");
+            cameraObject.transform.position = new Vector3(0f, 10f, -10f);
+            cameraObject.transform.rotation = Quaternion.Euler(45f, 0f, 0f);
+            Camera camera = cameraObject.AddComponent<Camera>();
+            createdObjects.Add(cameraObject);
+
+            GameObject player = CreatePlayer(new Vector3(5f, 1f, 0f));
+            LocalPlayerShooter shooter = player.AddComponent<LocalPlayerShooter>();
+            SetShooterField(shooter, "viewCamera", camera);
+
+            // Crear primero los objetos lejanos para no depender del orden del buffer fisico.
+            for (int i = 0; i < 48; i++)
+            {
+                GameObject obstacle = GameObject.CreatePrimitive(PrimitiveType.Cube);
+                obstacle.transform.position = cameraObject.transform.position
+                    + cameraObject.transform.forward * (12f - i * 0.2f);
+                obstacle.transform.localScale = Vector3.one * 0.12f;
+                createdObjects.Add(obstacle);
+            }
+            Physics.SyncTransforms();
+            yield return null;
+
+            Vector2 cursor = new Vector2(Screen.width * 0.5f, Screen.height * 0.5f);
+            Ray ray = camera.ScreenPointToRay(cursor);
+            RaycastHit[] allHits = Physics.RaycastAll(ray, 100f,
+                Physics.DefaultRaycastLayers, QueryTriggerInteraction.Ignore);
+            Assert.That(allHits.Length, Is.GreaterThan(32), "La prueba debe saturar el buffer inicial.");
+
+            float nearestDistance = float.PositiveInfinity;
+            Vector3 expected = Vector3.zero;
+            foreach (RaycastHit hit in allHits)
+            {
+                if (hit.distance < nearestDistance)
+                {
+                    nearestDistance = hit.distance;
+                    expected = hit.point;
+                }
+            }
+
+            Assert.That(shooter.TryGetAimPoint(cursor, out Vector3 aimPoint), Is.True);
+            Assert.That(Vector3.Distance(aimPoint, expected), Is.LessThan(0.001f),
+                "El resultado debe ser el mas cercano, incluso con mas de 32 colisiones.");
+        }
+
+        [UnityTest]
         public IEnumerator CameraRecoversFromNonFiniteOffsetsAndSharpness()
         {
             GameObject target = new GameObject("CameraTarget");
@@ -289,6 +336,32 @@ namespace Vhaldren.Tests
         }
 
         [UnityTest]
+        public IEnumerator DashTrailIncludesTheFinalMovementStep()
+        {
+            CreateGround();
+            GameObject player = CreatePlayer(new Vector3(0f, 1.08f, 0f));
+            PlayerMotor motor = player.GetComponent<PlayerMotor>();
+            TrailRenderer trail = player.AddComponent<TrailRenderer>();
+            trail.emitting = false;
+            DashFeedback feedback = player.AddComponent<DashFeedback>();
+
+            const BindingFlags flags = BindingFlags.Instance | BindingFlags.NonPublic;
+            typeof(DashFeedback).GetField("trail", flags).SetValue(feedback, trail);
+            MethodInfo lateUpdate = typeof(DashFeedback).GetMethod("LateUpdate", flags);
+
+            motor.Simulate(new PlayerMotionCommand(Vector3.zero, Vector3.forward, true), 0.18f);
+            Assert.That(motor.IsDashing, Is.False, "La duracion restante termino en este paso.");
+            Assert.That(motor.DashMovedThisStep, Is.True);
+            lateUpdate.Invoke(feedback, null);
+            Assert.That(trail.emitting, Is.True, "La estela debe cubrir el ultimo paso de esquiva.");
+
+            motor.Simulate(new PlayerMotionCommand(Vector3.zero, Vector3.forward), 0.02f);
+            lateUpdate.Invoke(feedback, null);
+            Assert.That(trail.emitting, Is.False, "Al siguiente paso la estela debe apagarse.");
+            yield break;
+        }
+
+        [UnityTest]
         public IEnumerator DashCoversItsDistanceAtAnyFrameRate()
         {
             CreateGround(60f);
@@ -370,6 +443,37 @@ namespace Vhaldren.Tests
 
             float third = DashForward(motor, step);
             Assert.That(third, Is.EqualTo(4.5f).Within(0.08f));
+        }
+
+        [UnityTest]
+        public IEnumerator CameraMovesInFrontOfObstaclesAndRestoresDistanceWhenClear()
+        {
+            GameObject target = new GameObject("CameraObstacleTarget");
+            target.transform.position = new Vector3(0f, 1f, 0f);
+            createdObjects.Add(target);
+
+            GameObject wall = GameObject.CreatePrimitive(PrimitiveType.Cube);
+            wall.transform.position = new Vector3(0f, 5f, -4f);
+            wall.transform.localScale = new Vector3(6f, 10f, 0.5f);
+            createdObjects.Add(wall);
+
+            GameObject cameraObject = new GameObject("CameraObstacleTest");
+            cameraObject.AddComponent<Camera>();
+            SimpleFollowCamera follow = cameraObject.AddComponent<SimpleFollowCamera>();
+            createdObjects.Add(cameraObject);
+            Physics.SyncTransforms();
+
+            follow.SetTarget(target.transform);
+            Quaternion originalAngle = cameraObject.transform.rotation;
+            Assert.That(cameraObject.transform.position.z, Is.GreaterThan(-4f),
+                "La camara debe situarse delante del obstaculo.");
+            Assert.That(Quaternion.Angle(originalAngle, cameraObject.transform.rotation), Is.LessThan(0.01f));
+
+            wall.SetActive(false);
+            follow.SetTarget(target.transform);
+            Assert.That(cameraObject.transform.position.z, Is.EqualTo(-10f).Within(0.01f),
+                "La camara debe recuperar su distancia configurada al eliminar la pared.");
+            yield break;
         }
 
         [UnityTest]
