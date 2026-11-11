@@ -119,7 +119,7 @@ namespace Vhaldren.Gameplay.World
                 // No alternar perseguir/volver cada frame al cruzar el limite.
                 if (returningHome)
                 {
-                    if (fromHome.sqrMagnitude <= 1.5f * 1.5f)
+                    if (fromHome.sqrMagnitude <= 0.75f * 0.75f)
                     {
                         returningHome = false;
                         provokedUntil = 0f;
