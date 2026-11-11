@@ -28,6 +28,18 @@ Prioridades del dueño del juego:
 - Personaje provisional hecho con formas básicas de Unity.
 - WASD usa acciones del Input System que conservan el orden de pulsar y soltar dentro de un mismo frame; `Active Input Handling` queda en Both para mantener la entrada heredada mientras se migra.
 
+## Auditoría incremental: correcciones aisladas (rama `audit/correcciones-control-camara-2026-11-10`)
+
+Esta rama parte de `feature/002-esquiva-zoom`. No reemplaza la arquitectura, no modifica `main` y no cambia velocidad, duracion o cooldown del movimiento.
+
+- **Disparos y apuntado:** el buffer de 32 impactos de `RaycastNonAlloc` podia truncar una consulta no ordenada y descartar el objeto mas cercano. Ahora crece de 32 a un maximo de 256 resultados, y usa `RaycastAll` solo si tambien se satura ese limite. Se conserva la exclusion del propio jugador.
+- **Camara:** proteccion configurable por `SphereCast` para acercarla cuando una pared bloquea la vista; restaura la distancia al despejarse, sin variar el angulo nominal. Campos de Inspector: `avoidObstacles`, `obstructionRadius`, `obstructionPadding` y `obstructionLayers`.
+- **Esquiva:** `PlayerMotor.DashMovedThisStep` permite mantener la estela durante el paso final, incluso cuando `IsDashing` ya es falso al acabar la simulacion.
+- **Regresiones agregadas:** PlayMode valida saturacion de raycasts, distancia y angulo de camara frente a paredes, exclusion de la propia capsula como obstaculo, y ultima actualizacion de la estela de esquiva.
+- **Verificacion:** los cambios de esta rama se revisaron estaticamente, pero **NO se han ejecutado ni compilado en Unity desde esta auditoria**. Las cifras de pruebas aprobadas mas abajo corresponden al estado previo, no a esta rama.
+- **Pendiente:** ejecutar EditMode/PlayMode y la lista de sensacion manual en Unity `6000.2.12f1`, y revisar posibles ajustes visuales de `obstructionLayers` en escenarios reales.
+- **Fuera de alcance deliberadamente:** introducir multiplayer, autoridad de servidor, habilidades o fusionar ramas. Esas tareas necesitan validaciones separadas y podrian alterar el prototipo de manera sustancial.
+
 ## Auditoría del 10 de noviembre de 2026
 
 Defectos encontrados y corregidos. Cada uno tiene una prueba que fallaba antes del arreglo.
