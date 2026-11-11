@@ -37,6 +37,14 @@ La escena es un circuito de prueba. Cada pieza sirve para comprobar algo:
 
 Si cambias el generador, la escena se vuelve a crear con **Vhaldren → Crear escena de prueba → Movimiento 001** y se comprueba con **Vhaldren → Validar escena 001**.
 
+## Mundo jugable 008 — primera prueba con enemigos
+
+La rama `feature/008-mundo-jugable` incorpora una **escena nueva generable**: mapa de 92 x 92 m con bosque, ruinas, altar, cinco guardianes y un jefe que persiguen y atacan. El jugador tiene vida, curacion con **Q**, derrota y reaparicion.
+
+**En Unity:** abre la rama, espera a que compile y ejecuta **Vhaldren > Crear mundo jugable 008 (bosque + ruinas + jefe)** (fuera de Play). Abre `Assets/Scenes/WorldPrototype001.unity` y pulsa Play. Controles: WASD, mouse, Espacio, clic izquierdo y Q. El mundo se genera en el editor y debe guardarse en Git tras verificarlo; `Movement001` permanece intacto.
+
+Ver [guia y plan de 3 dias](docs/008-MUNDO-JUGABLE-3-DIAS.md). No se ha ejecutado Unity desde esta rama; las pruebas y el mapa generado estan pendientes de validacion real.
+
 ## Nueva sala opcional: combate con KayKit CC0 (PR de integración)
 
 Esta rama incluye modelos originales KayKit Dungeon Remastered (licencia CC0, ver `Assets/ThirdParty/KayKitDungeon/LICENSE.txt`) y una primera diana de entrenamiento con vida, daño y reaparición.
