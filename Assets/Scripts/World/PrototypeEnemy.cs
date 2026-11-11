@@ -43,6 +43,12 @@ namespace Vhaldren.Gameplay.World
         {
             controller = GetComponent<CharacterController>();
             health = GetComponent<CombatHealth>();
+            // La escena 008 ya esta versionada sin esta nueva interfaz.
+            // Autoagregarla permite ver PV y dano sin regenerar ni borrar el mapa.
+            CombatDamageFeedback feedback = GetComponent<CombatDamageFeedback>();
+            if (feedback == null)
+                feedback = gameObject.AddComponent<CombatDamageFeedback>();
+            feedback.ConfigureForEnemy(isBoss);
             spawnPosition = transform.position;
             if (target == null)
             {
