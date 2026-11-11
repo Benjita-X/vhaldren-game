@@ -288,6 +288,140 @@ namespace Vhaldren.Tests
                 "El disparo no debe atravesar la pared que esta entre el jugador y el cursor.");
         }
 
+        [UnityTest]
+        public IEnumerator DashCoversItsDistanceAtAnyFrameRate()
+        {
+            CreateGround(60f);
+            GameObject slow = CreatePlayer(new Vector3(-5f, 1.08f, 0f));
+            GameObject fast = CreatePlayer(new Vector3(5f, 1.08f, 0f));
+            yield return null;
+
+            float slowDistance = DashForward(slow.GetComponent<PlayerMotor>(), 1f / 30f);
+            float fastDistance = DashForward(fast.GetComponent<PlayerMotor>(), 1f / 240f);
+
+            Assert.That(slowDistance, Is.EqualTo(4.5f).Within(0.08f), "A 30 FPS.");
+            Assert.That(fastDistance, Is.EqualTo(4.5f).Within(0.08f), "A 240 FPS.");
+        }
+
+        [UnityTest]
+        public IEnumerator DashFollowsMovementDirectionInsteadOfAim()
+        {
+            CreateGround(60f);
+            GameObject player = CreatePlayer(new Vector3(0f, 1.08f, 0f));
+            PlayerMotor motor = player.GetComponent<PlayerMotor>();
+            yield return null;
+
+            const float step = 1f / 120f;
+            Settle(motor, step);
+            Vector3 start = player.transform.position;
+            // Camina a la derecha mientras apunta hacia delante: la esquiva va a la derecha.
+            motor.Simulate(new PlayerMotionCommand(Vector3.right, Vector3.forward, true), step);
+            Assert.That(motor.IsDashing, Is.True);
+            for (int i = 0; i < 60; i++)
+                motor.Simulate(new PlayerMotionCommand(Vector3.zero, Vector3.forward), step);
+
+            Vector3 travelled = player.transform.position - start;
+            Assert.That(travelled.x, Is.EqualTo(4.5f).Within(0.08f));
+            Assert.That(Mathf.Abs(travelled.z), Is.LessThan(0.05f));
+            Assert.That(motor.IsDashing, Is.False);
+            Assert.That(motor.HorizontalVelocity.magnitude, Is.LessThan(0.001f),
+                "Sin teclas pulsadas, al terminar la esquiva el personaje se detiene.");
+        }
+
+        [UnityTest]
+        public IEnumerator DashStopsAtWalls()
+        {
+            CreateGround();
+            GameObject wall = GameObject.CreatePrimitive(PrimitiveType.Cube);
+            wall.transform.position = new Vector3(0f, 1f, 2f);
+            wall.transform.localScale = new Vector3(6f, 2f, 0.5f);
+            createdObjects.Add(wall);
+            GameObject player = CreatePlayer(new Vector3(0f, 1.08f, 0f));
+            PlayerMotor motor = player.GetComponent<PlayerMotor>();
+            yield return null;
+
+            DashForward(motor, 1f / 60f);
+
+            Assert.That(player.transform.position.z, Is.InRange(1f, 1.4f),
+                "La esquiva no debe atravesar la pared ni rebotar lejos de ella.");
+        }
+
+        [UnityTest]
+        public IEnumerator DashRespectsItsCooldown()
+        {
+            CreateGround(60f);
+            GameObject player = CreatePlayer(new Vector3(0f, 1.08f, -10f));
+            PlayerMotor motor = player.GetComponent<PlayerMotor>();
+            yield return null;
+
+            const float step = 1f / 120f;
+            float first = DashForward(motor, step);          // 0,5 s simulados
+            Assert.That(first, Is.GreaterThan(4f));
+            Assert.That(motor.IsDashReady, Is.False);
+
+            // Segunda pulsacion a mitad de la espera (1,2 s): no debe hacer nada.
+            float second = DashForward(motor, step);
+            Assert.That(second, Is.LessThan(0.01f));
+
+            // Ya pasaron 1,0 s; 0,3 s mas y la espera termino.
+            for (int i = 0; i < 36; i++)
+                motor.Simulate(new PlayerMotionCommand(Vector3.zero, Vector3.forward), step);
+            Assert.That(motor.IsDashReady, Is.True);
+
+            float third = DashForward(motor, step);
+            Assert.That(third, Is.EqualTo(4.5f).Within(0.08f));
+        }
+
+        [UnityTest]
+        public IEnumerator CameraZoomIsClampedAndKeepsTheViewAngle()
+        {
+            GameObject target = new GameObject("CameraTarget");
+            target.transform.position = new Vector3(2f, 1f, -3f);
+            createdObjects.Add(target);
+
+            GameObject cameraObject = new GameObject("TestCamera");
+            cameraObject.AddComponent<Camera>();
+            SimpleFollowCamera follow = cameraObject.AddComponent<SimpleFollowCamera>();
+            createdObjects.Add(cameraObject);
+            follow.SetTarget(target.transform);
+            Quaternion angleWithoutZoom = cameraObject.transform.rotation;
+
+            follow.SetZoom(0.01f, true);
+            follow.SetTarget(target.transform);
+            yield return null;
+
+            Assert.That(follow.Zoom, Is.EqualTo(0.6f).Within(0.0001f), "El zoom no baja del minimo.");
+            // Desplazamiento (0,10,-10) y punto de mira (0,0.5,0): al 60 % queda en (0, 6.2, -6).
+            Vector3 expected = target.transform.position + new Vector3(0f, 6.2f, -6f);
+            Assert.That(Vector3.Distance(cameraObject.transform.position, expected), Is.LessThan(0.01f));
+            Assert.That(Quaternion.Angle(cameraObject.transform.rotation, angleWithoutZoom), Is.LessThan(0.01f),
+                "El zoom cambia la distancia, no el angulo.");
+
+            follow.AddZoom(10f);
+            Assert.That(follow.TargetZoom, Is.EqualTo(1.5f).Within(0.0001f), "El zoom no pasa del maximo.");
+            follow.AddZoom(float.NaN);
+            Assert.That(follow.TargetZoom, Is.EqualTo(1.5f).Within(0.0001f));
+        }
+
+        /// <summary>Pide la esquiva hacia delante sin caminar y simula 0,5 s. Devuelve lo avanzado en Z.</summary>
+        private static float DashForward(PlayerMotor motor, float step)
+        {
+            Settle(motor, step);
+            float startZ = motor.transform.position.z;
+            int steps = Mathf.RoundToInt(0.5f / step);
+            for (int i = 0; i < steps; i++)
+                motor.Simulate(new PlayerMotionCommand(Vector3.zero, Vector3.forward, i == 0), step);
+            return motor.transform.position.z - startZ;
+        }
+
+        private static void Settle(PlayerMotor motor, float step)
+        {
+            // Sin esto el primer paso se gasta en asentar la capsula sobre el suelo.
+            // El tiempo de asentado no cuenta para la espera: se usa un paso minimo.
+            for (int i = 0; i < 5; i++)
+                motor.Simulate(new PlayerMotionCommand(Vector3.zero, Vector3.forward), 0.0001f);
+        }
+
         private GameObject CreateGround(float size = 20f)
         {
             GameObject ground = GameObject.CreatePrimitive(PrimitiveType.Cube);

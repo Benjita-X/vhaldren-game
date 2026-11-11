@@ -150,6 +150,25 @@ namespace Vhaldren.EditorTools
                 new Vector3(0f, -1.02f, 0.78f), new Vector3(0.14f, 0.04f, 0.5f), aimMaterial);
             facing.transform.localRotation = Quaternion.identity;
 
+            // Estela de la esquiva: sin respuesta visual, una esquiva parece un salto de imagen.
+            GameObject trailObject = new GameObject("DashTrail");
+            trailObject.transform.SetParent(player.transform, false);
+            trailObject.transform.localPosition = new Vector3(0f, -0.2f, 0f);
+            TrailRenderer trail = trailObject.AddComponent<TrailRenderer>();
+            trail.time = 0.22f;
+            trail.minVertexDistance = 0.05f;
+            trail.widthCurve = new AnimationCurve(new Keyframe(0f, 0.9f), new Keyframe(1f, 0f));
+            trail.sharedMaterial = aimMaterial;
+            trail.shadowCastingMode = ShadowCastingMode.Off;
+            trail.receiveShadows = false;
+            trail.emitting = false;
+
+            // El indicador de frente tambien avisa: encendido = esquiva lista, apagado = en espera.
+            DashFeedback feedback = player.AddComponent<DashFeedback>();
+            AssignObjectReference(feedback, "motor", motor);
+            AssignObjectReference(feedback, "trail", trail);
+            AssignObjectReference(feedback, "readyIndicator", facing.GetComponent<Renderer>());
+
             // Brillante y sin sombra para que se lea de un vistazo sobre cualquier superficie.
             GameObject aimMarker = CreateVisualPart(PrimitiveType.Cylinder, "AimMarker", null,
                 new Vector3(0f, 0.025f, 3f), new Vector3(0.5f, 0.012f, 0.5f), aimMaterial);
@@ -193,7 +212,8 @@ namespace Vhaldren.EditorTools
             Selection.activeGameObject = player;
             ValidateScene();
             Debug.Log("[Vhaldren] Escena generada: " + ScenePath +
-                      ". Pulsa Play: WASD mueve al instante, mouse apunta y clic izquierdo dispara al cursor.");
+                      ". Pulsa Play: WASD mueve, Espacio esquiva, la rueda hace zoom, " +
+                      "el mouse apunta y el clic izquierdo dispara al cursor.");
         }
 
         [MenuItem("Vhaldren/Validar escena 001")]
@@ -252,6 +272,9 @@ namespace Vhaldren.EditorTools
                          visual.transform.Find("ShotOrigin") != null &&
                          aimMarker.GetComponent<Collider>() == null &&
                          visual.GetComponentsInChildren<Collider>().Length == 0 &&
+                         player.GetComponent<DashFeedback>() != null &&
+                         player.transform.Find("DashTrail") != null &&
+                         player.transform.Find("DashTrail").GetComponent<TrailRenderer>() != null &&
                          visual.GetComponentsInChildren<Renderer>().Length >= 10;
 
             valid = valid && motor != null && follow != null &&

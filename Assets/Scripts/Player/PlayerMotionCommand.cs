@@ -11,11 +11,14 @@ namespace Vhaldren.Gameplay.Player
     {
         public readonly Vector3 MoveWorld;
         public readonly Vector3 FaceWorld;
+        /// <summary>La esquiva se pidio en este paso (pulsacion, no tecla mantenida).</summary>
+        public readonly bool Dash;
 
-        public PlayerMotionCommand(Vector3 moveWorld, Vector3 faceWorld)
+        public PlayerMotionCommand(Vector3 moveWorld, Vector3 faceWorld, bool dash = false)
         {
             MoveWorld = moveWorld;
             FaceWorld = faceWorld;
+            Dash = dash;
         }
     }
 }

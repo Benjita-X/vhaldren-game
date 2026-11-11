@@ -25,6 +25,16 @@ namespace Vhaldren.Gameplay.Player
         [Tooltip("Rapidez al invertir el sentido del movimiento.")]
         [SerializeField, Min(0f)] private float reversalAcceleration = 100f;
 
+        [Header("Esquiva")]
+        [Tooltip("Metros que recorre la esquiva.")]
+        [SerializeField, Min(0f)] private float dashDistance = 4.5f;
+        [Tooltip("Segundos que dura. Menos tiempo = mas brusca.")]
+        [SerializeField, Min(0.01f)] private float dashDuration = 0.18f;
+        [Tooltip("Segundos entre el inicio de una esquiva y el de la siguiente.")]
+        [SerializeField, Min(0f)] private float dashCooldown = 1.2f;
+        [Tooltip("Si se pulsa un poco antes de que termine la espera, la esquiva sale en cuanto puede.")]
+        [SerializeField, Min(0f)] private float dashBufferTime = 0.15f;
+
         [Header("Orientacion visual")]
         [Tooltip("Opcional: hijo visual. Si se asigna, solo el modelo gira al apuntar.")]
         [SerializeField] private Transform visualRoot;
@@ -32,8 +42,12 @@ namespace Vhaldren.Gameplay.Player
         private CharacterController controller;
         private float verticalSpeed;
         private Vector3 horizontalVelocity;
+        private PlayerDash dash;
 
         public Vector3 HorizontalVelocity => horizontalVelocity;
+        public bool IsDashing => dash.IsActive;
+        public bool IsDashReady => dash.IsReady;
+        public float DashCooldownRemaining => dash.CooldownRemaining;
         public Vector3 CurrentFacing { get; private set; } = Vector3.forward;
         public Vector3 ActualVelocity { get; private set; }
         public bool IsGrounded { get; private set; }
@@ -61,6 +75,11 @@ namespace Vhaldren.Gameplay.Player
             CurrentFacing = initialFacing.sqrMagnitude > 0.0001f ? initialFacing.normalized : Vector3.forward;
         }
 
+        private void OnDisable()
+        {
+            dash.Cancel();
+        }
+
         /// <summary>
         /// Una simulacion por paso. En local se llama desde Update.
         /// Posteriormente un controlador autorizado podra suministrar comandos de red.
@@ -82,17 +101,45 @@ namespace Vhaldren.Gameplay.Player
             // Suavizar solo el desplazamiento: apuntar con el mouse sigue siendo independiente.
             float speed = IsFinite(movementSpeed) ? Mathf.Max(0f, movementSpeed) : 0f;
             Vector3 targetHorizontalVelocity = move * speed;
-            horizontalVelocity = PlayerHorizontalMotion.Step(
-                horizontalVelocity,
-                targetHorizontalVelocity,
-                acceleration,
-                braking,
-                reversalAcceleration,
-                deltaTime,
-                instantHorizontalMovement
-            );
 
-            // Este prototipo no incluye saltos ni dash. El motor no controla entradas.
+            Vector3 facing = IsFinite(command.FaceWorld) ? command.FaceWorld : Vector3.zero;
+            facing.y = 0f;
+            facing = NormalizePlanar(facing);
+
+            // La esquiva va hacia donde se camina; quieto, hacia donde se apunta.
+            Vector3 dashPreference = move.sqrMagnitude > 0.0001f
+                ? move
+                : facing != Vector3.zero ? facing : CurrentFacing;
+            float dashTime = dash.Step(
+                command.Dash, dashPreference, dashDuration, dashCooldown, dashBufferTime, deltaTime);
+
+            Vector3 stepHorizontalVelocity;
+            if (dashTime > 0f)
+            {
+                // El paso puede repartirse entre esquiva y marcha normal: asi la distancia
+                // no depende de cuantos frames dure. Al terminar se retoma la velocidad pedida.
+                horizontalVelocity = targetHorizontalVelocity;
+                Vector3 dashDisplacement = dash.Direction * (SafeDashSpeed() * dashTime);
+                Vector3 walkDisplacement = targetHorizontalVelocity * (deltaTime - dashTime);
+                stepHorizontalVelocity = (dashDisplacement + walkDisplacement) / deltaTime;
+                if (!IsFinite(stepHorizontalVelocity))
+                    stepHorizontalVelocity = targetHorizontalVelocity;
+            }
+            else
+            {
+                horizontalVelocity = PlayerHorizontalMotion.Step(
+                    horizontalVelocity,
+                    targetHorizontalVelocity,
+                    acceleration,
+                    braking,
+                    reversalAcceleration,
+                    deltaTime,
+                    instantHorizontalMovement
+                );
+                stepHorizontalVelocity = horizontalVelocity;
+            }
+
+            // Este prototipo no incluye saltos. El motor no controla entradas.
             // Una configuracion corrupta no debe propagar NaN/Infinity al CharacterController.
             float safeGravity = IsFinite(gravity) ? gravity : 0f;
             float gravityStep = safeGravity * deltaTime;
@@ -102,7 +149,7 @@ namespace Vhaldren.Gameplay.Player
                 verticalSpeed = 0f;
             if (!IsFinite(verticalSpeed))
                 verticalSpeed = 0f;
-            Vector3 velocity = horizontalVelocity + Vector3.up * verticalSpeed;
+            Vector3 velocity = stepHorizontalVelocity + Vector3.up * verticalSpeed;
             Vector3 previousPosition = transform.position;
             CollisionFlags flags = controller.Move(velocity * deltaTime);
             IsGrounded = (flags & CollisionFlags.Below) != 0;
@@ -118,15 +165,12 @@ namespace Vhaldren.Gameplay.Player
             // asi no queda inercia bloqueada que se dispare al liberar la pared. Sin choque
             // se conserva la velocidad calculada; medirla en cada paso la contaminaba con
             // el redondeo de la posicion y con los pasos que el controlador descarta.
-            if ((flags & CollisionFlags.Sides) != 0)
+            if (dashTime <= 0f && (flags & CollisionFlags.Sides) != 0)
             {
                 Vector3 achieved = new Vector3(ActualVelocity.x, 0f, ActualVelocity.z);
                 horizontalVelocity = Vector3.ClampMagnitude(achieved, horizontalVelocity.magnitude);
             }
 
-            Vector3 facing = IsFinite(command.FaceWorld) ? command.FaceWorld : Vector3.zero;
-            facing.y = 0f;
-            facing = NormalizePlanar(facing);
             if (facing == Vector3.zero)
                 return;
 
@@ -142,6 +186,14 @@ namespace Vhaldren.Gameplay.Player
             targetTransform.rotation = Quaternion.RotateTowards(
                 targetTransform.rotation, targetRotation, maxTurn
             );
+        }
+
+        private float SafeDashSpeed()
+        {
+            if (!IsFinite(dashDistance) || !IsFinite(dashDuration) || dashDuration <= 0f)
+                return 0f;
+            float dashSpeed = Mathf.Max(0f, dashDistance) / dashDuration;
+            return IsFinite(dashSpeed) ? dashSpeed : 0f;
         }
 
         private static Vector3 ClampPlanarMagnitude(Vector3 value, float maxMagnitude)
