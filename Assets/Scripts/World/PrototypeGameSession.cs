@@ -59,7 +59,8 @@ namespace Vhaldren.Gameplay.World
             bossDefeated = false;
             foreach (PrototypeEnemy enemy in enemies)
             {
-                if (enemy == null)
+                // No conectar enemigos de otras escenas cargadas aditivamente.
+                if (enemy == null || enemy.gameObject.scene != gameObject.scene)
                     continue;
                 if (!enemy.IsBoss)
                     minionCount++;
@@ -78,10 +79,12 @@ namespace Vhaldren.Gameplay.World
             {
                 foreach (PrototypeEnemy enemy in enemies)
                 {
-                    if (enemy != null)
+                    if (enemy != null && enemy.gameObject.scene == gameObject.scene)
                         enemy.Defeated -= OnEnemyDefeated;
                 }
             }
+            defeated.Clear();
+            enemies = null;
         }
 
         private void OnEnemyDefeated(PrototypeEnemy enemy)
