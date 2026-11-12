@@ -44,6 +44,9 @@ namespace Vhaldren.Gameplay.World
             MeshRenderer placeholder = anchor.GetComponent<MeshRenderer>();
             if (placeholder != null)
                 placeholder.enabled = false;
+            Transform oldEyes = anchor.Find("Ojos");
+            if (oldEyes != null)
+                oldEyes.gameObject.SetActive(false);
 
             bool boss = name.Contains("JEFE") || name.Contains("Jefe");
             bool forest = name.Contains("bosque") || name.Contains("Bosque");
