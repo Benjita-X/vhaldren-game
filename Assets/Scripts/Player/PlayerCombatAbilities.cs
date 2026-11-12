@@ -423,7 +423,7 @@ namespace Vhaldren.Gameplay.Player
         {
             if (Event.current.type != EventType.Repaint)
                 return;
-            Rect box = new Rect(12f, 166f, Mathf.Min(620f, Screen.width - 24f), 53f);
+            Rect box = new Rect(12f, 184f, Mathf.Min(620f, Screen.width - 24f), 53f);
             GUI.Box(box, "");
             GUI.Label(new Rect(box.x + 8f, box.y + 4f, box.width - 16f, 21f), labelText);
             if (Time.time < lastActionMessageUntil)
