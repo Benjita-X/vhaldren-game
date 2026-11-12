@@ -104,6 +104,8 @@ namespace Vhaldren.Gameplay.World
 
         private readonly Dictionary<SettlementCulture, int> reputation =
             new Dictionary<SettlementCulture, int>();
+        private readonly Dictionary<string, int> tradeCounts =
+            new Dictionary<string, int>();
         private SurvivalInventory inventory;
         private int stage;
         private int eventProgress;
@@ -195,6 +197,7 @@ namespace Vhaldren.Gameplay.World
             // las invasiones reales deben tener enemigos y navegación.
             currentEvent = (VillageEvent)((stage + (int)currentEvent + 1) % 6);
             nextEventAt = Time.time + 90f;
+            tradeCounts.Clear(); // Llega una nueva caravana con stock renovado.
             Changed?.Invoke();
         }
 
@@ -221,6 +224,46 @@ namespace Vhaldren.Gameplay.World
             return true;
         }
 
+        public int TradeStock(int offerIndex)
+        {
+            if (offerIndex < 0 || offerIndex >= VillageTradeCatalog.Offers.Count)
+                return 0;
+            VillageTradeOffer offer = VillageTradeCatalog.Offers[offerIndex];
+            tradeCounts.TryGetValue(offer.Id, out int used);
+            return Mathf.Max(0, offer.StockPerEvent - used);
+        }
+
+        public VillageTradeResult TryTrade(int offerIndex)
+        {
+            if (inventory == null || offerIndex < 0 ||
+                offerIndex >= VillageTradeCatalog.Offers.Count)
+                return VillageTradeResult.NoOffer;
+
+            VillageTradeOffer offer = VillageTradeCatalog.Offers[offerIndex];
+            int reputationLevel = Reputation(offer.Faction);
+            if (reputationLevel < offer.ReputationNeeded)
+                return VillageTradeResult.ReputationTooLow;
+            if (TradeStock(offerIndex) <= 0)
+                return VillageTradeResult.NoStock;
+
+            int price = VillageTradeCatalog.Price(offer,
+                currentEvent, reputationLevel);
+            if (inventory.Count(offer.PriceResource) < price)
+                return VillageTradeResult.MissingMaterials;
+            if ((long)inventory.TotalItems - price + offer.RewardAmount >
+                inventory.Capacity)
+                return VillageTradeResult.InventoryFull;
+
+            if (!inventory.TryExchange(offer.PriceResource, price,
+                offer.Reward, offer.RewardAmount))
+                return VillageTradeResult.MissingMaterials;
+
+            tradeCounts.TryGetValue(offer.Id, out int previous);
+            tradeCounts[offer.Id] = previous + 1;
+            Changed?.Invoke();
+            return VillageTradeResult.Purchased;
+        }
+
         public bool TryClaim()
         {
             if (State != VillageQuestState.ReadyToClaim || inventory == null)
@@ -241,17 +284,15 @@ namespace Vhaldren.Gameplay.World
                 inventory.Capacity)
                 return false;
 
-            if (spent > 0 && !inventory.TrySpend(
-                new[] { new ResourceIngredient(delivered, spent) }))
-                return false;
-
-            if (inventory.Add(quest.Reward, quest.RewardAmount) != quest.RewardAmount)
+            if (spent > 0)
             {
-                // Guarda de seguridad ante cambios inesperados de capacidad.
-                if (spent > 0)
-                    inventory.Add(delivered, spent);
-                return false;
+                if (!inventory.TryExchange(delivered, spent,
+                    quest.Reward, quest.RewardAmount))
+                    return false;
             }
+            else if (inventory.Add(quest.Reward, quest.RewardAmount) !=
+                quest.RewardAmount)
+                return false;
 
             reputation[quest.Faction] = Reputation(quest.Faction) + quest.Reputation;
             stage++;
