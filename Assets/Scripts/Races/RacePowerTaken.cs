@@ -15,7 +15,10 @@ namespace Vhaldren.Gameplay.Races
             PlayerRace player = PlayerRace.Local;
             if (player == null)
                 return 1f;
-            return kind == CombatDamageKind.Magic ? player.SpellMultiplier : player.PhysicalMultiplier;
+            bool magical = kind == CombatDamageKind.Magic ||
+                kind == CombatDamageKind.Explosion ||
+                kind == CombatDamageKind.DamageOverTime;
+            return magical ? player.SpellMultiplier : player.PhysicalMultiplier;
         }
     }
 }
