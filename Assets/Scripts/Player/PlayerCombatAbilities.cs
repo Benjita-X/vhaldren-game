@@ -410,16 +410,43 @@ namespace Vhaldren.Gameplay.Player
             Destroy(visual, Mathf.Max(0.1f, lifetime));
         }
 
+        private GUIStyle actionStyle;
+        private GUIStyle reasonStyle;
+
         private void OnGUI()
         {
             if (Event.current.type != EventType.Repaint)
                 return;
-            Rect box = new Rect(12f, 166f, Mathf.Min(620f, Screen.width - 24f), 53f);
+            if (actionStyle == null)
+            {
+                actionStyle = new GUIStyle(GUI.skin.label)
+                {
+                    fontSize = 15,
+                    fontStyle = FontStyle.Bold,
+                    alignment = TextAnchor.MiddleCenter,
+                    wordWrap = true
+                };
+                reasonStyle = new GUIStyle(GUI.skin.label)
+                {
+                    fontSize = 14,
+                    alignment = TextAnchor.MiddleCenter,
+                    wordWrap = true
+                };
+                reasonStyle.normal.textColor = new Color(1f, 0.89f, 0.66f);
+            }
+
+            // Separado de HUD de salud y de mensajes de inventario.
+            // El jugador ve todas las teclas y el motivo exacto del rechazo.
+            float width = Mathf.Min(760f, Mathf.Max(250f, Screen.width - 20f));
+            Rect box = new Rect((Screen.width - width) * 0.5f,
+                Mathf.Max(76f, Screen.height - 172f), width, 70f);
             GUI.Box(box, "");
-            GUI.Label(new Rect(box.x + 8f, box.y + 4f, box.width - 16f, 21f), labelText);
-            if (Time.time < lastActionMessageUntil)
-                GUI.Label(new Rect(box.x + 8f, box.y + 26f, box.width - 16f, 22f),
-                    lastActionMessage);
+            GUI.Label(new Rect(box.x + 8f, box.y + 4f, box.width - 16f, 28f),
+                labelText, actionStyle);
+            GUI.Label(new Rect(box.x + 8f, box.y + 34f, box.width - 16f, 31f),
+                Time.time < lastActionMessageUntil
+                    ? lastActionMessage
+                    : "V: espada  |  T: pulso rúnico  |  F: escarcha", reasonStyle);
         }
 
         private void OnDisable() => StopAllCoroutines();
