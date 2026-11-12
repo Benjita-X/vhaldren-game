@@ -44,6 +44,11 @@ namespace Vhaldren.Gameplay.Player
         private CombatDefense defense;
         private PlayerMotor motor;
         private PlayerDamageTracker damageTracker;
+        private PlayerActionModifiers actionModifiers;
+        private PlayerAnimationDriver animations;
+        private string lastActionMessage = "";
+        private float lastActionMessageUntil;
+        public string LastActionMessage => lastActionMessage;
         private float swordReadyAt;
         private float runeReadyAt;
         private float frostReadyAt;
@@ -65,6 +70,8 @@ namespace Vhaldren.Gameplay.Player
             defense = GetComponent<CombatDefense>();
             motor = GetComponent<PlayerMotor>();
             damageTracker = GetComponent<PlayerDamageTracker>();
+            actionModifiers = GetComponent<PlayerActionModifiers>();
+            animations = GetComponent<PlayerAnimationDriver>();
         }
 
         private void Update()
@@ -96,10 +103,11 @@ namespace Vhaldren.Gameplay.Player
 
         public bool TrySwordSweep()
         {
-            if (health == null || health.IsDefeated || Time.time < swordReadyAt ||
-                defense == null || !defense.TrySpend(swordStaminaCost))
+            if (!CanStartAbility("Tajo de espada", swordReadyAt, swordStaminaCost))
                 return false;
 
+            animations?.PlayCombatAction(PlayerAnimationDriver.CombatAction.Sword);
+            Announce("Tajo de espada");
             swordReadyAt = Time.time + Mathf.Max(0.1f, swordCooldown);
             bool counter = defense.TryConsumeCounter();
             if (counter)
@@ -110,10 +118,11 @@ namespace Vhaldren.Gameplay.Player
 
         public bool TryRunePulse()
         {
-            if (health == null || health.IsDefeated || Time.time < runeReadyAt ||
-                defense == null || !defense.TrySpend(runeStaminaCost))
+            if (!CanStartAbility("Pulso rúnico", runeReadyAt, runeStaminaCost))
                 return false;
 
+            animations?.PlayCombatAction(PlayerAnimationDriver.CombatAction.Spell);
+            Announce("Pulso rúnico: canalizando");
             runeReadyAt = Time.time + Mathf.Max(0.1f, runeCooldown);
             Vector3 center = transform.position;
             StartCoroutine(RuneSequence(center));
@@ -122,10 +131,11 @@ namespace Vhaldren.Gameplay.Player
 
         public bool TryFrostWave()
         {
-            if (health == null || health.IsDefeated || Time.time < frostReadyAt ||
-                defense == null || !defense.TrySpend(frostStaminaCost))
+            if (!CanStartAbility("Escarcha", frostReadyAt, frostStaminaCost))
                 return false;
 
+            animations?.PlayCombatAction(PlayerAnimationDriver.CombatAction.Frost);
+            Announce("Onda de escarcha: canalizando");
             frostReadyAt = Time.time + Mathf.Max(0.1f, frostCooldown);
             Vector3 facing = motor != null ? motor.CurrentFacing : transform.forward;
             facing.y = 0f;
@@ -133,6 +143,46 @@ namespace Vhaldren.Gameplay.Player
                 facing = Vector3.forward;
             StartCoroutine(FrostSequence(facing.normalized));
             return true;
+        }
+
+        private bool CanStartAbility(string name, float readyAt, float staminaCost)
+        {
+            if (health == null || health.IsDefeated)
+            {
+                Announce(name + ": personaje derrotado");
+                return false;
+            }
+
+            if (actionModifiers == null)
+                actionModifiers = GetComponent<PlayerActionModifiers>();
+            if (actionModifiers != null && !actionModifiers.AllowsAttack)
+            {
+                Announce(name + ": sal del modo construcción (B)");
+                return false;
+            }
+
+            if (Time.time < readyAt)
+            {
+                Announce(name + ": recarga " + (readyAt - Time.time).ToString("0.0") + " s");
+                return false;
+            }
+
+            if (defense == null)
+                defense = GetComponent<CombatDefense>();
+            if (defense == null || !defense.TrySpend(staminaCost))
+            {
+                float have = defense != null ? defense.Stamina : 0f;
+                Announce(name + ": resistencia " + have.ToString("0") + "/" +
+                    staminaCost.ToString("0"));
+                return false;
+            }
+            return true;
+        }
+
+        private void Announce(string message)
+        {
+            lastActionMessage = message;
+            lastActionMessageUntil = Time.time + 1.6f;
         }
 
         private IEnumerator FrostSequence(Vector3 direction)
@@ -362,9 +412,12 @@ namespace Vhaldren.Gameplay.Player
         {
             if (Event.current.type != EventType.Repaint)
                 return;
-            Rect box = new Rect(12f, 166f, Mathf.Min(510f, Screen.width - 24f), 29f);
+            Rect box = new Rect(12f, 166f, Mathf.Min(620f, Screen.width - 24f), 53f);
             GUI.Box(box, "");
             GUI.Label(new Rect(box.x + 8f, box.y + 4f, box.width - 16f, 21f), labelText);
+            if (Time.time < lastActionMessageUntil)
+                GUI.Label(new Rect(box.x + 8f, box.y + 26f, box.width - 16f, 22f),
+                    lastActionMessage);
         }
 
         private void OnDisable() => StopAllCoroutines();
