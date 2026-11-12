@@ -66,7 +66,7 @@ namespace Vhaldren.Gameplay.Player
                     alignment = TextAnchor.UpperLeft
                 };
 
-            GUI.Box(new Rect(x, 43f, width, 392f), "");
+            GUI.Box(new Rect(x, 43f, width, 408f), "");
             string guide =
                 "<b>MOVIMIENTO</b>\nWASD: mover | Espacio: esquivar\n" +
                 "Ratón: apuntar | Clic izquierdo: ballesta\n\n" +
@@ -75,14 +75,15 @@ namespace Vhaldren.Gameplay.Player
                 "X: parada precisa | Q: poción\n\n" +
                 "<b>MAGIA Y ESENCIA</b>\n1/2/3: hechizos de la escuela | Tab: escuela\n" +
                 "H (mantener): absorber esencia de un enemigo débil\n" +
-                "Clic mientras absorbes: ejecutar (sin esencia)\n\n" +
+                "Clic mientras absorbes: ejecutar (sin esencia)\n" +
+                "U: forja de equipo (sube tu nivel)\n\n" +
                 "<b>SUPERVIVENCIA</b>\nE: recolectar | J/K: fabricar picos\n" +
                 "B: construir | 1–0: pieza | R: girar\n" +
                 "G: desmontar | Ctrl+Z: deshacer\n\n" +
                 "<b>PUEBLOS</b>\nN: abrir tablón | Y: aceptar/reclamar\n" +
                 "O: cambiar oferta | P: comerciar\n\n" +
                 "Esc: pausa y salir | F1: ocultar esta ayuda";
-            GUI.Label(new Rect(x + 10f, 50f, width - 20f, 382f), guide, textStyle);
+            GUI.Label(new Rect(x + 10f, 50f, width - 20f, 398f), guide, textStyle);
         }
 
         private static bool WasHelpPressed()

@@ -76,6 +76,16 @@ namespace Vhaldren.Gameplay.World
                 yield return Shot("6-luna-carmesi.png");
             }
 
+            Vhaldren.Gameplay.Progression.PlayerEquipment gear =
+                player != null ? player.GetComponent<Vhaldren.Gameplay.Progression.PlayerEquipment>() : null;
+            if (gear != null)
+            {
+                gear.SetPanel(true);
+                yield return new WaitForSeconds(0.3f);
+                yield return Shot("7-forja.png");
+                gear.SetPanel(false);
+            }
+
             int enemies = FindObjectsByType<PrototypeEnemy>(FindObjectsSortMode.None).Length;
             File.AppendAllText(report, "enemigos=" + enemies + " hechizos=" + (book != null ? book.SpellsCast : 0) +
                                        " fps=" + (1f / Mathf.Max(0.0001f, Time.smoothDeltaTime)).ToString("0") + "\n");

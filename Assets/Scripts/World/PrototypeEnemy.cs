@@ -162,6 +162,7 @@ namespace Vhaldren.Gameplay.World
         {
             provokedUntil = Time.time + 12f;
             returningHome = false;
+            AlertAllies();
             // Los guardianes menores dan una oportunidad real de contraatacar.
             // El jefe no queda bloqueado permanentemente por ataques de disparo rapido.
             if (!isBoss)
@@ -311,7 +312,8 @@ namespace Vhaldren.Gameplay.World
                 // Deslumbrado (Lumancia) reduce el daño que causa este enemigo.
                 float outgoing = Mathf.Max(0f, attackDamage) *
                     Vhaldren.Gameplay.Magic.StatusEffects.OutgoingFor(this) *
-                    DayNightCycle.EnemyDamageMultiplier;
+                    DayNightCycle.EnemyDamageMultiplier *
+                    Vhaldren.Gameplay.Progression.CombatLevel.OutgoingFor(this);
                 CombatDamageResult response = defender.Receive(
                     outgoing, activeAttackKind, transform.position);
                 ShowAimLine(false);
@@ -372,6 +374,25 @@ namespace Vhaldren.Gameplay.World
             float safe = Mathf.Clamp(recoverySeconds, 0f, 3f);
             staggerUntil = Mathf.Max(staggerUntil, Time.time + safe);
             nextAttackTime = Mathf.Max(nextAttackTime, staggerUntil + 0.08f);
+        }
+
+        public bool IsProvoked => !defeated && Time.time < provokedUntil;
+
+        /// <summary>
+        /// Un campamento pelea en grupo: al atacar a uno, sus compañeros a 10 m acuden.
+        /// Asi no se puede limpiar un asentamiento enemigo de uno en uno sin preparacion.
+        /// </summary>
+        private void AlertAllies()
+        {
+            int count = Physics.OverlapSphereNonAlloc(transform.position, 10f, allies,
+                Physics.DefaultRaycastLayers, QueryTriggerInteraction.Ignore);
+            for (int i = 0; i < count; i++)
+            {
+                PrototypeEnemy ally = allies[i] != null ? allies[i].GetComponentInParent<PrototypeEnemy>() : null;
+                if (ally == null || ally == this || ally.defeated || ally.returningHome)
+                    continue;
+                ally.provokedUntil = Mathf.Max(ally.provokedUntil, Time.time + 10f);
+            }
         }
 
         private CombatDamageKind AttackKindFor(int sequence)

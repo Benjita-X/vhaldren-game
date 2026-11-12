@@ -89,6 +89,9 @@ namespace Vhaldren.Gameplay.World
                     gameObject.AddComponent<GamePauseMenu>();
                 if (GetComponent<DayNightCycle>() == null)
                     gameObject.AddComponent<DayNightCycle>();
+                if (player.GetComponent<SurvivalInventory>() != null &&
+                    player.GetComponent<Vhaldren.Gameplay.Progression.PlayerEquipment>() == null)
+                    player.gameObject.AddComponent<Vhaldren.Gameplay.Progression.PlayerEquipment>();
                 if (GameAutoCapture.RequestedFolder() != null && GetComponent<GameAutoCapture>() == null)
                     gameObject.AddComponent<GameAutoCapture>();
 
@@ -138,8 +141,17 @@ namespace Vhaldren.Gameplay.World
             enemies = FindObjectsByType<PrototypeEnemy>(FindObjectsSortMode.None);
             if (Application.isPlaying)
                 foreach (PrototypeEnemy candidate in enemies)
-                    if (candidate != null && candidate.GetComponent<Vhaldren.Gameplay.Magic.EssenceSource>() == null)
+                {
+                    if (candidate == null)
+                        continue;
+                    if (candidate.GetComponent<Vhaldren.Gameplay.Magic.EssenceSource>() == null)
                         candidate.gameObject.AddComponent<Vhaldren.Gameplay.Magic.EssenceSource>();
+                    if (candidate.GetComponent<Vhaldren.Gameplay.Progression.CombatLevel>() == null)
+                        candidate.gameObject.AddComponent<Vhaldren.Gameplay.Progression.CombatLevel>()
+                            .Configure(Vhaldren.Gameplay.Progression.CombatLevel.LevelFor(candidate));
+                    if (candidate.GetComponent<Vhaldren.Gameplay.Progression.EnemyLoot>() == null)
+                        candidate.gameObject.AddComponent<Vhaldren.Gameplay.Progression.EnemyLoot>();
+                }
             minionCount = 0;
             defeated.Clear();
             bossDefeated = false;

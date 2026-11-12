@@ -138,5 +138,24 @@ namespace Vhaldren.Tests
             Assert.That(Vhaldren.Gameplay.World.DayNightCycle.IsCrimsonNight(day4Night + 4f * hour), Is.True);
             Assert.That(Vhaldren.Gameplay.World.DayNightCycle.IsCrimsonNight(day4Night - 24f * hour), Is.False);
         }
+
+        [Test]
+        public void GearLevelsAndLevelGapMultipliers()
+        {
+            Assert.That(Vhaldren.Gameplay.Progression.GearCatalog.GearLevel(0, 0, 0), Is.EqualTo(1));
+            Assert.That(Vhaldren.Gameplay.Progression.GearCatalog.GearLevel(3, 3, 3), Is.EqualTo(24));
+            Assert.That(Vhaldren.Gameplay.Progression.GearCatalog.GearLevel(1, 1, 0), Is.EqualTo(6));
+            Assert.That(Vhaldren.Gameplay.Progression.GearCatalog.DamageDealtMultiplier(10, 10), Is.EqualTo(1f));
+            Assert.That(Vhaldren.Gameplay.Progression.GearCatalog.DamageDealtMultiplier(1, 26), Is.EqualTo(0.35f));
+            Assert.That(Vhaldren.Gameplay.Progression.GearCatalog.DamageTakenMultiplier(1, 26), Is.EqualTo(2f));
+            Assert.That(Vhaldren.Gameplay.Progression.GearCatalog.DamageDealtMultiplier(24, 26), Is.EqualTo(0.92f).Within(0.001f));
+            Assert.That(Vhaldren.Gameplay.Progression.GearCatalog.DamageTakenMultiplier(30, 5), Is.EqualTo(0.65f));
+            for (int t = 1; t <= Vhaldren.Gameplay.Progression.GearCatalog.MaxTier; t++)
+            {
+                Assert.That(Vhaldren.Gameplay.Progression.GearCatalog.Get(t).Level,
+                    Is.GreaterThan(Vhaldren.Gameplay.Progression.GearCatalog.Get(t - 1).Level));
+                Assert.That(Vhaldren.Gameplay.Progression.GearCatalog.Get(t).Cost.Length, Is.GreaterThan(0));
+            }
+        }
     }
 }

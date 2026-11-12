@@ -24,6 +24,20 @@ namespace Vhaldren.Tests
                 errors.Add(condition);
         }
 
+        [UnityTearDown]
+        public IEnumerator TearDown()
+        {
+            // No dejar el mundo (ni su equipo/ciclo global) activo para otras pruebas.
+            Scene world = SceneManager.GetSceneByName("WorldPrototype001");
+            if (world.IsValid() && world.isLoaded)
+            {
+                Scene empty = SceneManager.CreateScene("VaciaTrasMundo");
+                SceneManager.SetActiveScene(empty);
+                yield return SceneManager.UnloadSceneAsync(world);
+            }
+            yield return null;
+        }
+
         [UnityTest]
         public IEnumerator WorldLoadsWithBestiaryAndMagicAndRunsWithoutErrors()
         {
@@ -56,6 +70,12 @@ namespace Vhaldren.Tests
                 Assert.That(book, Is.Not.Null);
                 Assert.That(player.GetComponent<PlayerFeeding>(), Is.Not.Null);
                 Assert.That(player.GetComponent<CombatState>(), Is.Not.Null);
+                Assert.That(player.GetComponent<Vhaldren.Gameplay.Progression.PlayerEquipment>(), Is.Not.Null);
+                foreach (PrototypeEnemy enemy in enemies)
+                {
+                    Assert.That(enemy.GetComponent<Vhaldren.Gameplay.Progression.CombatLevel>(), Is.Not.Null);
+                    Assert.That(enemy.GetComponent<Vhaldren.Gameplay.Progression.EnemyLoot>(), Is.Not.Null);
+                }
 
                 // Lanzar un hechizo de cada tipo en el mundo real no debe generar errores.
                 Vector3 ahead = player.transform.position + Vector3.forward * 6f;

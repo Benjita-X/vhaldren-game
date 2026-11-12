@@ -60,8 +60,18 @@ La auditoría de los archivos de V Rising (`auditoria-v-rising/AUDITORIA.md`) se
 - `Assets/Resources/VariantesShader` guarda dos materiales de muestra para que el ejecutable no pierda la transparencia de la vista previa de construcción ni el brillo de los enemigos.
 - Verificación automática: `Vhaldren.exe -vhaldrenCapture <carpeta>` arranca el mundo, lanza hechizos, visita un campamento, pone la Luna carmesí, guarda capturas y un informe, y se cierra. Resultado: 19 enemigos, 120 FPS a 1280×720 y ninguna excepción en el registro.
 
+### Progresión obligatoria: equipo, niveles y botín (respuesta a «que no sea fácil»)
+- ¿Por qué no usar los enemigos de V Rising «ya hechos»? Se revisaron los archivos extraídos. `modelos.json` solo guarda el nombre y el número de vértices de cada malla, y los OBJ son geometría suelta, sin esqueleto, animación ni comportamiento. La IA está compilada en `GameAssembly.dll` (247 MB de código nativo IL2CPP) y el mundo usa entidades DOTS de Unity 2022. No hay nada que se pueda conectar: igualmente habría que reprogramar el comportamiento, y además infringiría el copyright.
+- **Nivel de enemigo**: saqueador 5, ballestero 6, acechador 6, lobo 7, centinela de ruinas 9, esqueleto 10, acólito y sanadora 12, guardián 13, bruto 16, centinela rúnico 20 y jefe 26.
+- **Nivel de equipo** = media de arma, armadura y talismán: viajero 1, cazador 8, hierro 16, rúnico 24.
+- Por cada nivel de diferencia, un 4 %: con menos nivel haces menos daño (mínimo 35 %) y recibes más (máximo ×2). Con equipo inicial, el jefe hace el doble de daño y recibe un tercio.
+- **Forja (U)**: cazador = 4 piel, 6 madera, 4 fibra. Hierro = 6 mineral, 4 madera, 3 piel, con banco de trabajo. Rúnico = 3 cristal, 6 mineral, 4 esencia, con banco. La armadura da +20/+45/+80 de vida y el talismán +6/12/20 % de poder de hechizo.
+- **Botín por tipo**: la piel sale de lobos y tiradores, el mineral del bruto y las ruinas, y el cristal y la esencia de acólitos, centinela y jefe. Para mejorar hay que cazar en orden.
+- **Campamentos en grupo**: al atacar a un enemigo, sus compañeros a menos de 10 m acuden. Un asentamiento no se limpia de uno en uno.
+- Encima de cada enemigo se ve su nivel: blanco (a tu altura), amarillo (reto) y rojo (6 o más por encima).
+
 ## Pruebas
-- **EditMode 76/76** y **PlayMode 100/100** en Unity 6000.2.12f1.
+- **EditMode 77/77** y **PlayMode 105/105** en Unity 6000.2.12f1 (incluye 6 pruebas de progresión: forja atómica, banco, armadura sin curación gratis, diferencia de nivel, botín y aviso al grupo).
 - Nuevas: catálogo de hechizos y esencias, ciclo día/noche, 11 de magia en PlayMode (proyectil, cargas, congelación, maldición, estática, Égida, escuelas en combate, absorción, ejecución, interrupción, Paso sombrío contra muro y regeneración), 7 del bestiario y una prueba de humo que carga `WorldPrototype001` completo y exige consola limpia.
 - El actualizador del Animator 017 se ejecutó al abrir Unity: el controlador pasó de 6 a 14 estados sin perder ninguno.
 

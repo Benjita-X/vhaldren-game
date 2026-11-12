@@ -46,6 +46,7 @@ namespace Vhaldren.Gameplay.Magic
         private EssenceReservoir essence;
         private CombatState combat;
         private PlayerFeeding feeding;
+        private Vhaldren.Gameplay.Progression.PlayerEquipment equipment;
         private System.Random random = new System.Random(20261112);
 
         private SpellSchool school = SpellSchool.Pyromancy;
@@ -73,7 +74,9 @@ namespace Vhaldren.Gameplay.Magic
         public bool IsCasting => Time.time < castingUntil;
 
         /// <summary>Poder de hechizo actual: base 1 por la bonificacion de esencia.</summary>
-        public float SpellPower => essence != null ? essence.SpellPowerMultiplier : 1f;
+        public float SpellPower =>
+            (essence != null ? essence.SpellPowerMultiplier : 1f) *
+            (equipment != null ? equipment.SpellPowerMultiplier : 1f);
 
         private void Awake()
         {
@@ -87,6 +90,7 @@ namespace Vhaldren.Gameplay.Magic
             essence = GetComponent<EssenceReservoir>();
             if (essence == null)
                 essence = gameObject.AddComponent<EssenceReservoir>();
+            equipment = GetComponent<Vhaldren.Gameplay.Progression.PlayerEquipment>();
             combat = GetComponent<CombatState>();
             if (combat == null)
                 combat = gameObject.AddComponent<CombatState>();
@@ -644,6 +648,15 @@ namespace Vhaldren.Gameplay.Magic
             if ((target.transform.position - transform.position).sqrMagnitude > 22f * 22f)
                 return;
             text.Clear();
+            Vhaldren.Gameplay.Progression.CombatLevel level = target.GetComponent<Vhaldren.Gameplay.Progression.CombatLevel>();
+            if (level != null)
+            {
+                int gear = equipment != null ? equipment.GearLevel : level.Level;
+                int gap = level.Level - gear;
+                // Rojo: muy por encima de tu equipo; amarillo: reto; blanco: a tu altura.
+                text.Append(gap >= 6 ? "<color=#ff5050>" : gap >= 2 ? "<color=#ffd24a>" : "<color=#dddddd>")
+                    .Append("Nv ").Append(level.Level).Append("</color>\n");
+            }
             StatusEffects status = target.GetComponent<StatusEffects>();
             if (status != null)
             {
@@ -712,6 +725,10 @@ namespace Vhaldren.Gameplay.Magic
             text.Clear();
             text.Append("<b><color=#").Append(hex).Append('>').Append(SpellCatalog.SchoolName(school).ToUpperInvariant())
                 .Append("</color></b>   Tab: escuela (").Append(UnlockedCount).Append("/6)");
+            if (equipment == null)
+                equipment = GetComponent<Vhaldren.Gameplay.Progression.PlayerEquipment>();
+            if (equipment != null)
+                text.Append("   Equipo <b>Nv ").Append(equipment.GearLevel).Append("</b> (U)");
             if (combat != null && combat.InCombat)
                 text.Append("   <color=#f88>EN COMBATE ").Append(combat.SecondsLeft.ToString("0")).Append("s</color>");
             if (DayNightCycle.Active != null)
