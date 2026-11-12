@@ -159,7 +159,7 @@ namespace Vhaldren.Gameplay.Player
                 actionModifiers = GetComponent<PlayerActionModifiers>();
             if (actionModifiers != null && !actionModifiers.AllowsAttack)
             {
-                Announce(name + ": sal del modo construcción (B)");
+                Announce(name + ": cierra construcción (B) o diálogo (N)");
                 return false;
             }
 
