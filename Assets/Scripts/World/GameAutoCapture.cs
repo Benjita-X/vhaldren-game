@@ -2,19 +2,22 @@ using System;
 using System.Collections;
 using System.IO;
 using UnityEngine;
+using Vhaldren.Gameplay.Combat;
 using Vhaldren.Gameplay.Magic;
 
 namespace Vhaldren.Gameplay.World
 {
     /// <summary>
     /// Verificacion automatica del ejecutable. Solo actua si se arranca con
-    /// <c>-vhaldrenCapture carpeta</c>: guarda capturas del mundo (al inicio, lanzando
-    /// hechizos y con la ayuda abierta), escribe un informe y cierra el juego.
-    /// En una partida normal no hace nada.
+    /// <c>-vhaldrenCapture carpeta</c>: guarda capturas del mundo (al inicio, la preparacion
+    /// y el estallido de hechizos, los proyectiles de las seis escuelas, los remates de
+    /// area, el aviso de un enemigo llenandose y su muerte), escribe un informe y cierra
+    /// el juego. En una partida normal no hace nada.
     /// </summary>
     public sealed class GameAutoCapture : MonoBehaviour
     {
         private string folder;
+        private string report;
 
         public static string RequestedFolder()
         {
@@ -37,40 +40,62 @@ namespace Vhaldren.Gameplay.World
             StartCoroutine(Run());
         }
 
+        private void Note(string line) => File.AppendAllText(report, line + "\n");
+
         private IEnumerator Run()
         {
-            string report = Path.Combine(folder, "informe.txt");
+            report = Path.Combine(folder, "informe.txt");
             File.WriteAllText(report, "Vhaldren " + Application.version + " " + Screen.width + "x" + Screen.height + "\n");
             yield return new WaitForSeconds(4f);
             yield return Shot("1-inicio.png");
+            Note("shaders_propios=" + !VfxLibrary.UsingFallback);
 
             GameObject player = GameObject.Find("PlayerRoot");
             PlayerSpellbook book = player != null ? player.GetComponent<PlayerSpellbook>() : null;
+            CombatDefense defense = player != null ? player.GetComponent<CombatDefense>() : null;
+            CombatHealth health = player != null ? player.GetComponent<CombatHealth>() : null;
+            Vhaldren.Gameplay.CameraSystem.SimpleFollowCamera follow =
+                Camera.main != null ? Camera.main.GetComponent<Vhaldren.Gameplay.CameraSystem.SimpleFollowCamera>() : null;
+
             if (book != null)
             {
+                follow?.SetZoom(0.75f, true);
                 Vector3 ahead = player.transform.position + Vector3.forward * 6f;
                 book.TryCast(1, ahead);
-                yield return new WaitForSeconds(0.45f);
+                yield return new WaitForSeconds(0.2f);
+                yield return Shot("2a-anillo-preparacion.png");
+                yield return new WaitForSeconds(0.2f);
                 yield return Shot("2-anillo-de-llamas.png");
-                book.ResetCooldowns();
+                Ready(book, defense);
                 book.TryCast(2, ahead + Vector3.forward * 2f);
                 yield return new WaitForSeconds(0.6f);
                 yield return Shot("3-meteoro-avisado.png");
-                yield return new WaitForSeconds(0.8f);
+                yield return new WaitForSeconds(0.42f);
+                yield return Shot("3b-meteoro-cayendo.png");
+                yield return new WaitForSeconds(0.38f);
                 yield return Shot("4-meteoro-impacto.png");
+                yield return new WaitForSeconds(0.8f);
+
+                yield return SchoolShowcase(book, defense, player.transform);
+                follow?.SetZoom(1f, true);
             }
 
             // Vista general de un campamento del bestiario.
             if (player != null)
             {
+                if (book != null)
+                    book.SelectSchool(SpellSchool.Fulmancy);   // antes de entrar en combate
                 player.transform.position = new Vector3(0f, 1.08f, -24f);
                 Physics.SyncTransforms();
                 yield return new WaitForSeconds(2.5f);
                 yield return Shot("5-campamento-bandidos.png");
+                yield return EnemyShowcase(book, defense, health, follow);
             }
 
             if (player != null)
             {
+                if (health != null)
+                    health.ResetToFull();
                 player.transform.position = new Vector3(0f, 1.08f, 35.5f);
                 Physics.SyncTransforms();
                 yield return new WaitForSeconds(1.5f);
@@ -84,8 +109,6 @@ namespace Vhaldren.Gameplay.World
                 // Vista alejada desde una esquina: terreno pintado, muros y montañas.
                 player.transform.position = new Vector3(-36f, 1.08f, -34f);
                 Physics.SyncTransforms();
-                Vhaldren.Gameplay.CameraSystem.SimpleFollowCamera follow =
-                    Camera.main != null ? Camera.main.GetComponent<Vhaldren.Gameplay.CameraSystem.SimpleFollowCamera>() : null;
                 follow?.SetZoom(2.2f, true);
                 yield return new WaitForSeconds(1.2f);
                 yield return Shot("9-terreno-montanas.png");
@@ -112,9 +135,147 @@ namespace Vhaldren.Gameplay.World
             }
 
             int enemies = FindObjectsByType<PrototypeEnemy>(FindObjectsSortMode.None).Length;
-            File.AppendAllText(report, "enemigos=" + enemies + " hechizos=" + (book != null ? book.SpellsCast : 0) +
-                                       " fps=" + (1f / Mathf.Max(0.0001f, Time.smoothDeltaTime)).ToString("0") + "\n");
+            Note("enemigos=" + enemies + " hechizos=" + (book != null ? book.SpellsCast : 0) +
+                 " fps=" + (1f / Mathf.Max(0.0001f, Time.smoothDeltaTime)).ToString("0"));
             Application.Quit();
+        }
+
+        /// <summary>Recargas y resistencia llenas: la demostracion no depende de los tiempos.</summary>
+        private static void Ready(PlayerSpellbook book, CombatDefense defense)
+        {
+            book.ResetCooldowns();
+            if (defense != null)
+                defense.RestoreStamina(1000f);
+        }
+
+        /// <summary>Un proyectil de cada escuela en abanico y el definitivo de varias.</summary>
+        private IEnumerator SchoolShowcase(PlayerSpellbook book, CombatDefense defense, Transform player)
+        {
+            book.Unlock(SpellSchool.Umbramancy);
+            book.Unlock(SpellSchool.Hemomancy);
+            book.Unlock(SpellSchool.Lumancy);
+            Vector3 origin = player.position;
+            int cast = 0;
+            for (int i = 0; i < SpellCatalog.SchoolCount; i++)
+            {
+                SpellSchool school = (SpellSchool)i;
+                if (!book.SelectSchool(school))
+                    continue;
+                Ready(book, defense);
+                float angle = Mathf.Lerp(-55f, 55f, i / (SpellCatalog.SchoolCount - 1f));
+                Vector3 aim = origin + Quaternion.Euler(0f, angle, 0f) * Vector3.forward * 16f;
+                if (book.TryCast(0, aim))
+                    cast++;
+            }
+            yield return new WaitForSeconds(0.3f);
+            yield return Shot("10-proyectiles-seis-escuelas.png");
+            Note("proyectiles_en_vuelo=" + FindObjectsByType<SpellProjectile>(FindObjectsSortMode.None).Length + "/" + cast);
+            yield return new WaitForSeconds(0.9f);
+
+            Vector3 zone = origin + Vector3.forward * 7f;
+            if (book.SelectSchool(SpellSchool.Fulmancy))
+            {
+                Ready(book, defense);
+                book.TryCast(2, zone);
+                yield return new WaitForSeconds(0.62f);
+                yield return Shot("11-tempestad-rayos.png");
+                yield return new WaitForSeconds(0.32f);
+                yield return Shot("11b-tempestad-descarga.png");
+                yield return new WaitForSeconds(0.6f);
+            }
+            if (book.SelectSchool(SpellSchool.Lumancy))
+            {
+                Ready(book, defense);
+                book.TryCast(2, zone);
+                yield return new WaitForSeconds(0.55f);
+                yield return Shot("12a-juicio-avisado.png");
+                yield return new WaitForSeconds(0.52f);
+                yield return Shot("12-juicio-celestial.png");
+                yield return new WaitForSeconds(0.6f);
+            }
+            if (book.SelectSchool(SpellSchool.Umbramancy))
+            {
+                Ready(book, defense);
+                book.TryCast(2, zone);
+                yield return new WaitForSeconds(0.32f);
+                yield return Shot("13a-eclipse-preparacion.png");
+                yield return new WaitForSeconds(0.38f);
+                yield return Shot("13-eclipse.png");
+                yield return new WaitForSeconds(0.6f);
+            }
+            if (book.SelectSchool(SpellSchool.Cryomancy))
+            {
+                Ready(book, defense);
+                book.TryCast(1, zone);
+                yield return new WaitForSeconds(0.68f);
+                yield return Shot("14-prision-glacial.png");
+                yield return new WaitForSeconds(0.6f);
+            }
+            if (book.SelectSchool(SpellSchool.Hemomancy))
+            {
+                Ready(book, defense);
+                book.TryCast(2, zone);
+                yield return new WaitForSeconds(0.98f);
+                yield return Shot("15-festin-carmesi.png");
+                yield return new WaitForSeconds(0.6f);
+            }
+        }
+
+        /// <summary>Aviso enemigo llenandose, cadena de rayos y una muerte animada.</summary>
+        private IEnumerator EnemyShowcase(PlayerSpellbook book, CombatDefense defense, CombatHealth health,
+            Vhaldren.Gameplay.CameraSystem.SimpleFollowCamera follow)
+        {
+            follow?.SetZoom(0.8f, true);
+            PrototypeEnemy attacker = null;
+            float limit = Time.time + 8f;
+            while (attacker == null && Time.time < limit)
+            {
+                if (health != null)
+                    health.ResetToFull();
+                foreach (PrototypeEnemy enemy in FindObjectsByType<PrototypeEnemy>(FindObjectsSortMode.None))
+                {
+                    EnemyAttackTelegraph warning = enemy.GetComponent<EnemyAttackTelegraph>();
+                    if (enemy.IsAttackTelegraphed && warning != null && warning.Fill >= 0.4f && warning.Fill <= 0.8f)
+                    {
+                        attacker = enemy;
+                        break;
+                    }
+                }
+                if (attacker == null)
+                    yield return null;
+            }
+            Note("aviso_enemigo=" + (attacker != null ? attacker.name + " lleno " +
+                attacker.GetComponent<EnemyAttackTelegraph>().Fill.ToString("0.00") : "ninguno"));
+            if (attacker == null)
+                yield break;
+            yield return Shot("16-aviso-enemigo-llenandose.png");
+
+            if (book != null)
+            {
+                Ready(book, defense);
+                book.TryCast(1, attacker.transform.position);
+                yield return new WaitForSeconds(0.22f);
+                yield return Shot("17-cadena-de-rayos.png");
+            }
+
+            if (health != null)
+                health.ResetToFull();
+            CombatHealth victim = attacker.GetComponent<CombatHealth>();
+            if (victim != null && !victim.IsDefeated)
+                victim.ApplyDamage(victim.CurrentHealth + 1f);
+            yield return new WaitForSeconds(0.35f);
+            yield return Shot("18-muerte-cayendo.png");
+            EnemyAnimationDriver driver = attacker.AnimationDriver;
+            Note("muerte_animada=" + (driver != null && driver.InDeathState) + " procedural=" + attacker.UsesProceduralDeath +
+                 " colision_apagada=" + !attacker.GetComponent<CharacterController>().enabled +
+                 " cuerpo_visible=" + attacker.IsCorpseVisible);
+            yield return new WaitForSeconds(0.65f);
+            yield return Shot("19-muerte-en-el-suelo.png");
+            yield return new WaitForSeconds(1.1f);
+            Note("cuerpo_oculto_tras_1_8s=" + !attacker.IsCorpseVisible);
+            if (health != null)
+                health.ResetToFull();
+            follow?.SetZoom(1f, true);
         }
 
         private IEnumerator Shot(string file)

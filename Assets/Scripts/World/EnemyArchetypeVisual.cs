@@ -14,8 +14,20 @@ namespace Vhaldren.Gameplay.World
         private static readonly int ColorId = Shader.PropertyToID("_Color");
         private Transform props;
         private string builtFor;
+        private bool authoredModel;
 
         public string BuiltFor => builtFor;
+
+        /// <summary>
+        /// Con un modelo real los accesorios son brillos sueltos (orbe, runas) que no siguen
+        /// al esqueleto: se apagan mientras el cuerpo cae. En los cuerpos provisionales los
+        /// accesorios SON el cuerpo (lobo), asi que se quedan y caen con el.
+        /// </summary>
+        public void SetDefeated(bool defeated)
+        {
+            if (props != null && authoredModel)
+                props.gameObject.SetActive(!defeated);
+        }
 
         public void Build(EnemyArchetype data)
         {
@@ -34,6 +46,7 @@ namespace Vhaldren.Gameplay.World
             // solo los brillos que delatan magia (mago, sanadora, elite).
             Transform realModel = AuthoredVisual.FindRoot(anchor);
             bool authored = realModel != null;
+            authoredModel = authored;
             if (authored)
             {
                 if (data.Role == EnemyRole.Caster)

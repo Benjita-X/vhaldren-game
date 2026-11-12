@@ -100,12 +100,17 @@ namespace Vhaldren.Gameplay.Combat
             Host().Burst(position, Vector3.up, new Color(1f, 0.95f, 0.6f), 16, 6f);
         }
 
-        /// <summary>Polvo al moverse o esquivar.</summary>
+        /// <summary>Polvo al moverse o esquivar: bocanadas suaves que tapan (no brillan).</summary>
         public static void Dust(Vector3 feet, Vector3 direction, int count, float speed)
         {
             if (!Enabled)
                 return;
-            Host().Burst(feet + Vector3.up * 0.05f, direction, new Color(0.55f, 0.5f, 0.44f, 0.7f), count, speed, 0.5f, 0.22f);
+            VfxHost vfx = VfxHost.Get();
+            if (vfx != null)
+                vfx.Smoke(feet + Vector3.up * 0.12f, 0.18f, new Color(0.58f, 0.53f, 0.46f, 0.55f),
+                    Mathf.Clamp(count, 1, 24), 0.32f, 0.6f, direction * (speed * 0.45f));
+            else
+                Host().Burst(feet + Vector3.up * 0.05f, direction, new Color(0.55f, 0.5f, 0.44f, 0.7f), count, speed, 0.5f, 0.22f);
         }
 
         public static void HitStop(float seconds)
@@ -206,7 +211,8 @@ namespace Vhaldren.Gameplay.Combat
             main.startColor = color;
             main.startSpeed = new ParticleSystem.MinMaxCurve(speed * 0.5f, speed);
             main.startLifetime = new ParticleSystem.MinMaxCurve(lifetime * 0.6f, lifetime);
-            main.startSize = new ParticleSystem.MinMaxCurve(size * 0.6f, size);
+            // La forma de luz tiene bordes suaves: algo mas grande para ocupar lo mismo.
+            main.startSize = new ParticleSystem.MinMaxCurve(size * 0.9f, size * 1.6f);
             system.Emit(Mathf.Clamp(count, 1, 40));
         }
 
@@ -239,11 +245,15 @@ namespace Vhaldren.Gameplay.Combat
             shrink.enabled = true;
             shrink.size = new ParticleSystem.MinMaxCurve(1f, AnimationCurve.Linear(0f, 1f, 1f, 0.2f));
             ParticleSystemRenderer renderer = go.GetComponent<ParticleSystemRenderer>();
-            renderer.sharedMaterial = PrototypeVfx.SharedMaterial;
+            // Chispa con forma de luz (centro caliente y bordes suaves) en vez de un
+            // rectangulo plano: los golpes se leen como destellos, no como cuadrados.
+            Material spark = VfxLibrary.AdditiveGlow;
+            renderer.sharedMaterial = spark != null ? spark : PrototypeVfx.SharedMaterial;
             renderer.renderMode = ParticleSystemRenderMode.Stretch;
-            renderer.velocityScale = 0.04f;
-            renderer.lengthScale = 1.5f;
+            renderer.velocityScale = 0.05f;
+            renderer.lengthScale = 2f;
             renderer.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
+            renderer.receiveShadows = false;
             return system;
         }
 

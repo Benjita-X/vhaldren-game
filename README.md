@@ -46,5 +46,6 @@ placeholders por modelos Blender sin reprogramar el juego.
 - `docs/TRASPASO.md`: instrucciones para cualquier agente que continúe.
 - `docs/018-CONSOLIDACION-PRE-MODELADO.md`: bugs corregidos y contrato Blender → Unity.
 - `docs/019-MAGIA-ESENCIA-BESTIARIO-Y-EJECUTABLE.md`: detalle de la vertical slice 017 y su última validación reportada.
+- `docs/021-EFECTOS-HECHIZOS-Y-MUERTE-ENEMIGOS.md`: efectos de hechizos por capas, avisos que se llenan y muerte animada de enemigos.
 
 Los documentos numerados anteriores se conservan como historial; no son la fuente actual de rama/estado.

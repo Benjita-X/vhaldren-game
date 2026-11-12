@@ -92,8 +92,100 @@ namespace Vhaldren.EditorTools
             }
             AssetDatabase.SaveAssets();
             AddRunAnimation();
+            AddDeathAnimation();
             Debug.Log("[Vhaldren] Enemigos KayKit listos: " + Models.Length + " modelos, " +
                       (Models.Length * 4) + " variantes de animacion.");
+        }
+
+        private static readonly string[] DeathNames = { "Death_A", "Death_B" };
+        public const string DeathStateName = EnemyAnimationDriver.DeathState;
+        public const string DeathTriggerName = EnemyAnimationDriver.DeathTrigger;
+
+        /// <summary>
+        /// Añade la caida (Death_A) al controlador base y a las 24 variantes modificando los
+        /// assets existentes, igual que <see cref="AddRunAnimation"/>: mismos GUID, asi la
+        /// escena no pierde ninguna referencia. Se puede ejecutar varias veces sin duplicar nada.
+        /// Por consola: -executeMethod Vhaldren.EditorTools.KayKitEnemySetup.AddDeathAnimation
+        /// </summary>
+        [MenuItem("Vhaldren/Personaje/Añadir muerte a enemigos KayKit")]
+        public static void AddDeathAnimation()
+        {
+            AnimatorController controller = AssetDatabase.LoadAssetAtPath<AnimatorController>(BaseControllerPath);
+            if (controller == null)
+                throw new InvalidOperationException("No existe el controlador base de enemigos.");
+            ModelInfo reference = Models.First(m => m.Id == "Skeleton_Warrior");
+            AnimationClip referenceDeath = Pick(ClipsOf(reference.FbxPath), DeathNames);
+            if (referenceDeath == null)
+                throw new InvalidOperationException("El modelo de referencia no tiene clip de muerte.");
+
+            if (!controller.parameters.Any(p => p.name == DeathTriggerName))
+                controller.AddParameter(DeathTriggerName, AnimatorControllerParameterType.Trigger);
+
+            AnimatorStateMachine machine = controller.layers[0].stateMachine;
+            AnimatorState death = null;
+            foreach (ChildAnimatorState child in machine.states)
+                if (child.state.name == DeathStateName)
+                    death = child.state;
+            if (death == null)
+                death = machine.AddState(DeathStateName, new Vector3(305f, 195f, 0f));
+            death.motion = referenceDeath;
+            death.writeDefaultValues = true;
+            death.speed = 1f;
+            // Sin transicion de salida: el cuerpo queda en el suelo hasta que el enemigo
+            // reaparece (EnemyAnimationDriver.ResetAfterRespawn reinicia el Animator).
+
+            AnimatorStateTransition enter = null;
+            foreach (AnimatorStateTransition transition in machine.anyStateTransitions)
+                if (transition.destinationState == death)
+                    enter = transition;
+            if (enter == null)
+            {
+                enter = machine.AddAnyStateTransition(death);
+                enter.AddCondition(AnimatorConditionMode.If, 0f, DeathTriggerName);
+            }
+            enter.hasExitTime = false;
+            enter.hasFixedDuration = true;
+            enter.duration = 0.08f;
+            enter.canTransitionToSelf = false;
+            enter.interruptionSource = TransitionInterruptionSource.None;
+
+            // La muerte va primera: si en el mismo fotograma llegan golpe y muerte, gana la muerte.
+            AnimatorStateTransition[] any = machine.anyStateTransitions;
+            if (any.Length > 1 && any[0] != enter)
+            {
+                List<AnimatorStateTransition> ordered = new List<AnimatorStateTransition> { enter };
+                foreach (AnimatorStateTransition transition in any)
+                    if (transition != enter)
+                        ordered.Add(transition);
+                machine.anyStateTransitions = ordered.ToArray();
+            }
+            EditorUtility.SetDirty(death);
+            EditorUtility.SetDirty(enter);
+            EditorUtility.SetDirty(machine);
+            EditorUtility.SetDirty(controller);
+
+            int updated = 0;
+            foreach (ModelInfo model in Models)
+            {
+                AnimationClip clip = Pick(ClipsOf(model.FbxPath), DeathNames);
+                foreach (AttackStyle style in Enum.GetValues(typeof(AttackStyle)))
+                {
+                    AnimatorOverrideController overrides =
+                        AssetDatabase.LoadAssetAtPath<AnimatorOverrideController>(OverridePath(model.Id, style));
+                    if (overrides == null || clip == null)
+                        continue;
+                    List<KeyValuePair<AnimationClip, AnimationClip>> pairs = new List<KeyValuePair<AnimationClip, AnimationClip>>();
+                    overrides.GetOverrides(pairs);
+                    for (int i = 0; i < pairs.Count; i++)
+                        if (pairs[i].Key == referenceDeath)
+                            pairs[i] = new KeyValuePair<AnimationClip, AnimationClip>(pairs[i].Key, clip);
+                    overrides.ApplyOverrides(pairs);
+                    EditorUtility.SetDirty(overrides);
+                    updated++;
+                }
+            }
+            AssetDatabase.SaveAssets();
+            Debug.Log("[Vhaldren] Muerte añadida a enemigos KayKit (" + updated + " variantes).");
         }
 
         private static readonly string[] RunNames = { "Running_A", "Running_B" };
