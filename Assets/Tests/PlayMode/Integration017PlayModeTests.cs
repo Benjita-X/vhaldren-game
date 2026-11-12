@@ -15,12 +15,14 @@ namespace Vhaldren.Tests
         private GameObject player;
         private GameObject sessionObject;
         private GameObject board;
+        private GameObject enemyObject;
 
         [UnityTearDown]
         public IEnumerator TearDown()
         {
             if (sessionObject != null) Object.Destroy(sessionObject);
             if (board != null) Object.Destroy(board);
+            if (enemyObject != null) Object.Destroy(enemyObject);
             if (player != null) Object.Destroy(player);
             yield return null;
         }
@@ -147,6 +149,53 @@ namespace Vhaldren.Tests
                 "Un intercambio rechazado no entrega ni descuenta items.");
             Assert.That(inventory.Count(ResourceKind.Hide), Is.EqualTo(hides));
             Assert.That(journal.TradeStock(1), Is.EqualTo(3));
+        }
+
+        [UnityTest]
+        public IEnumerator RespawnedEnemyCountsAgainForQuestAcceptedAfterEarlierKill()
+        {
+            player = new GameObject("PlayerRoot");
+            player.AddComponent<CombatHealth>();
+            player.AddComponent<SurvivalInventory>();
+
+            enemyObject = new GameObject("GuardianRepetible");
+            enemyObject.transform.position = new Vector3(4f, 1.08f, 0f);
+            PrototypeEnemy enemy = enemyObject.AddComponent<PrototypeEnemy>();
+
+            sessionObject = new GameObject("TestSessionQuest");
+            sessionObject.SetActive(false);
+            PrototypeGameSession session = sessionObject.AddComponent<PrototypeGameSession>();
+            typeof(PrototypeGameSession).GetField("player",
+                BindingFlags.Instance | BindingFlags.NonPublic)
+                .SetValue(session, player.transform);
+            sessionObject.SetActive(true);
+            yield return null;
+
+            VillageQuestJournal journal = player.GetComponent<VillageQuestJournal>();
+            Assert.That(journal, Is.Not.Null);
+
+            // Matar antes de llegar al capítulo de guardianes: queda en el
+            // contador global, pero NO debe inutilizar sus muertes futuras.
+            CombatHealth enemyHealth = enemyObject.GetComponent<CombatHealth>();
+            enemyHealth.ApplyDamage(enemyHealth.CurrentHealth);
+            yield return new WaitForSeconds(1.1f);
+            Assert.That(enemy.IsDefeated, Is.False, "El enemigo ya reapareció.");
+
+            Assert.That(journal.TryAccept(), Is.True);
+            Assert.That(journal.TryClaim(), Is.True);
+            Assert.That(journal.TryAccept(), Is.True);
+            Assert.That(journal.TryClaim(), Is.True);
+            Assert.That(journal.TryAccept(), Is.True);
+            Assert.That(journal.Current.Objective, Is.EqualTo(VillageObjective.DefeatGuardians));
+
+            enemyHealth.ApplyDamage(enemyHealth.CurrentHealth);
+            yield return new WaitForSeconds(1.1f);
+            Assert.That(journal.Progress, Is.EqualTo(1));
+
+            enemyHealth.ApplyDamage(enemyHealth.CurrentHealth);
+            yield return null;
+            Assert.That(journal.Progress, Is.EqualTo(2));
+            Assert.That(journal.State, Is.EqualTo(VillageQuestState.ReadyToClaim));
         }
 
         [UnityTest]
