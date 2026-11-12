@@ -83,7 +83,8 @@ namespace Vhaldren.Gameplay.Player
                    "<b>MAGIA Y RAZA</b>\n" + K(GameAction.Spell1) + "/" + K(GameAction.Spell2) + "/" + K(GameAction.Spell3) + " hechizos | " + K(GameAction.NextSchool) + " escuela\n" +
                    K(GameAction.Absorb) + " (mantener) absorber esencia | " + K(GameAction.RacialPower) + " poder de raza\n" +
                    K(GameAction.Equipment) + " forja de equipo\n\n" +
-                   "<b>SUPERVIVENCIA</b>\n" + K(GameAction.Gather) + " recolectar | " + K(GameAction.Build) + " construir | " + K(GameAction.CraftPick1) + "/" + K(GameAction.CraftPick2) + " picos\n\n" +
+                   "<b>SUPERVIVENCIA</b>\n" + K(GameAction.Gather) + " recolectar | " + K(GameAction.Build) + " construir | " + K(GameAction.CraftPick1) + "/" + K(GameAction.CraftPick2) + " picos\n" +
+                   "Piezas: " + K(GameAction.BuildSlot1) + "…" + K(GameAction.BuildSlot10) + " | " + K(GameAction.Rotate) + " girar | " + K(GameAction.Dismantle) + " desmontar\n\n" +
                    "<b>PUEBLOS</b>\n" + K(GameAction.Noticeboard) + " tablón | " + K(GameAction.Accept) + " aceptar | " + K(GameAction.Offer) + " oferta | " + K(GameAction.Buy) + " comprar\n\n" +
                    K(GameAction.Pause) + ": menú (opciones, información) | " + K(GameAction.Help) + ": ocultar ayuda";
         }
