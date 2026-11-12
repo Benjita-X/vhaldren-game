@@ -18,6 +18,7 @@ namespace Vhaldren.Gameplay.World
         [SerializeField] private Transform player;
 
         private VillageQuestJournal journal;
+        private SettlementState townState;
         private bool open;
         private string feedback = "";
         private float feedbackUntil;
@@ -35,6 +36,12 @@ namespace Vhaldren.Gameplay.World
             }
             if (player != null)
                 journal = player.GetComponent<VillageQuestJournal>();
+
+            townState = GetComponent<SettlementState>();
+            if (townState == null)
+                townState = gameObject.AddComponent<SettlementState>();
+            if (journal != null)
+                townState.Bind(journal);
 
             if (transform.childCount == 0)
                 CreateVisuals();
@@ -109,19 +116,26 @@ namespace Vhaldren.Gameplay.World
                         ? "Y: entregar / reclamar recompensa"
                         : "Investiga y completa el encargo";
             string eventText = journal.EventTitle;
+            string villageStatus = townState != null
+                ? "\nSeguridad: " + townState.Security +
+                  " | Provisiones: " + townState.Supplies +
+                  " | Ánimo: " + townState.Morale +
+                  " | Tensión arcana: " + townState.ArcaneTension +
+                  "\n" + townState.CurrentSituation()
+                : string.Empty;
             string text = "<b>CONSEJO DEL CRUCE</b>\n" +
                 "Reputación local: " +
                 journal.Reputation(SettlementCulture.Mixed) +
                 " | Arcanistas: " +
                 journal.Reputation(SettlementCulture.Arcane) +
-                "\nEvento actual: " + eventText + "\n\n" +
+                "\nEvento actual: " + eventText + villageStatus + "\n\n" +
                 mission + "\n\n" + action +
                 "\nN: cerrar";
             if (Time.time < feedbackUntil)
                 text += "\n\n" + feedback;
 
             GUI.Box(new Rect(Mathf.Max(10f, Screen.width - 385f),
-                Mathf.Max(10f, Screen.height - 470f), 370f, 285f),
+                Mathf.Max(10f, Screen.height - 555f), 370f, 365f),
                 text, labelStyle);
         }
 
