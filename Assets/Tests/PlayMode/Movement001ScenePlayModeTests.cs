@@ -24,10 +24,17 @@ namespace Vhaldren.Tests
         [UnitySetUp]
         public IEnumerator SetUp()
         {
+            // Movement001 es una sala de pruebas: no va en el ejecutable (solo MainMenu y
+            // WorldPrototype001), asi que se carga directamente desde el proyecto.
+#if UNITY_EDITOR
+            yield return UnityEditor.SceneManagement.EditorSceneManager.LoadSceneAsyncInPlayMode(
+                ScenePath, new LoadSceneParameters(LoadSceneMode.Additive));
+#else
             yield return SceneManager.LoadSceneAsync(ScenePath, LoadSceneMode.Additive);
+#endif
             Scene scene = SceneManager.GetSceneByPath(ScenePath);
             Assert.That(scene.IsValid() && scene.isLoaded, Is.True,
-                "Movement001 debe estar en Build Settings para poder cargarse.");
+                "No se pudo cargar la sala de pruebas Movement001.");
 
             foreach (GameObject root in scene.GetRootGameObjects())
             {
