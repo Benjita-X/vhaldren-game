@@ -32,9 +32,9 @@ namespace Vhaldren.Gameplay.World
 
             // Con un personaje KayKit texturizado no se tiñe ni se añaden armas falsas:
             // solo los brillos que delatan magia (mago, sanadora, elite).
-            Transform realModel = anchor.Find("Modelo texturizado");
-            bool textured = realModel != null && realModel.GetComponentInChildren<Animator>(true) != null;
-            if (textured)
+            Transform realModel = AuthoredVisual.FindRoot(anchor);
+            bool authored = realModel != null;
+            if (authored)
             {
                 if (data.Role == EnemyRole.Caster)
                     Orb(new Vector3(0.45f, 0.95f, 0.25f), 0.2f, new Color(1f, 0.45f, 0.1f));
