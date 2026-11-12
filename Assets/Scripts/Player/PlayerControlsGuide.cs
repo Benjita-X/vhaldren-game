@@ -1,4 +1,5 @@
 using UnityEngine;
+using Vhaldren.Gameplay.World;
 #if ENABLE_INPUT_SYSTEM
 using UnityEngine.InputSystem;
 #endif
@@ -16,13 +17,18 @@ namespace Vhaldren.Gameplay.Player
         [SerializeField] private bool expandedByDefault = true;
         private bool expanded;
         private GUIStyle textStyle;
-        private GUIStyle titleStyle;
+        private VillageNoticeboard noticeboard;
         private float autoHideAt;
 
         private void Awake()
         {
             expanded = expandedByDefault;
             autoHideAt = Time.time + 16f;
+        }
+
+        private void Start()
+        {
+            noticeboard = FindAnyObjectByType<VillageNoticeboard>();
         }
 
         private void Update()
@@ -39,6 +45,9 @@ namespace Vhaldren.Gameplay.Player
         private void OnGUI()
         {
             if (Event.current.type != EventType.Repaint)
+                return;
+            // La ayuda nunca debe tapar el comercio/dialogo del pueblo.
+            if (noticeboard != null && noticeboard.MenuOpen)
                 return;
 
             float width = Mathf.Min(365f, Mathf.Max(160f, Screen.width - 24f));
