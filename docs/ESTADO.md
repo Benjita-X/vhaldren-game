@@ -40,6 +40,15 @@ La auditoría detectó y corrigió problemas que se vuelven críticos cuando el 
 - `AuthoredVisual` marca modelos finales de Blender/KayKit para que el runtime no genere cuerpos
   provisionales encima. Lógica, hitboxes y arte quedan separados.
 
+## Interfaz (022)
+
+El HUD ya no son recuadros opacos: barra de acción única abajo en el centro (orbe de vida, resistencia en
+arco, armas a la izquierda y hechizos/raza a la derecha, ≤ 45 % del ancho), viñeta con velo carmesí que
+se vuelve roja con poca vida, avisos breves arriba (máximo 2), misión arriba a la derecha, recursos
+abajo a la izquierda, estados de enemigos como puntos de color y flechas para golpes desde fuera de la
+pantalla. Los recuadros antiguos siguen con F3. Los personajes KayKit llevan solo su arma en la mano.
+Detalle y verificación: `docs/022-HUD-ELEGANTE-Y-ARMAS-VISIBLES.md`.
+
 ## Pruebas
 
 Último resultado de Unity heredado de la 017 y registrado por Claude en

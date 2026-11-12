@@ -81,6 +81,9 @@ namespace Vhaldren.Gameplay.World
                 TryBuyCurrentOffer();
         }
 
+        /// <summary>Abre o cierra el tablón (capturas y pruebas); solo se abre con el jugador cerca.</summary>
+        public void SetMenuOpen(bool requested) => SetOpen(requested && PlayerNearby);
+
         private void SetOpen(bool requested)
         {
             if (requested == open)
@@ -175,9 +178,14 @@ namespace Vhaldren.Gameplay.World
                     richText = true
                 };
 
-            Rect label = new Rect(Mathf.Max(10f, Screen.width - 385f),
-                Mathf.Max(210f, Screen.height - 180f), 370f, 42f);
-            GUI.Box(label, "PUESTO DEL CRUCE  |  N: tablón de misiones", labelStyle);
+            // El aviso «N: tablón» lo dibuja la barra de acción; aquí solo el tablón abierto
+            // (o el recuadro antiguo en el modo de depuración F3).
+            if (Vhaldren.Gameplay.UI.HudMode.Debug)
+            {
+                Rect label = new Rect(Mathf.Max(10f, Screen.width - 385f),
+                    Mathf.Max(210f, Screen.height - 180f), 370f, 42f);
+                GUI.Box(label, "PUESTO DEL CRUCE  |  N: tablón de misiones", labelStyle);
+            }
             if (!open)
                 return;
 
@@ -212,13 +220,18 @@ namespace Vhaldren.Gameplay.World
                 " | Stock: " + journal.TradeStock(tradeIndex);
             if (journal.Reputation(offer.Faction) < offer.ReputationNeeded)
                 text += " | Requiere reputación " + offer.ReputationNeeded;
-            text += "\nN: cerrar";
+            text += "\n" + Vhaldren.Gameplay.Settings.GameInput.Label(Vhaldren.Gameplay.Settings.GameAction.Noticeboard) + ": cerrar";
             if (Time.time < feedbackUntil)
-                text += "\n\n" + feedback;
+                text += "\n\n<color=#e9c46a>" + feedback + "</color>";
 
-            GUI.Box(new Rect(Mathf.Max(10f, Screen.width - 385f),
-                Mathf.Max(10f, Screen.height - 530f), 370f, 370f),
-                text, labelStyle);
+            // Tablón completo con el marco de los menús, a la derecha y sin tapar la barra.
+            Vhaldren.Gameplay.UI.MenuStyle.Begin();
+            float w = Vhaldren.Gameplay.UI.MenuStyle.Width;
+            Rect panel = new Rect(w - 492f, 70f, 470f, 380f);
+            Vhaldren.Gameplay.UI.MenuStyle.FramedPanel(panel);
+            GUI.Label(new Rect(panel.x + 22f, panel.y + 16f, panel.width - 44f, panel.height - 28f),
+                text, Vhaldren.Gameplay.UI.MenuStyle.Body);
+            Vhaldren.Gameplay.UI.MenuStyle.End();
         }
 
         private void CreateVisuals()

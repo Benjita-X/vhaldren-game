@@ -111,6 +111,19 @@ namespace Vhaldren.Gameplay.World
                 if (player.GetComponent<SurvivalInventory>() != null &&
                     player.GetComponent<Vhaldren.Gameplay.Progression.PlayerEquipment>() == null)
                     player.gameObject.AddComponent<Vhaldren.Gameplay.Progression.PlayerEquipment>();
+                // HUD 022: barra de acción única, viñeta, avisos, misión, estados y armas visibles.
+                if (player.GetComponent<Vhaldren.Gameplay.UI.ActionBarHud>() == null)
+                    player.gameObject.AddComponent<Vhaldren.Gameplay.UI.ActionBarHud>().Bind(this);
+                Vhaldren.Gameplay.UI.ScreenVignette vignette = GetComponent<Vhaldren.Gameplay.UI.ScreenVignette>();
+                if (vignette == null)
+                    vignette = gameObject.AddComponent<Vhaldren.Gameplay.UI.ScreenVignette>();
+                vignette.Bind(playerHealth);
+                Vhaldren.Gameplay.UI.WorldHud worldHud = GetComponent<Vhaldren.Gameplay.UI.WorldHud>();
+                if (worldHud == null)
+                    worldHud = gameObject.AddComponent<Vhaldren.Gameplay.UI.WorldHud>();
+                worldHud.Bind(player);
+                if (player.GetComponent<CharacterLoadout>() == null)
+                    player.gameObject.AddComponent<CharacterLoadout>();
                 if (GameAutoCapture.RequestedFolder() != null && GetComponent<GameAutoCapture>() == null)
                     gameObject.AddComponent<GameAutoCapture>();
 
@@ -178,6 +191,9 @@ namespace Vhaldren.Gameplay.World
                         candidate.gameObject.AddComponent<Vhaldren.Gameplay.Progression.EnemyLoot>();
                     if (candidate.GetComponent<Vhaldren.Gameplay.Races.RacePowerTaken>() == null)
                         candidate.gameObject.AddComponent<Vhaldren.Gameplay.Races.RacePowerTaken>();
+                    // Arma propia en la mano según el modelo (hacha, espada y escudo, bastón...).
+                    if (candidate.GetComponent<CharacterLoadout>() == null)
+                        candidate.gameObject.AddComponent<CharacterLoadout>();
                 }
             minionCount = 0;
             defeated.Clear();
@@ -347,6 +363,26 @@ namespace Vhaldren.Gameplay.World
 
         public float LastPotionHealed { get; private set; }
 
+        /// <summary>Segundos hasta poder beber otra poción (barra de acción).</summary>
+        public float PotionCooldownRemaining => Mathf.Max(0f, healReadyAt - Time.time);
+        public float PotionCooldown => Mathf.Max(0.1f, healCooldown);
+        public bool IsPlayerDefeated => playerHealth != null && playerHealth.IsDefeated;
+        public float RespawnSecondsLeft => float.IsInfinity(respawnAt) ? 0f : Mathf.Max(0f, respawnAt - Time.time);
+        public bool TrialComplete => bossDefeated && defeated.Count >= minionCount + 1;
+        public int GuardiansDefeated
+        {
+            get
+            {
+                int fallen = 0;
+                foreach (PrototypeEnemy enemy in defeated)
+                    if (enemy != null && !enemy.IsBoss)
+                        fallen++;
+                return fallen;
+            }
+        }
+        public int GuardianCount => minionCount;
+        public bool BossDefeated => bossDefeated;
+
         /// <summary>
         /// Una pocion restaura hasta healAmount PV, nunca mas que la vida
         /// faltante. Deja feedback con el valor real y solo inicia cooldown
@@ -374,6 +410,8 @@ namespace Vhaldren.Gameplay.World
             }
             lastHealFeedbackUntil = Time.time + 2.0f;
             nextHudRefresh = 0f;
+            Vhaldren.Gameplay.UI.HudNotices.Post(lastHealFeedback, LastPotionHealed > 0f
+                ? new Color(1f, 0.62f, 0.62f) : Vhaldren.Gameplay.UI.HudNotices.Warning);
             return LastPotionHealed;
         }
 
@@ -420,6 +458,11 @@ namespace Vhaldren.Gameplay.World
         {
             if (playerHealth == null)
                 return;
+            if (!Vhaldren.Gameplay.UI.HudMode.Debug)
+            {
+                DrawOutcome();
+                return;
+            }
             const float height = 114f;
             Rect box = new Rect(12f, 12f, Mathf.Max(240f, Mathf.Min(Screen.width - 24f, 900f)), height);
             GUI.Box(box, "");
@@ -436,6 +479,36 @@ namespace Vhaldren.Gameplay.World
             else if (bossDefeated && defeated.Count >= minionCount + 1)
                 GUI.Box(new Rect(Screen.width / 2f - 180f, 102f, 360f, 60f),
                     "PRUEBA COMPLETADA\nHas derrotado a los guardianes y al jefe");
+        }
+
+        /// <summary>Caída y victoria: texto grande con contorno, sin cajas opacas.</summary>
+        private void DrawOutcome()
+        {
+            if (Event.current.type != EventType.Repaint || Vhaldren.Gameplay.UI.HudMode.Hidden)
+                return;
+            string title = null, subtitle = null;
+            Color tint = Vhaldren.Gameplay.UI.HudSkin.GoldBright;
+            if (playerHealth.IsDefeated)
+            {
+                title = "HAS CAÍDO";
+                subtitle = "Reaparecerás en " + Mathf.CeilToInt(RespawnSecondsLeft) + " s";
+                tint = new Color(0.95f, 0.3f, 0.3f);
+            }
+            else if (TrialComplete)
+            {
+                title = "PRUEBA COMPLETADA";
+                subtitle = "Has derrotado a los guardianes y al jefe";
+            }
+            if (title == null)
+                return;
+            Vhaldren.Gameplay.UI.MenuStyle.Begin();
+            float w = Vhaldren.Gameplay.UI.MenuStyle.Width;
+            float y = playerHealth.IsDefeated ? Vhaldren.Gameplay.UI.MenuStyle.Height * 0.36f : 130f;
+            Vhaldren.Gameplay.UI.HudSkin.SoftPanel(new Rect(w * 0.5f - 300f, y - 10f, 600f, 92f), 0.6f);
+            Vhaldren.Gameplay.UI.HudSkin.Label(new Rect(0f, y, w, 46f), title, 40, tint, TextAnchor.MiddleCenter, true);
+            Vhaldren.Gameplay.UI.HudSkin.FadeLine(new Rect(w * 0.5f - 200f, y + 50f, 400f, 1.5f), Vhaldren.Gameplay.UI.HudSkin.Gold);
+            Vhaldren.Gameplay.UI.HudSkin.Label(new Rect(0f, y + 54f, w, 24f), subtitle, 17, Vhaldren.Gameplay.UI.HudSkin.Text);
+            Vhaldren.Gameplay.UI.MenuStyle.End();
         }
 
         private static bool WasHealPressed()

@@ -22,7 +22,8 @@ namespace Vhaldren.Gameplay.Settings
         Rotate, Dismantle, Gather, CraftPick1, CraftPick2,
         Noticeboard, Accept, Offer, Buy, Help, Pause,
         // Al final: los valores anteriores no cambian.
-        CameraRotateLeft, CameraRotateRight, CameraReset
+        CameraRotateLeft, CameraRotateRight, CameraReset,
+        DebugHud
     }
 
     /// <summary>
@@ -61,7 +62,7 @@ namespace Vhaldren.Gameplay.Settings
             const int W = 0, S = 0, A = 0, D = 0, Space = 0, V = 0, T = 0, F = 0, Z = 0, C = 0, X = 0, Q = 0,
                 Digit0 = 0, Digit1 = 0, Digit2 = 0, Digit3 = 0, Digit4 = 0, Digit5 = 0, Digit6 = 0,
                 Digit7 = 0, Digit8 = 0, Digit9 = 0, Tab = 0, H = 0, R = 0, U = 0, B = 0, G = 0, E = 0, J = 0,
-                K = 0, N = 0, Y = 0, O = 0, P = 0, F1 = 0, Escape = 0;
+                K = 0, N = 0, Y = 0, O = 0, P = 0, F1 = 0, F3 = 0, Escape = 0;
 #endif
 #if ENABLE_INPUT_SYSTEM
             Add(GameAction.MoveForward, "Avanzar", "Movimiento", Key.W);
@@ -109,6 +110,7 @@ namespace Vhaldren.Gameplay.Settings
             Add(GameAction.Buy, "Comprar", "Pueblos", Key.P);
             Add(GameAction.Help, "Ayuda en pantalla", "Interfaz", Key.F1);
             Add(GameAction.Pause, "Menú / pausa", "Interfaz", Key.Escape);
+            Add(GameAction.DebugHud, "Recuadros de depuración", "Interfaz", Key.F3);
 #endif
             return list.ToArray();
         }
@@ -258,6 +260,7 @@ namespace Vhaldren.Gameplay.Settings
                 case Key.Delete: return "Supr";
                 case Key.Home: return "Inicio";
                 case Key.End: return "Fin";
+                case Key.F3: return "F3";
                 case Key.None: return "—";
             }
             string name = key.ToString();

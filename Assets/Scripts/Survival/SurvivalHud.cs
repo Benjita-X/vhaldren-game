@@ -63,10 +63,28 @@ namespace Vhaldren.Gameplay.Survival
             catalogKey = -1;
         }
 
+        private static Color ResourceColor(ResourceKind kind)
+        {
+            switch (kind)
+            {
+                case ResourceKind.Wood: return new Color(0.66f, 0.45f, 0.25f);
+                case ResourceKind.Stone: return new Color(0.62f, 0.62f, 0.64f);
+                case ResourceKind.Fiber: return new Color(0.48f, 0.7f, 0.34f);
+                case ResourceKind.Ore: return new Color(0.45f, 0.62f, 0.85f);
+                default: return new Color(0.8f, 0.8f, 0.8f);
+            }
+        }
+
         private void OnGUI()
         {
             if (inventory == null)
                 return;
+            if (!Vhaldren.Gameplay.UI.HudMode.Debug)
+            {
+                if (Event.current.type == EventType.Repaint && !Vhaldren.Gameplay.UI.HudMode.Hidden)
+                    DrawMinimal();
+                return;
+            }
             if (style == null)
                 style = new GUIStyle(GUI.skin.box) { alignment = TextAnchor.UpperLeft, fontSize = 13, richText = true, wordWrap = true };
 
@@ -115,6 +133,65 @@ namespace Vhaldren.Gameplay.Survival
                 if (gatherer.CanGatherTarget && gatherer.Progress01 > 0f)
                     GUI.Box(new Rect(rect.x, rect.yMax + 2f, rect.width * gatherer.Progress01, 6f), GUIContent.none);
             }
+        }
+
+        /// <summary>
+        /// Fila mínima abajo a la izquierda (sin cajas). En modo construcción se amplía: nombres
+        /// de los materiales, capacidad, fabricación de picos y el catálogo con el marco del HUD.
+        /// </summary>
+        private void DrawMinimal()
+        {
+            Vhaldren.Gameplay.UI.MenuStyle.Begin();
+            float w = Vhaldren.Gameplay.UI.MenuStyle.Width, h = Vhaldren.Gameplay.UI.MenuStyle.Height;
+            bool building = builder != null && builder.IsBuilding;
+            float barLeft = w * 0.5f - Vhaldren.Gameplay.UI.ActionBarHud.NaturalWidth *
+                Vhaldren.Gameplay.UI.ActionBarHud.BarScale(w) * 0.5f;
+            float maxRow = Mathf.Max(160f, barLeft - 36f);
+            float x = 20f, y = h - 30f;
+            float rowStart = x;
+            for (int i = 0; i < Shown.Length; i++)
+            {
+                ResourceKind kind = Shown[i];
+                string label = building ? HarvestNode.ResourceName(kind) + " " + inventory.Count(kind) : inventory.Count(kind).ToString();
+                float lw = Vhaldren.Gameplay.UI.HudSkin.TextWidth(label, 16) + 30f;
+                if (x + lw - rowStart > maxRow && x > rowStart)
+                {
+                    x = rowStart;
+                    y -= 24f;
+                }
+                Vhaldren.Gameplay.UI.HudSkin.Fill(new Rect(x, y + 3f, 13f, 13f), new Color(0f, 0f, 0f, 0.85f));
+                Vhaldren.Gameplay.UI.HudSkin.Fill(new Rect(x + 1.5f, y + 4.5f, 10f, 10f), ResourceColor(kind));
+                Vhaldren.Gameplay.UI.HudSkin.Label(new Rect(x + 18f, y, lw, 19f), label, 16, Vhaldren.Gameplay.UI.HudSkin.Text, TextAnchor.MiddleLeft);
+                x += lw;
+            }
+            string capacity = inventory.TotalItems + "/" + inventory.Capacity;
+            Vhaldren.Gameplay.UI.HudSkin.Label(new Rect(x + 2f, y, 120f, 19f), capacity, 14, Vhaldren.Gameplay.UI.HudSkin.TextDim, TextAnchor.MiddleLeft);
+
+            if (building)
+            {
+                if (tools == null)
+                    tools = GetComponent<SurvivalToolbelt>();
+                if (tools != null)
+                {
+                    string crafting = !tools.OwnsImprovisedPick
+                        ? Vhaldren.Gameplay.Settings.GameInput.Label(Vhaldren.Gameplay.Settings.GameAction.CraftPick1) + ": pico improvisado (3 madera + 2 fibra)"
+                        : !tools.OwnsStonePick
+                            ? Vhaldren.Gameplay.Settings.GameInput.Label(Vhaldren.Gameplay.Settings.GameAction.CraftPick2) + ": pico de piedra (3 madera + 5 piedra + 2 fibra)"
+                            : "Pico de piedra: piedra y mineral disponibles";
+                    Vhaldren.Gameplay.UI.HudSkin.Label(new Rect(rowStart, y - 24f, 560f, 19f), crafting, 15, Vhaldren.Gameplay.UI.HudSkin.TextDim, TextAnchor.MiddleLeft);
+                }
+                int key = builder.SelectedIndex * 1000 + (int)builder.LastResult * 10 + builder.RotationSteps +
+                          (builder.FreePlacement ? 500000 : 0);
+                if (key != catalogKey)
+                {
+                    catalogKey = key;
+                    catalog = BuildCatalogText();
+                }
+                Rect panel = new Rect(w - 392f, 96f, 372f, 262f);
+                Vhaldren.Gameplay.UI.MenuStyle.FramedPanel(panel);
+                GUI.Label(new Rect(panel.x + 18f, panel.y + 12f, panel.width - 32f, panel.height - 20f), catalog, Vhaldren.Gameplay.UI.MenuStyle.Small);
+            }
+            Vhaldren.Gameplay.UI.MenuStyle.End();
         }
 
         private string BuildCatalogText()

@@ -306,6 +306,9 @@ namespace Vhaldren.Gameplay.Races
             return true;
         }
 
+        /// <summary>Color del poder de raza (icono de la barra y avisos).</summary>
+        public Color HudColor => PowerColor();
+
         private Color PowerColor()
         {
             switch (Data.Id)
@@ -324,7 +327,11 @@ namespace Vhaldren.Gameplay.Races
         {
             message = value;
             messageUntil = Time.time + 2f;
-            return value.EndsWith("!");
+            bool used = value.EndsWith("!");
+            Vhaldren.Gameplay.UI.HudNotices.Post(value, used
+                ? Color.Lerp(PowerColor(), Color.white, 0.45f)
+                : Vhaldren.Gameplay.UI.HudNotices.Warning);
+            return used;
         }
 
         /// <summary>Linea para la barra de hechizos: raza y estado del poder.</summary>

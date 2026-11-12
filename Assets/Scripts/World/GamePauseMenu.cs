@@ -70,6 +70,8 @@ namespace Vhaldren.Gameplay.World
             {
                 float bw = 360f, x = (w - bw) * 0.5f, y = h * 0.5f - 200f;
                 GUI.Label(new Rect(0f, y - 90f, w, 70f), "PAUSA", MenuStyle.Title);
+                // Mismo marco fino que el HUD y los paneles de menú.
+                HudSkin.OrnateFrame(new Rect(x - 34f, y - 26f, bw + 68f, 5f * 64f + 42f));
                 if (GUI.Button(new Rect(x, y, bw, 54f), "Continuar", MenuStyle.Button)) SetPaused(false);
                 y += 64f;
                 if (GUI.Button(new Rect(x, y, bw, 54f), "Opciones", MenuStyle.Button)) page = Page.Options;

@@ -287,11 +287,13 @@ namespace Vhaldren.Gameplay.Magic
         {
             message = value;
             messageUntil = Time.time + 2.2f;
+            Vhaldren.Gameplay.UI.HudNotices.Post(value, new Color(1f, 0.55f, 0.55f), 2.2f);
         }
 
         private void OnGUI()
         {
-            if (Event.current.type != EventType.Repaint)
+            // El aviso de absorber y su progreso los dibuja ActionBarHud; esto es solo F3.
+            if (Event.current.type != EventType.Repaint || !Vhaldren.Gameplay.UI.HudMode.Debug)
                 return;
             if (style == null)
                 style = new GUIStyle(GUI.skin.box) { alignment = TextAnchor.MiddleCenter, fontSize = 13, richText = true };

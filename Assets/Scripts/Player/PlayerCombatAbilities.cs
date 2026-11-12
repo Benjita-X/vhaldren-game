@@ -65,6 +65,12 @@ namespace Vhaldren.Gameplay.Player
         public float FrostCooldownRemaining => Mathf.Max(0f, frostReadyAt - Time.time);
         public float SwordCooldownRemaining => Mathf.Max(0f, swordReadyAt - Time.time);
         public float RuneCooldownRemaining => Mathf.Max(0f, runeReadyAt - Time.time);
+        public float SwordCooldown => Mathf.Max(0.1f, swordCooldown);
+        public float RuneCooldown => Mathf.Max(0.1f, runeCooldown);
+        public float FrostCooldown => Mathf.Max(0.1f, frostCooldown);
+        public float SwordStaminaCost => swordStaminaCost;
+        public float RuneStaminaCost => runeStaminaCost;
+        public float FrostStaminaCost => frostStaminaCost;
 
         private void Awake()
         {
@@ -112,7 +118,7 @@ namespace Vhaldren.Gameplay.Player
             animations?.PlayCombatAction(PlayerAnimationDriver.CombatAction.Sword);
             if (GameFeel.Enabled)
                 GameAudio.Play(GameSound.Slash, transform.position, 0.8f);
-            Announce("Tajo de espada");
+            Announce("Tajo de espada", false);
             swordReadyAt = Time.time + Mathf.Max(0.1f, swordCooldown);
             bool counter = defense.TryConsumeCounter();
             if (counter)
@@ -130,7 +136,7 @@ namespace Vhaldren.Gameplay.Player
             animations?.PlayCombatAction(PlayerAnimationDriver.CombatAction.Spell);
             if (GameFeel.Enabled)
                 GameAudio.Play(GameSound.SpellCast, transform.position, 0.8f);
-            Announce("Pulso rúnico: canalizando");
+            Announce("Pulso rúnico: canalizando", false);
             GetComponent<VillageQuestJournal>()?.RecordAction(VillageObjective.CastMagic);
             runeReadyAt = Time.time + Mathf.Max(0.1f, runeCooldown);
             Vector3 center = transform.position;
@@ -147,7 +153,7 @@ namespace Vhaldren.Gameplay.Player
             animations?.PlayCombatAction(PlayerAnimationDriver.CombatAction.Frost);
             if (GameFeel.Enabled)
                 GameAudio.Play(GameSound.Frost, transform.position, 0.8f);
-            Announce("Onda de escarcha: canalizando");
+            Announce("Onda de escarcha: canalizando", false);
             GetComponent<VillageQuestJournal>()?.RecordAction(VillageObjective.CastMagic);
             frostReadyAt = Time.time + Mathf.Max(0.1f, frostCooldown);
             Vector3 facing = motor != null ? motor.CurrentFacing : transform.forward;
@@ -192,10 +198,13 @@ namespace Vhaldren.Gameplay.Player
             return true;
         }
 
-        private void Announce(string message)
+        /// <summary>Guarda el mensaje (pruebas y modo F3); si es un aviso útil, lo muestra arriba.</summary>
+        private void Announce(string message, bool notify = true)
         {
             lastActionMessage = message;
             lastActionMessageUntil = Time.time + 1.6f;
+            if (notify)
+                Vhaldren.Gameplay.UI.HudNotices.Post(message, Vhaldren.Gameplay.UI.HudNotices.Warning);
         }
 
         /// <summary>
@@ -444,7 +453,7 @@ namespace Vhaldren.Gameplay.Player
 
         private void OnGUI()
         {
-            if (Event.current.type != EventType.Repaint)
+            if (Event.current.type != EventType.Repaint || !Vhaldren.Gameplay.UI.HudMode.Debug)
                 return;
             Rect box = new Rect(12f, 184f, Mathf.Min(620f, Screen.width - 24f), 53f);
             GUI.Box(box, "");

@@ -27,7 +27,8 @@ namespace Vhaldren.Gameplay.Settings
         public static float ShakeIntensity { get => Get("temblor", 1f); set => Set("temblor", Mathf.Clamp01(value)); }
         public static bool HitStop { get => Get("paron", 1f) > 0.5f; set => Set("paron", value ? 1f : 0f); }
         public static bool DamageNumbers { get => Get("numeros", 1f) > 0.5f; set => Set("numeros", value ? 1f : 0f); }
-        public static bool ShowHelpOnStart { get => Get("ayuda", 1f) > 0.5f; set => Set("ayuda", value ? 1f : 0f); }
+        /// <summary>Abrir la ayuda F1 al empezar (por defecto no: solo un aviso breve «F1: controles»).</summary>
+        public static bool ShowHelpOnStart { get => Get("ayuda", 0f) > 0.5f; set => Set("ayuda", value ? 1f : 0f); }
         public static bool VSync { get => Get("vsync", 1f) > 0.5f; set => Set("vsync", value ? 1f : 0f); }
         public static int FrameCap { get => Mathf.RoundToInt(Get("fps", 120f)); set => Set("fps", Mathf.Clamp(value, 30, 240)); }
         public static int Quality

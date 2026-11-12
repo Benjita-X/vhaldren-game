@@ -147,6 +147,9 @@ namespace Vhaldren.Gameplay.World
                 Physics.SyncTransforms();
             }
 
+            if (player != null)
+                yield return HudShowcase(player, book, defense, health, follow);
+
             if (DayNightCycle.Active != null)
             {
                 DayNightCycle.Active.SetElapsed((3f * 24f + 14f) * DayNightCycle.DaySeconds / 24f);
@@ -306,6 +309,258 @@ namespace Vhaldren.Gameplay.World
             if (health != null)
                 health.ResetToFull();
             follow?.SetZoom(1f, true);
+        }
+
+        /// <summary>
+        /// HUD 022: barra con recargas y cargas, poca vida (viñeta roja), avisos, construcción,
+        /// ayuda F1, tablón, armas en las manos de cerca y la flecha de golpe fuera de pantalla.
+        /// </summary>
+        private IEnumerator HudShowcase(GameObject player, PlayerSpellbook book, CombatDefense defense, CombatHealth health,
+            SimpleFollowCamera follow)
+        {
+            Transform body = player.transform;
+            Vector3 safe = new Vector3(2f, 1.08f, 2f);
+            body.position = safe;
+            Physics.SyncTransforms();
+            if (health != null) health.ResetToFull();
+            yield return new WaitForSeconds(1.2f);
+
+            // Recargas: espada, pulso, un hechizo con cargas y la poción.
+            Vhaldren.Gameplay.Player.PlayerCombatAbilities abilities = player.GetComponent<Vhaldren.Gameplay.Player.PlayerCombatAbilities>();
+            PrototypeGameSession session = FindAnyObjectByType<PrototypeGameSession>();
+            if (book != null)
+            {
+                Ready(book, defense);
+                book.SelectSchool(SpellSchool.Pyromancy);
+                book.TryCast(0, body.position + Vector3.forward * 5f);
+            }
+            if (abilities != null)
+            {
+                abilities.TrySwordSweep();
+                if (defense != null) defense.RestoreStamina(1000f);
+                abilities.TryRunePulse();
+            }
+            if (health != null)
+                health.ApplyDamage(health.MaximumHealth * 0.35f);
+            session?.TryDrinkPotion();
+            yield return new WaitForSeconds(1.4f);
+            yield return Shot("20-hud-barra-recargas.png");
+            Vhaldren.Gameplay.UI.ActionBarHud bar = player.GetComponent<Vhaldren.Gameplay.UI.ActionBarHud>();
+            if (bar != null)
+            {
+                bar.Refresh();
+                Note("barra: espada=" + bar.Slot(Vhaldren.Gameplay.UI.ActionBarHud.SlotId.Sword).Remaining.ToString("0.0") +
+                     "s pulso=" + bar.Slot(Vhaldren.Gameplay.UI.ActionBarHud.SlotId.Pulse).Remaining.ToString("0.0") +
+                     "s pocion=" + bar.Slot(Vhaldren.Gameplay.UI.ActionBarHud.SlotId.Potion).Remaining.ToString("0.0") +
+                     "s hechizo1 cargas=" + bar.Slot(Vhaldren.Gameplay.UI.ActionBarHud.SlotId.Spell1).Charges +
+                     " ancho=" + (Vhaldren.Gameplay.UI.ActionBarHud.WidthFraction(Screen.width, Screen.height) * 100f).ToString("0") + "%");
+            }
+
+            // Avisos: poder de raza y botín (máximo dos a la vez).
+            Vhaldren.Gameplay.Races.PlayerRace race = player.GetComponent<Vhaldren.Gameplay.Races.PlayerRace>();
+            if (race != null)
+                race.TryUsePower();
+            Vhaldren.Gameplay.Progression.PlayerEquipment gearForLoot = player.GetComponent<Vhaldren.Gameplay.Progression.PlayerEquipment>();
+            if (gearForLoot != null)
+                gearForLoot.Notify("Botín: +2 Madera +1 Piel");
+            yield return new WaitForSeconds(0.4f);
+            yield return Shot("21-hud-avisos.png");
+
+            // Poca vida: la viñeta se tiñe de rojo y late.
+            if (health != null)
+            {
+                health.ResetToFull();
+                health.ApplyDamage(health.MaximumHealth * 0.82f);
+            }
+            yield return new WaitForSeconds(0.5f);
+            yield return Shot("22-hud-poca-vida.png");
+            if (health != null) health.ResetToFull();
+
+            // Ayuda F1 compacta.
+            Vhaldren.Gameplay.Player.PlayerControlsGuide guide = player.GetComponent<Vhaldren.Gameplay.Player.PlayerControlsGuide>();
+            if (guide != null)
+            {
+                guide.SetExpanded(true);
+                yield return new WaitForSeconds(0.3f);
+                yield return Shot("23-hud-ayuda-f1.png");
+                guide.SetExpanded(false);
+            }
+
+            // Construcción: la fila de recursos se amplía y aparece el catálogo.
+            Vhaldren.Gameplay.Survival.PlayerBuilder builder = player.GetComponent<Vhaldren.Gameplay.Survival.PlayerBuilder>();
+            if (builder != null)
+            {
+                builder.SetBuildMode(true);
+                yield return new WaitForSeconds(0.4f);
+                yield return Shot("24-hud-construccion.png");
+                builder.SetBuildMode(false);
+            }
+
+            // Tablón del Cruce abierto con N.
+            VillageNoticeboard board = FindAnyObjectByType<VillageNoticeboard>();
+            if (board != null)
+            {
+                body.position = board.transform.position + new Vector3(1.2f, 1.08f, 1.2f);
+                Physics.SyncTransforms();
+                yield return new WaitForSeconds(0.5f);
+                yield return Shot("25a-hud-cerca-del-tablon.png");
+                board.SetMenuOpen(true);
+                yield return new WaitForSeconds(0.3f);
+                yield return Shot("25-hud-tablon.png");
+                board.SetMenuOpen(false);
+            }
+
+            // Armas en las manos, de cerca, en el campamento de bandidos.
+            body.position = new Vector3(0f, 1.08f, -21f);
+            Physics.SyncTransforms();
+            if (follow != null)
+                follow.SetZoom(0f, true);
+            yield return new WaitForSeconds(1.5f);
+            yield return Shot("26-armas-en-las-manos.png");
+            foreach (CharacterLoadout loadout in FindObjectsByType<CharacterLoadout>(FindObjectsSortMode.None))
+                Note("arma: " + loadout.name + " modelo=" + loadout.ModelKind +
+                     " derecha=" + (loadout.RightHandItem != null ? loadout.RightHandItem.name + "@" + loadout.RightHandItem.parent.name : "-") +
+                     " izquierda=" + (loadout.LeftHandItem != null ? loadout.LeftHandItem.name + "@" + loadout.LeftHandItem.parent.name : "-"));
+            if (health != null) health.ResetToFull();
+            yield return Portraits();
+
+            // Golpe desde fuera de la pantalla: un ballestero a distancia con el zoom más cercano.
+            Vhaldren.Gameplay.UI.WorldHud world = FindAnyObjectByType<Vhaldren.Gameplay.UI.WorldHud>();
+            PrototypeEnemy archer = null;
+            foreach (PrototypeEnemy enemy in FindObjectsByType<PrototypeEnemy>(FindObjectsSortMode.None))
+                if (!enemy.IsDefeated && enemy.Archetype != null && enemy.Archetype.Role == EnemyRole.Ranged)
+                {
+                    archer = enemy;
+                    break;
+                }
+            bool arrowShown = false;
+            if (archer != null && world != null)
+            {
+                // El jugador se coloca al norte del ballestero: con la cámara mirando al norte,
+                // el tirador queda detrás de ella (abajo, fuera de la pantalla).
+                float until = Time.time + 10f;
+                while (Time.time < until && !arrowShown)
+                {
+                    if (health != null) health.ResetToFull();
+                    Vector3 away = archer.transform.position + new Vector3(0f, 0f, 8.4f);
+                    if ((body.position - away).sqrMagnitude > 4f)
+                    {
+                        body.position = new Vector3(away.x, 1.08f, away.z);
+                        Physics.SyncTransforms();
+                    }
+                    yield return new WaitForEndOfFrame();
+                    // Se comprueba al final del fotograma, con la flecha ya dibujada.
+                    if (world.Warnings.Count > 0)
+                    {
+                        arrowShown = true;
+                        Texture2D image = new Texture2D(Screen.width, Screen.height, TextureFormat.RGB24, false);
+                        image.ReadPixels(new Rect(0f, 0f, Screen.width, Screen.height), 0, 0);
+                        image.Apply();
+                        File.WriteAllBytes(Path.Combine(folder, "27-hud-flecha-fuera-de-pantalla.png"), image.EncodeToPNG());
+                        Destroy(image);
+                        Note("flecha: borde=" + world.Warnings[0].EdgePoint.ToString("F0") + " angulo=" + world.Warnings[0].Angle.ToString("0"));
+                    }
+                    yield return null;
+                }
+            }
+            Note("flecha_fuera_de_pantalla=" + (arrowShown ? "si" : "no") + (archer != null ? " (" + archer.name + ")" : ""));
+            if (health != null) health.ResetToFull();
+            if (follow != null)
+                follow.SetZoom(1f, true);
+            body.position = new Vector3(0f, 1.08f, -24f);
+            Physics.SyncTransforms();
+        }
+
+        /// <summary>
+        /// Retratos de cerca (cámara temporal) de cada tipo de modelo con el arma en la mano:
+        /// caballero, bárbaro, bruto, maga, sanadora, ballestero y los dos esqueletos.
+        /// </summary>
+        private IEnumerator Portraits()
+        {
+            string[] wanted = { "knight", "barbarian", "barbarian", "mage", "mage", "rogue", "skeleton_warrior", "skeleton_minion" };
+            System.Collections.Generic.List<CharacterLoadout> picked = new System.Collections.Generic.List<CharacterLoadout>();
+            CharacterLoadout[] all = FindObjectsByType<CharacterLoadout>(FindObjectsSortMode.InstanceID);
+            foreach (string kind in wanted)
+            {
+                foreach (CharacterLoadout candidate in all)
+                {
+                    if (candidate.ModelKind != kind || picked.Contains(candidate))
+                        continue;
+                    PrototypeEnemy enemy = candidate.GetComponent<PrototypeEnemy>();
+                    if (enemy == null || enemy.IsDefeated || enemy.IsBoss)
+                        continue;
+                    // Variantes: el bruto (hacha a dos manos) y la sanadora (varita y libro).
+                    bool brute = enemy.Archetype != null && enemy.Archetype.Role == EnemyRole.Brute;
+                    bool support = enemy.Archetype != null && enemy.Archetype.Role == EnemyRole.Support;
+                    int sameKind = picked.FindAll(p => p.ModelKind == kind).Count;
+                    if (kind == "barbarian" && brute != (sameKind == 1))
+                        continue;
+                    if (kind == "mage" && support != (sameKind == 1))
+                        continue;
+                    picked.Add(candidate);
+                    break;
+                }
+            }
+            if (picked.Count == 0)
+                yield break;
+
+            foreach (CharacterLoadout loadout in picked)
+                foreach (Animator animator in loadout.GetComponentsInChildren<Animator>())
+                    animator.cullingMode = AnimatorCullingMode.AlwaysAnimate;
+            yield return new WaitForSeconds(0.3f);
+
+            const int tileW = 300, tileH = 380;
+            Texture2D sheet = new Texture2D(tileW * 4, tileH * 2, TextureFormat.RGB24, false);
+            RenderTexture target = new RenderTexture(tileW, tileH, 24);
+            GameObject rig = new GameObject("Camara de retratos");
+            Camera photo = rig.AddComponent<Camera>();
+            photo.fieldOfView = 32f;
+            photo.nearClipPlane = 0.05f;
+            photo.clearFlags = CameraClearFlags.SolidColor;
+            photo.backgroundColor = new Color(0.09f, 0.07f, 0.08f);
+            photo.targetTexture = target;
+            photo.enabled = false;
+            yield return new WaitForEndOfFrame();
+            for (int i = 0; i < picked.Count && i < 8; i++)
+            {
+                Transform t = picked[i].transform;
+                Vector3 front = t.forward;
+                front.y = 0f;
+                if (front.sqrMagnitude < 0.01f) front = Vector3.forward;
+                front.Normalize();
+                // Tres cuartos por delante y a la derecha, para ver las dos manos.
+                Vector3 side = Quaternion.Euler(0f, 35f, 0f) * front;
+                // Encuadre por el tamaño real del modelo (cuerpo y armas).
+                Bounds bounds = new Bounds(t.position, Vector3.one * 0.5f);
+                bool first = true;
+                foreach (Renderer r in picked[i].GetComponentsInChildren<Renderer>())
+                {
+                    // Solo el cuerpo animado y las armas (no discos de aviso ni brillos del suelo).
+                    bool weapon = (picked[i].RightHandItem != null && r.transform.IsChildOf(picked[i].RightHandItem)) ||
+                                  (picked[i].LeftHandItem != null && r.transform.IsChildOf(picked[i].LeftHandItem));
+                    if (!(r is SkinnedMeshRenderer) && !weapon || !r.enabled || !r.gameObject.activeInHierarchy)
+                        continue;
+                    if (first) { bounds = r.bounds; first = false; }
+                    else bounds.Encapsulate(r.bounds);
+                }
+                Vector3 look = bounds.center;
+                float distance = Mathf.Max(2.2f, bounds.extents.y * 2f / Mathf.Tan(photo.fieldOfView * 0.5f * Mathf.Deg2Rad) * 0.62f);
+                rig.transform.position = look + side * distance + Vector3.up * distance * 0.32f;
+                rig.transform.LookAt(look);
+                photo.Render();
+                RenderTexture.active = target;
+                sheet.ReadPixels(new Rect(0f, 0f, tileW, tileH), (i % 4) * tileW, (1 - i / 4) * tileH);
+                RenderTexture.active = null;
+                Note("retrato " + (i + 1) + ": " + t.name + " (" + picked[i].ModelKind + ") " +
+                     (picked[i].RightHandItem != null ? picked[i].RightHandItem.name : "-") + " / " +
+                     (picked[i].LeftHandItem != null ? picked[i].LeftHandItem.name : "-"));
+            }
+            sheet.Apply();
+            File.WriteAllBytes(Path.Combine(folder, "28-armas-retratos.png"), sheet.EncodeToPNG());
+            photo.targetTexture = null;
+            Destroy(rig);
+            Destroy(target);
+            Destroy(sheet);
         }
 
         private static SimpleFollowCamera FollowCamera() =>

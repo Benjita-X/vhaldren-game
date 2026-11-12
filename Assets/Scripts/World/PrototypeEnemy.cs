@@ -72,6 +72,8 @@ namespace Vhaldren.Gameplay.World
         public bool IsDefeated => defeated;
         public bool IsSlowed => !defeated && Time.time < slowUntil;
         public bool IsAttackTelegraphed => windingUp;
+        /// <summary>A quién persigue y golpea (el jugador en el mundo).</summary>
+        public Transform Target => target;
         public bool IsStaggered => !defeated && Time.time < staggerUntil;
         public EnemyArchetype Archetype => archetype;
         public bool IsEnraged => enraged;

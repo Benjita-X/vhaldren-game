@@ -61,6 +61,9 @@ namespace Vhaldren.Gameplay.UI
             MenuStyle.Begin();
             float w = MenuStyle.Width, h = MenuStyle.Height;
             MenuStyle.Fill(new Rect(0f, 0f, w, h), new Color(0f, 0f, 0f, screen == Screen.Main ? 0.25f : 0.55f));
+            // Mismo enmarcado que en partida: viñeta oscura y velo carmesí arriba.
+            HudSkin.DrawVignette(new Rect(0f, 0f, w, h), new Color(0f, 0f, 0f, 0.6f));
+            HudSkin.DrawTopGlow(new Rect(0f, 0f, w, h * 0.18f), new Color(HudSkin.Crimson.r, HudSkin.Crimson.g * 0.6f, HudSkin.Crimson.b, 0.25f));
             Rect panel = new Rect(w * 0.5f - Mathf.Min(560f, w * 0.47f), 70f, Mathf.Min(1120f, w * 0.94f), h - 120f);
             switch (screen)
             {
@@ -78,6 +81,7 @@ namespace Vhaldren.Gameplay.UI
             GUI.Label(new Rect(0f, 90f, w, 90f), "VHALDREN", MenuStyle.Title);
             GUI.Label(new Rect(w * 0.5f - 400f, 180f, 800f, 40f), "Sangre, esencia y magia en un reino que no perdona", MenuStyle.Subtitle);
             float bw = 340f, x = 90f, y = 300f;
+            HudSkin.OrnateFrame(new Rect(x - 32f, y - 28f, bw + 64f, 5f * 68f + 56f + 56f));
             if (GUI.Button(new Rect(x, y, bw, 56f), "Nueva partida", MenuStyle.Button)) screen = Screen.Race;
             y += 68f;
             GUI.enabled = false;
@@ -91,12 +95,12 @@ namespace Vhaldren.Gameplay.UI
             if (GUI.Button(new Rect(x, y, bw, 56f), "Créditos", MenuStyle.Button)) screen = Screen.Credits;
             y += 68f;
             if (GUI.Button(new Rect(x, y, bw, 56f), "Salir", MenuStyle.Button)) Quit();
-            GUI.Label(new Rect(16f, h - 34f, 600f, 30f), "Versión de prueba · rama 017 · " + Application.version, MenuStyle.Small);
+            GUI.Label(new Rect(16f, h - 34f, 600f, 30f), "Versión de prueba · rama 018 · " + Application.version, MenuStyle.Small);
         }
 
         private void DrawRaces(Rect area)
         {
-            GUI.Box(area, GUIContent.none, MenuStyle.Panel);
+            MenuStyle.FramedPanel(area);
             GUI.Label(new Rect(area.x + 24f, area.y + 14f, 600f, 40f), "ELIGE TU LINAJE", MenuStyle.Header);
             float listWidth = 300f;
             Rect list = new Rect(area.x + 24f, area.y + 66f, listWidth, area.height - 150f);
@@ -123,7 +127,7 @@ namespace Vhaldren.Gameplay.UI
 
         private void DrawCredits(Rect area)
         {
-            GUI.Box(area, GUIContent.none, MenuStyle.Panel);
+            MenuStyle.FramedPanel(area);
             GUI.Label(new Rect(area.x + 24f, area.y + 14f, 600f, 40f), "CRÉDITOS", MenuStyle.Header);
             GUI.Label(new Rect(area.x + 24f, area.y + 70f, area.width - 48f, area.height - 150f),
                 "<b>Vhaldren</b> — juego original hecho con Unity 6.\n\n" +

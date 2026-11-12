@@ -48,7 +48,7 @@ namespace Vhaldren.Gameplay.UI
         /// <summary>Dibuja el panel. Devuelve true si el jugador pulso "Volver".</summary>
         public bool Draw(Rect area)
         {
-            GUI.Box(area, GUIContent.none, MenuStyle.Panel);
+            MenuStyle.FramedPanel(area);
             GUI.Label(new Rect(area.x + 24f, area.y + 14f, 400f, 40f), "OPCIONES", MenuStyle.Header);
             float tabWidth = 150f;
             for (int i = 0; i < Tabs.Length; i++)

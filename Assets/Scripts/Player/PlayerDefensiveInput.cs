@@ -101,7 +101,7 @@ namespace Vhaldren.Gameplay.Player
 
         private void OnGUI()
         {
-            if (Event.current.type != EventType.Repaint || defense == null)
+            if (Event.current.type != EventType.Repaint || defense == null || !Vhaldren.Gameplay.UI.HudMode.Debug)
                 return;
             Rect rect = new Rect(12f, 132f, Mathf.Min(650f, Screen.width - 24f), 46f);
             GUI.Box(rect, "");

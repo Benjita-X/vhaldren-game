@@ -3,16 +3,17 @@ using UnityEngine;
 namespace Vhaldren.Gameplay.UI
 {
     /// <summary>
-    /// Estilo comun de los menus (fantasia oscura): paneles negros translucidos, titulos
-    /// dorados y botones con borde. Todo se dibuja en un lienzo virtual de 900 px de alto
-    /// que se escala a cualquier resolucion.
+    /// Estilo comun de los menus (fantasia oscura): paneles negros translucidos con marco
+    /// fino dorado y esquinas (mismo arte que el HUD, ver <see cref="HudSkin"/>), titulos
+    /// dorados y botones con borde y bisel. Todo se dibuja en un lienzo virtual de 900 px
+    /// de alto que se escala a cualquier resolucion.
     /// </summary>
     public static class MenuStyle
     {
         public const float VirtualHeight = 900f;
 
         private static Texture2D panel, button, buttonHover, buttonActive, line;
-        public static GUIStyle Title, Subtitle, Body, Small, Button, Tab, TabActive, Panel, Header, KeyButton;
+        public static GUIStyle Title, Subtitle, Body, Small, SmallRight, Button, Tab, TabActive, Panel, Header, KeyButton;
 
         public static float Scale => Mathf.Max(0.5f, Screen.height / VirtualHeight);
         public static float Width => Screen.width / Scale;
@@ -26,6 +27,14 @@ namespace Vhaldren.Gameplay.UI
         }
 
         public static void End() => GUI.matrix = Matrix4x4.identity;
+
+        /// <summary>Panel con fondo translúcido y el marco ornamentado del HUD.</summary>
+        public static void FramedPanel(Rect rect)
+        {
+            Ensure();
+            GUI.Box(rect, GUIContent.none, Panel);
+            HudSkin.OrnateFrame(rect, 1f, false);
+        }
 
         public static void Fill(Rect rect, Color color)
         {
@@ -48,10 +57,10 @@ namespace Vhaldren.Gameplay.UI
         {
             if (Title != null && panel != null)
                 return;
-            panel = Solid(new Color(0.04f, 0.035f, 0.05f, 0.9f));
-            button = Solid(new Color(0.16f, 0.1f, 0.12f, 0.95f));
-            buttonHover = Solid(new Color(0.36f, 0.12f, 0.14f, 0.98f));
-            buttonActive = Solid(new Color(0.55f, 0.16f, 0.16f, 1f));
+            panel = Framed(new Color(0.035f, 0.03f, 0.045f, 0.9f), new Color(0.035f, 0.03f, 0.045f, 0.9f), new Color(0f, 0f, 0f, 0f));
+            button = Framed(new Color(0.17f, 0.1f, 0.12f, 0.96f), new Color(0.09f, 0.055f, 0.07f, 0.96f), new Color(0.55f, 0.43f, 0.24f, 0.9f));
+            buttonHover = Framed(new Color(0.42f, 0.13f, 0.15f, 0.98f), new Color(0.24f, 0.07f, 0.09f, 0.98f), new Color(0.93f, 0.78f, 0.45f, 1f));
+            buttonActive = Framed(new Color(0.6f, 0.17f, 0.17f, 1f), new Color(0.38f, 0.1f, 0.1f, 1f), new Color(1f, 0.86f, 0.55f, 1f));
             line = Solid(Color.white);
             Color gold = new Color(0.93f, 0.78f, 0.45f);
             Color text = new Color(0.9f, 0.88f, 0.86f);
@@ -65,9 +74,10 @@ namespace Vhaldren.Gameplay.UI
             Body = new GUIStyle(GUI.skin.label) { fontSize = 17, wordWrap = true, richText = true };
             Body.normal.textColor = text;
             Small = new GUIStyle(Body) { fontSize = 14 };
-            Panel = new GUIStyle(GUI.skin.box) { padding = new RectOffset(18, 18, 14, 14) };
+            SmallRight = new GUIStyle(Small) { alignment = TextAnchor.MiddleRight, wordWrap = false };
+            Panel = new GUIStyle(GUI.skin.box) { padding = new RectOffset(18, 18, 14, 14), border = new RectOffset(6, 6, 6, 6) };
             Panel.normal.background = panel;
-            Button = new GUIStyle(GUI.skin.button) { fontSize = 22, alignment = TextAnchor.MiddleCenter, richText = true };
+            Button = new GUIStyle(GUI.skin.button) { fontSize = 22, alignment = TextAnchor.MiddleCenter, richText = true, border = new RectOffset(6, 6, 6, 6) };
             Button.normal.background = button;
             Button.hover.background = buttonHover;
             Button.active.background = buttonActive;
@@ -79,6 +89,40 @@ namespace Vhaldren.Gameplay.UI
             TabActive.normal.background = buttonActive;
             TabActive.normal.textColor = gold;
             KeyButton = new GUIStyle(Button) { fontSize = 17 };
+        }
+
+        /// <summary>
+        /// Textura de 9 cortes: degradado vertical (arriba más claro), borde fino de 1 px y
+        /// bisel interior. Con border = 6 se estira sin deformar el marco.
+        /// </summary>
+        private static Texture2D Framed(Color top, Color bottom, Color edge)
+        {
+            const int size = 16;
+            Texture2D texture = new Texture2D(size, size, TextureFormat.RGBA32, false)
+            {
+                hideFlags = HideFlags.HideAndDontSave,
+                wrapMode = TextureWrapMode.Clamp,
+                filterMode = FilterMode.Bilinear
+            };
+            Color[] pixels = new Color[size * size];
+            for (int y = 0; y < size; y++)
+            {
+                for (int x = 0; x < size; x++)
+                {
+                    float v = y / (size - 1f);
+                    Color c = Color.Lerp(bottom, top, v);
+                    bool outer = x == 0 || y == 0 || x == size - 1 || y == size - 1;
+                    bool inner = x == 2 || y == 2 || x == size - 3 || y == size - 3;
+                    if (outer && edge.a > 0f)
+                        c = edge;
+                    else if (inner && edge.a > 0f && x > 1 && y > 1 && x < size - 2 && y < size - 2)
+                        c = Color.Lerp(c, y >= size - 3 ? Color.white : Color.black, 0.12f);
+                    pixels[y * size + x] = c;
+                }
+            }
+            texture.SetPixels(pixels);
+            texture.Apply();
+            return texture;
         }
     }
 }

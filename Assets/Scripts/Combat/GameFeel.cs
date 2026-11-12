@@ -283,15 +283,9 @@ namespace Vhaldren.Gameplay.Combat
                 pixel.SetPixel(0, 0, Color.white);
                 pixel.Apply();
             }
-            // Viñeta roja: bordes de la pantalla al recibir daño.
-            Color previous = GUI.color;
-            GUI.color = new Color(0.7f, 0f, 0.03f, hurtAlpha);
-            float edge = Mathf.Min(Screen.width, Screen.height) * 0.08f;
-            GUI.DrawTexture(new Rect(0f, 0f, Screen.width, edge), pixel);
-            GUI.DrawTexture(new Rect(0f, Screen.height - edge, Screen.width, edge), pixel);
-            GUI.DrawTexture(new Rect(0f, edge, edge, Screen.height - 2f * edge), pixel);
-            GUI.DrawTexture(new Rect(Screen.width - edge, edge, edge, Screen.height - 2f * edge), pixel);
-            GUI.color = previous;
+            // Viñeta roja al recibir daño: el mismo degradado suave del HUD (sin bordes duros).
+            Vhaldren.Gameplay.UI.HudSkin.DrawVignette(new Rect(0f, 0f, Screen.width, Screen.height),
+                new Color(0.75f, 0f, 0.04f, Mathf.Clamp01(hurtAlpha * 1.6f)));
         }
 
         private void OnDisable()

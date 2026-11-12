@@ -199,6 +199,9 @@ namespace Vhaldren.Gameplay.Magic
             return charges[index] > 0 ? 0f : Mathf.Max(0f, rechargeAt[index] - Time.time);
         }
 
+        /// <summary>Segundos que tarda en volver una carga (con la bonificación de esencia).</summary>
+        public float RechargeSeconds(SpellDefinition spell) => EffectiveCooldown(spell);
+
         private float EffectiveCooldown(SpellDefinition spell) =>
             Mathf.Max(0.2f, spell.Cooldown * (essence != null ? essence.CooldownMultiplier : 1f));
 
@@ -276,7 +279,7 @@ namespace Vhaldren.Gameplay.Magic
                 SpellImpactFlash.Spawn(transform.position + Vector3.up * 0.5f,
                     SpellCatalog.SchoolColor(spell.School), 0.8f, 0.3f, 1.2f, SpellVfx.ElementOf(spell.School));
                 ShadowPuff(spell.School, transform.position);
-                Announce(label + ": regreso");
+                Announce(label + ": regreso", false);
                 return true;
             }
 
@@ -301,7 +304,7 @@ namespace Vhaldren.Gameplay.Magic
             animations?.PlayCombatAction(spell.School == SpellSchool.Cryomancy
                 ? PlayerAnimationDriver.CombatAction.Frost
                 : PlayerAnimationDriver.CombatAction.Spell);
-            Announce(label);
+            Announce(label, false);
             if (GameFeel.Enabled)
                 GameAudio.Play(spell.School == SpellSchool.Cryomancy ? GameSound.Frost : GameSound.SpellCast,
                     transform.position, 0.75f);
@@ -739,10 +742,13 @@ namespace Vhaldren.Gameplay.Magic
                 host.Burst(VfxElement.Storm, points[i], Vector3.up, palette.Spark, 12, 5.5f, 0.12f, 0.3f, 1f, 0.1f);
         }
 
-        private void Announce(string value)
+        /// <summary>Lanzar un hechizo no avisa (la barra ya lo muestra); los rechazos y escuelas sí.</summary>
+        private void Announce(string value, bool notify = true)
         {
             message = value;
             messageUntil = Time.time + 1.8f;
+            if (notify)
+                Vhaldren.Gameplay.UI.HudNotices.Post(value, SpellCatalog.SchoolColor(school) * 0.35f + Vhaldren.Gameplay.UI.HudNotices.Neutral * 0.65f);
         }
 
         // ── Interfaz ─────────────────────────────────────────────────────
@@ -802,7 +808,8 @@ namespace Vhaldren.Gameplay.Magic
 
         private void OnGUI()
         {
-            if (Event.current.type != EventType.Repaint || health == null)
+            // HUD normal: ActionBarHud y WorldHud. Esto queda como recuadros de depuración (F3).
+            if (Event.current.type != EventType.Repaint || health == null || !Vhaldren.Gameplay.UI.HudMode.Debug)
                 return;
             if (style == null)
             {

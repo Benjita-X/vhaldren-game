@@ -54,6 +54,9 @@ namespace Vhaldren.Gameplay.Player
         public float TotalDamageDealt { get; private set; }
         public float LastDamageDealt { get; private set; }
         public bool UsesPhysicalArrows => usePhysicalArrows;
+        /// <summary>Recarga entre flechas (para la barra de acción).</summary>
+        public float ArrowCooldown => Mathf.Max(0.05f, arrowCooldown);
+        public float ArrowCooldownRemaining => Mathf.Max(0f, nextArrowAt - Time.time);
         public int BufferedShots => bufferedCount;
         public int RejectedShotRequests { get; private set; }
 
