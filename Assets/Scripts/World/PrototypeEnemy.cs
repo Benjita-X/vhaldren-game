@@ -32,6 +32,8 @@ namespace Vhaldren.Gameplay.World
         private CombatHealth targetHealth;
         private PlayerMotor targetMotor;
         private EnemyAttackTelegraph attackWarning;
+        private CombatDamageKind activeAttackKind = CombatDamageKind.Melee;
+        private int attackSequence;
         private Vector3 spawnPosition;
         private float fallingSpeed;
         private float nextAttackTime;
@@ -58,6 +60,13 @@ namespace Vhaldren.Gameplay.World
             if (feedback == null)
                 feedback = gameObject.AddComponent<CombatDamageFeedback>();
             feedback.ConfigureForEnemy(isBoss);
+            CombatDamageReceiver damageReceiver = GetComponent<CombatDamageReceiver>();
+            if (damageReceiver == null)
+                damageReceiver = gameObject.AddComponent<CombatDamageReceiver>();
+            damageReceiver.ConfigureResistances(isBoss ? 0.12f : 0f,
+                isBoss ? 0.16f : 0f, isBoss ? 0.26f : 0f);
+            if (GetComponent<EnemyVisualPrototype>() == null)
+                gameObject.AddComponent<EnemyVisualPrototype>();
             // Se agrega tambien a escenas 008 ya versionadas sin recompilar la escena.
             attackWarning = GetComponent<EnemyAttackTelegraph>();
             if (attackWarning == null)
@@ -237,7 +246,18 @@ namespace Vhaldren.Gameplay.World
             // esquivo correctamente en este mismo fotograma.
             if (targetMotor == null ||
                 (!targetMotor.IsDashing && !targetMotor.DashMovedThisStep))
-                targetHealth.ApplyDamage(Mathf.Max(0f, attackDamage));
+            {
+                CombatDamageReceiver defender = target.GetComponent<CombatDamageReceiver>();
+                if (defender != null)
+                {
+                    CombatDamageResult response = defender.Receive(
+                        Mathf.Max(0f, attackDamage), activeAttackKind, transform.position);
+                    if (response.Parried)
+                        InterruptAttack(0.70f);
+                }
+                else
+                    targetHealth.ApplyDamage(Mathf.Max(0f, attackDamage));
+            }
         }
 
         private bool CanReachTarget()
@@ -277,11 +297,17 @@ namespace Vhaldren.Gameplay.World
                 safeWindup = Mathf.Max(0.75f, safeWindup);
 
             windingUp = true;
+            // El jefe alterna espada y ataque runico (1 de cada 3 golpes).
+            // Escudo = defensa fisica; barrera C = defensa contra magia.
+            attackSequence++;
+            activeAttackKind = isBoss && attackSequence % 3 == 0
+                ? CombatDamageKind.Magic : CombatDamageKind.Melee;
             attackReleaseAt = Time.time + safeWindup;
             nextAttackTime = Time.time + Mathf.Max(Mathf.Max(0.1f, attackCooldown),
                 safeWindup + 0.2f);
             if (attackWarning != null)
-                attackWarning.Begin(attackRange, safeWindup, isBoss);
+                attackWarning.Begin(attackRange, safeWindup, isBoss,
+                    activeAttackKind == CombatDamageKind.Magic);
         }
 
         private void CancelAttack()
