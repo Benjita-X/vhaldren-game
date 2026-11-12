@@ -280,7 +280,8 @@ namespace Vhaldren.Gameplay.World
                       "  |  DANO TOTAL: " + playerDamage.TotalDamage.ToString("0.#") +
                       " PV  |  FLECHA " + playerDamage.DamageFor(CombatDamageKind.Arrow).ToString("0") +
                       " / ESPADA " + playerDamage.DamageFor(CombatDamageKind.Melee).ToString("0") +
-                      " / MAGIA " + playerDamage.DamageFor(CombatDamageKind.Magic).ToString("0")
+                      " / MAGIA " + playerDamage.DamageFor(CombatDamageKind.Magic).ToString("0") +
+                      " / DOT " + playerDamage.DamageFor(CombatDamageKind.DamageOverTime).ToString("0")
                     : "Estadisticas no disponibles";
             }
         }
