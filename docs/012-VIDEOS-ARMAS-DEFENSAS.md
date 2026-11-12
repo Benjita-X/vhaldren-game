@@ -38,7 +38,7 @@ Rama: `feature/012-armas-defensas-enemigos`. Este trabajo es independiente de lo
 | Magia runica | Pulso circular centrado en el lugar donde se activo, aviso 0,55s, radio 3,5m, daño Magic y 7s de espera; no atraviesa paredes. | T |
 | Escudo fisico | Mantener guardia frontal: reduce espadas ~78% y flechas ~52%, NO detiene magia. Consume resistencia. | Z mantener |
 | Barrera magica | Mantener guardia frontal: reduce magia ~80% y explosiones ~62%, NO detiene espadas. Consume más resistencia. | C mantener |
-| Parada precisa | Ventana ~0,20s, cooldown ~1,5s; niega un solo golpe frontal de espada o flecha, no detiene magia. Consume resistencia. | X pulsar |
+| Parada precisa | Ventana ~0,20s, cooldown ~1,5s; niega un solo golpe frontal de espada o flecha, no detiene magia. Consume resistencia. Si se logra, habilita un unico contraataque de espada V (+50% de daño) durante ~0,85s. | X pulsar, luego V |
 | Esquiva | El dash existente concede proteccion a los ataques nuevos mientras está activo; no modifica motor ni entradas existentes. | Espacio |
 | Enemigos | Siluetas 3D procedimentales con cabeza, armadura, capucha, manos, piernas y arma; materiales con textura procedural, estética bosque/ruinas/boss. Sin colisiones extra ni movimientos del root. | — |
 | Jefe | Armadura/colores propios; resistencia de flecha/magia; alterna un golpe runico (1 de 3 ataques) identificado con anillo celeste. | — |
