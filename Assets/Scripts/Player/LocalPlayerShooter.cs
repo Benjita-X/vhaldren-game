@@ -23,6 +23,13 @@ namespace Vhaldren.Gameplay.Player
         [Tooltip("Dano de prueba. No es un ataque validado por servidor.")]
         [SerializeField, Min(0f)] private float testDamage = 25f;
         [SerializeField] private LayerMask aimLayers = Physics.DefaultRaycastLayers;
+        [Header("Arma visible — modo mundo")]
+        [SerializeField] private bool usePhysicalArrows;
+        [SerializeField, Min(1f)] private float arrowSpeed = 27f;
+        [SerializeField, Min(0f)] private float arrowGravity = 0.16f;
+        [SerializeField, Min(0.05f)] private float arrowCooldown = 0.38f;
+
+        private float nextArrowAt;
 
         private RaycastHit[] aimHits = new RaycastHit[AimHitCapacity];
         private LineRenderer tracer;
@@ -37,6 +44,26 @@ namespace Vhaldren.Gameplay.Player
         /// <summary>Suma de dano realmente descontado de CombatHealth, sin overkill.</summary>
         public float TotalDamageDealt { get; private set; }
         public float LastDamageDealt { get; private set; }
+        public bool UsesPhysicalArrows => usePhysicalArrows;
+
+        /// <summary>Activar flechas en el mundo sin cambiar el disparo legacy de tests.</summary>
+        public void SetPhysicalArrows(bool enabled)
+        {
+            usePhysicalArrows = enabled;
+        }
+
+        /// <summary>Respuesta diferida cuando la flecha impacta de verdad.</summary>
+        public void RegisterProjectileImpact(Vector3 impactPoint, float appliedDamage)
+        {
+            LastImpactPoint = impactPoint;
+            if (!float.IsNaN(appliedDamage) && !float.IsInfinity(appliedDamage) &&
+                appliedDamage > 0f)
+            {
+                HitsLanded++;
+                LastDamageDealt = appliedDamage;
+                TotalDamageDealt += appliedDamage;
+            }
+        }
 
         private void Awake()
         {
@@ -150,6 +177,28 @@ namespace Vhaldren.Gameplay.Player
             float range = Mathf.Min(SafeMaxRange(), Vector3.Distance(origin, aimPoint));
             if (range <= 0f)
                 return false;
+
+            if (usePhysicalArrows)
+            {
+                if (Time.time < nextArrowAt)
+                    return false;
+
+                float safeDamage = float.IsNaN(testDamage) || float.IsInfinity(testDamage)
+                    ? 0f : Mathf.Max(0f, testDamage);
+                PhysicalArrowProjectile arrow = PhysicalArrowProjectile.Spawn(
+                    transform, origin, direction, safeDamage,
+                    Mathf.Max(1f, arrowSpeed), SafeMaxRange(), this,
+                    Mathf.Max(0f, arrowGravity));
+                if (arrow == null)
+                    return false;
+
+                nextArrowAt = Time.time + Mathf.Max(0.05f, arrowCooldown);
+                LastAimPoint = aimPoint;
+                LastImpactPoint = origin;
+                ShotsFired++;
+                // Nada de tracer instantaneo: se ve el cuerpo de la flecha real.
+                return true;
+            }
 
             LastAimPoint = aimPoint;
             LastImpactPoint = aimPoint;
