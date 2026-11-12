@@ -115,6 +115,41 @@ namespace Vhaldren.Tests
         }
 
         [UnityTest]
+        public IEnumerator VillageMarketHasReputationRulesAndNoPartialTransactions()
+        {
+            player = new GameObject("PlayerRoot");
+            SurvivalInventory inventory = player.AddComponent<SurvivalInventory>();
+            VillageQuestJournal journal = player.AddComponent<VillageQuestJournal>();
+            yield return null;
+
+            Assert.That(journal.TryTrade(2),
+                Is.EqualTo(VillageTradeResult.ReputationTooLow));
+            int food = inventory.Count(ResourceKind.Food);
+            int fiber = inventory.Count(ResourceKind.Fiber);
+            int initialPrice = VillageTradeCatalog.Price(VillageTradeCatalog.Offers[0],
+                journal.CurrentEvent, journal.Reputation(SettlementCulture.Mixed));
+            Assert.That(journal.TryTrade(0), Is.EqualTo(VillageTradeResult.Purchased));
+            Assert.That(inventory.Count(ResourceKind.Food), Is.EqualTo(food + 2));
+            Assert.That(inventory.Count(ResourceKind.Fiber), Is.EqualTo(fiber - initialPrice));
+            Assert.That(journal.TradeStock(0), Is.EqualTo(3));
+
+            Assert.That(journal.TryAccept(), Is.True);
+            Assert.That(journal.TryClaim(), Is.True); // +2 reputación mixta.
+            Assert.That(inventory.Add(ResourceKind.Hide, 2), Is.EqualTo(2));
+            int beforeFill = inventory.TotalItems;
+            Assert.That(inventory.Add(ResourceKind.Wood,
+                inventory.Capacity - beforeFill), Is.GreaterThan(0));
+            int full = inventory.TotalItems;
+            int hides = inventory.Count(ResourceKind.Hide);
+
+            Assert.That(journal.TryTrade(1), Is.EqualTo(VillageTradeResult.InventoryFull));
+            Assert.That(inventory.TotalItems, Is.EqualTo(full),
+                "Un intercambio rechazado no entrega ni descuenta items.");
+            Assert.That(inventory.Count(ResourceKind.Hide), Is.EqualTo(hides));
+            Assert.That(journal.TradeStock(1), Is.EqualTo(3));
+        }
+
+        [UnityTest]
         public IEnumerator QuestBoardInteractsOnlyNearPlayer()
         {
             player = new GameObject("PlayerRoot");
