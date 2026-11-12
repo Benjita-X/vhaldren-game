@@ -24,6 +24,7 @@ namespace Vhaldren.Gameplay.Races
         [SerializeField] private RaceId race = RaceId.Human;
 
         private readonly Collider[] nearby = new Collider[32];
+        private readonly RaycastHit[] lineHits = new RaycastHit[16];
         private readonly System.Collections.Generic.HashSet<CombatDamageReceiver> burstHit =
             new System.Collections.Generic.HashSet<CombatDamageReceiver>();
         private CombatHealth health;
@@ -253,6 +254,8 @@ namespace Vhaldren.Gameplay.Races
                 CombatDamageReceiver receiver = scan[i] != null ? scan[i].GetComponentInParent<CombatDamageReceiver>() : null;
                 if (receiver == null || receiver.transform.IsChildOf(transform) || !burstHit.Add(receiver))
                     continue;
+                if (!Unobstructed(receiver))
+                    continue;
                 CombatDamageResult result = receiver.Receive(damage, CombatDamageKind.Magic, transform.position);
                 if (result.Applied > 0f)
                 {
@@ -260,6 +263,47 @@ namespace Vhaldren.Gameplay.Races
                     GetComponent<PlayerDamageTracker>()?.Record(result.Applied, CombatDamageKind.Magic);
                 }
             }
+        }
+
+        private bool Unobstructed(CombatDamageReceiver target)
+        {
+            if (target == null)
+                return false;
+            Vector3 start = transform.position + Vector3.up * 0.55f;
+            Collider targetCollider = target.GetComponent<Collider>();
+            Vector3 end = targetCollider != null
+                ? targetCollider.bounds.center
+                : target.transform.position + Vector3.up * 0.55f;
+            Vector3 ray = end - start;
+            float distance = ray.magnitude;
+            if (distance <= 0.01f)
+                return true;
+
+            Vector3 direction = ray / distance;
+            int count = Physics.RaycastNonAlloc(start, direction, lineHits, distance,
+                Physics.DefaultRaycastLayers, QueryTriggerInteraction.Ignore);
+            RaycastHit[] complete = null;
+            if (count >= lineHits.Length)
+            {
+                complete = Physics.RaycastAll(start, direction, distance,
+                    Physics.DefaultRaycastLayers, QueryTriggerInteraction.Ignore);
+                count = complete.Length;
+            }
+
+            for (int i = 0; i < count; i++)
+            {
+                RaycastHit candidate = complete != null ? complete[i] : lineHits[i];
+                if (candidate.collider == null)
+                    continue;
+                Transform obstacle = candidate.collider.transform;
+                if (obstacle.IsChildOf(transform) || obstacle.IsChildOf(target.transform))
+                    continue;
+                // Otros combatientes no bloquean la onda; el escenario sí.
+                if (obstacle.GetComponentInParent<CombatDamageReceiver>() != null)
+                    continue;
+                return false;
+            }
+            return true;
         }
 
         private Color PowerColor()
