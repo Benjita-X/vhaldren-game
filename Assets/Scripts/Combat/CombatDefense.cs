@@ -117,6 +117,19 @@ namespace Vhaldren.Gameplay.Combat
             return true;
         }
 
+        /// <summary>Las habilidades gastan la misma resistencia que la defensa.</summary>
+        public bool TrySpend(float amount)
+        {
+            Initialize();
+            if (health != null && health.IsDefeated)
+                return false;
+            if (float.IsNaN(amount) || float.IsInfinity(amount) || amount < 0f ||
+                stamina < amount)
+                return false;
+            stamina -= amount;
+            return true;
+        }
+
         public bool TryParry()
         {
             Initialize();
