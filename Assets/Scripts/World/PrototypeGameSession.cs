@@ -61,6 +61,8 @@ namespace Vhaldren.Gameplay.World
                     protection = player.gameObject.AddComponent<CombatDefense>();
                 if (player.GetComponent<PlayerDefensiveInput>() == null)
                     player.gameObject.AddComponent<PlayerDefensiveInput>();
+                if (player.GetComponent<PlayerCombatAbilities>() == null)
+                    player.gameObject.AddComponent<PlayerCombatAbilities>();
 
                 // Solo el mundo usa flechas fisicas; las pruebas y la sala
                 // de entrenamiento conservan el disparo legacy configurable.
