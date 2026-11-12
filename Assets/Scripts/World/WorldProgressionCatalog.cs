@@ -70,6 +70,25 @@ namespace Vhaldren.Gameplay.World
         }
     }
 
+    public sealed class SettlementDefinition
+    {
+        public readonly string Id;
+        public readonly RealmKind Realm;
+        public readonly SettlementCulture Culture;
+        public readonly bool HasWanderingMerchantStop;
+        public readonly bool HasMagicMentor;
+
+        public SettlementDefinition(string id, RealmKind realm,
+            SettlementCulture culture, bool merchantStop, bool magicMentor)
+        {
+            Id = id;
+            Realm = realm;
+            Culture = culture;
+            HasWanderingMerchantStop = merchantStop;
+            HasMagicMentor = magicMentor;
+        }
+    }
+
     public static class WorldProgressionCatalog
     {
         public static readonly IReadOnlyList<RealmDefinition> Realms =
@@ -81,6 +100,27 @@ namespace Vhaldren.Gameplay.World
                     "CelestialEntry", 30, "Esencia astral"),
                 new RealmDefinition(RealmKind.Infernal, "Reino Abisal",
                     "InfernalEntry", 30, "Obsidiana y brasa abisal")
+            });
+
+        public static readonly IReadOnlyList<SettlementDefinition> SettlementArchetypes =
+            Array.AsReadOnly(new[]
+            {
+                new SettlementDefinition("earth-crossroads", RealmKind.Earth,
+                    SettlementCulture.Mixed, true, false),
+                new SettlementDefinition("earth-arcane-academy", RealmKind.Earth,
+                    SettlementCulture.Arcane, true, true),
+                new SettlementDefinition("earth-lycan-village", RealmKind.Earth,
+                    SettlementCulture.Lycan, false, false),
+                new SettlementDefinition("earth-vampire-citadel", RealmKind.Earth,
+                    SettlementCulture.Vampire, true, true),
+                new SettlementDefinition("earth-necropolis", RealmKind.Earth,
+                    SettlementCulture.Undead, false, true),
+                new SettlementDefinition("earth-human-hamlet", RealmKind.Earth,
+                    SettlementCulture.Human, true, false),
+                new SettlementDefinition("celestial-sky-city", RealmKind.Celestial,
+                    SettlementCulture.Celestial, true, true),
+                new SettlementDefinition("infernal-obsidian-market", RealmKind.Infernal,
+                    SettlementCulture.Demon, true, true)
             });
 
         // Arquetipos de cuevas que luego alimentaran el director de
@@ -166,7 +206,17 @@ namespace Vhaldren.Gameplay.World
                     cave.RecommendedLevel <= 0)
                     return false;
             }
-            return Realms.Count == 3 && ids.Count == CaveArchetypes.Count;
+            if (Realms.Count != 3 || ids.Count != CaveArchetypes.Count)
+                return false;
+
+            ids.Clear();
+            foreach (SettlementDefinition town in SettlementArchetypes)
+            {
+                if (town == null || string.IsNullOrWhiteSpace(town.Id) ||
+                    !ids.Add(town.Id) || FindRealm(town.Realm) == null)
+                    return false;
+            }
+            return ids.Count == SettlementArchetypes.Count;
         }
     }
 }
