@@ -37,7 +37,7 @@ namespace Vhaldren.Gameplay.Player
         [Tooltip("Velocidad que corresponde a la animacion de correr completa.")]
         [SerializeField, Min(0.1f)] private float runSpeed = 6f;
         [Tooltip("Suavizado de la mezcla de piernas, en segundos.")]
-        [SerializeField, Min(0f)] private float dampTime = 0.08f;
+        [SerializeField, Min(0f)] private float dampTime = 0.12f;
 
         private bool wasDashing;
         private int lastShots;

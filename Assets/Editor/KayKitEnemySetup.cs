@@ -91,8 +91,79 @@ namespace Vhaldren.EditorTools
                     BuildOverride(model, style, controller, clips, skeleton);
             }
             AssetDatabase.SaveAssets();
+            AddRunAnimation();
             Debug.Log("[Vhaldren] Enemigos KayKit listos: " + Models.Length + " modelos, " +
                       (Models.Length * 4) + " variantes de animacion.");
+        }
+
+        private static readonly string[] RunNames = { "Running_A", "Running_B" };
+        public const float WalkThreshold = 2f;
+        public const float RunThreshold = 4f;
+
+        /// <summary>
+        /// Añade correr al arbol de movimiento y a todas las variantes, modificando los
+        /// assets existentes (mismos GUID): las escenas no pierden ninguna referencia.
+        /// Asi los enemigos rapidos corren en vez de patinar caminando.
+        /// </summary>
+        [MenuItem("Vhaldren/Personaje/Añadir correr a enemigos KayKit")]
+        public static void AddRunAnimation()
+        {
+            AnimatorController controller = AssetDatabase.LoadAssetAtPath<AnimatorController>(BaseControllerPath);
+            if (controller == null)
+                throw new InvalidOperationException("No existe el controlador base de enemigos.");
+            ModelInfo reference = Models.First(m => m.Id == "Skeleton_Warrior");
+            AnimationClip referenceRun = Pick(ClipsOf(reference.FbxPath), RunNames);
+            if (referenceRun == null)
+                throw new InvalidOperationException("El modelo de referencia no tiene clip de correr.");
+
+            BlendTree tree = null;
+            foreach (ChildAnimatorState child in controller.layers[0].stateMachine.states)
+                if (child.state.name == "Movimiento")
+                    tree = child.state.motion as BlendTree;
+            if (tree == null)
+                throw new InvalidOperationException("Falta el arbol 'Movimiento'.");
+
+            ChildMotion[] motions = tree.children;
+            bool hasRun = false;
+            for (int i = 0; i < motions.Length; i++)
+            {
+                if (motions[i].motion == referenceRun)
+                {
+                    hasRun = true;
+                    motions[i].threshold = RunThreshold;
+                }
+                else if (motions[i].threshold > 0f)
+                    motions[i].threshold = WalkThreshold;
+            }
+            tree.children = motions;
+            if (!hasRun)
+                tree.AddChild(referenceRun, RunThreshold);
+            tree.useAutomaticThresholds = false;
+            EditorUtility.SetDirty(tree);
+            EditorUtility.SetDirty(controller);
+
+            int updated = 0;
+            foreach (ModelInfo model in Models)
+            {
+                AnimationClip run = Pick(ClipsOf(model.FbxPath), RunNames);
+                foreach (AttackStyle style in Enum.GetValues(typeof(AttackStyle)))
+                {
+                    AnimatorOverrideController overrides =
+                        AssetDatabase.LoadAssetAtPath<AnimatorOverrideController>(OverridePath(model.Id, style));
+                    if (overrides == null || run == null)
+                        continue;
+                    List<KeyValuePair<AnimationClip, AnimationClip>> pairs = new List<KeyValuePair<AnimationClip, AnimationClip>>();
+                    overrides.GetOverrides(pairs);
+                    for (int i = 0; i < pairs.Count; i++)
+                        if (pairs[i].Key == referenceRun)
+                            pairs[i] = new KeyValuePair<AnimationClip, AnimationClip>(pairs[i].Key, run);
+                    overrides.ApplyOverrides(pairs);
+                    EditorUtility.SetDirty(overrides);
+                    updated++;
+                }
+            }
+            AssetDatabase.SaveAssets();
+            Debug.Log("[Vhaldren] Correr añadido al movimiento de enemigos (" + updated + " variantes).");
         }
 
         private static void ConfigureImporter(string path)

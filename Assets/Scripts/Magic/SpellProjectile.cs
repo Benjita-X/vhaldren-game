@@ -10,6 +10,8 @@ namespace Vhaldren.Gameplay.Magic
     public sealed class SpellProjectile : MonoBehaviour
     {
         public const float Speed = 24f;
+        /// <summary>El radio de golpe es menor que el brillo visible: aciertos justos, no regalados.</summary>
+        public const float HitRadiusFactor = 0.6f;
 
         private readonly RaycastHit[] hits = new RaycastHit[12];
         private PlayerSpellbook caster;
@@ -65,7 +67,7 @@ namespace Vhaldren.Gameplay.Magic
             }
 
             Vector3 start = transform.position;
-            int count = Physics.SphereCastNonAlloc(start, spell.Radius, direction, hits, step,
+            int count = Physics.SphereCastNonAlloc(start, spell.Radius * HitRadiusFactor, direction, hits, step,
                 Physics.DefaultRaycastLayers, QueryTriggerInteraction.Ignore);
             RaycastHit[] completeHits = null;
             // Unity no garantiza que un NonAlloc saturado conserve los impactos
@@ -73,7 +75,7 @@ namespace Vhaldren.Gameplay.Magic
             // pared y dejar que el proyectil la atravesara.
             if (count >= hits.Length)
             {
-                completeHits = Physics.SphereCastAll(start, spell.Radius, direction, step,
+                completeHits = Physics.SphereCastAll(start, spell.Radius * HitRadiusFactor, direction, step,
                     Physics.DefaultRaycastLayers, QueryTriggerInteraction.Ignore);
                 count = completeHits.Length;
             }

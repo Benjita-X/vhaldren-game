@@ -326,8 +326,10 @@ namespace Vhaldren.Gameplay.Player
 
                 float safeDamage = float.IsNaN(testDamage) || float.IsInfinity(testDamage)
                     ? 0f : Mathf.Max(0f, testDamage);
+                Vector3 launch = BallisticDirection(origin, aimPoint, Mathf.Max(1f, arrowSpeed),
+                    Mathf.Max(0f, arrowGravity), direction);
                 PhysicalArrowProjectile arrow = PhysicalArrowProjectile.Spawn(
-                    transform, origin, direction, safeDamage,
+                    transform, origin, launch, safeDamage,
                     Mathf.Max(1f, arrowSpeed), SafeMaxRange(), this,
                     Mathf.Max(0f, arrowGravity));
                 if (arrow == null)
@@ -444,6 +446,33 @@ namespace Vhaldren.Gameplay.Player
         }
 
         private float SafeMaxRange() => Mathf.Max(1f, maxRange);
+
+        /// <summary>
+        /// Direccion de lanzamiento para que la flecha, con su caida, llegue a la altura
+        /// del pecho en el punto apuntado (arco bajo). Si el cursor esta en el suelo se
+        /// apunta 0,9 m por encima; si el objetivo esta fuera de alcance, tiro directo.
+        /// </summary>
+        public static Vector3 BallisticDirection(Vector3 origin, Vector3 aimPoint, float speed,
+            float gravityScale, Vector3 fallback)
+        {
+            Vector3 target = aimPoint;
+            if (target.y < origin.y - 0.3f)
+                target.y = Mathf.Max(target.y + 0.9f, origin.y - 0.35f);
+            Vector3 planar = target - origin;
+            planar.y = 0f;
+            float dx = planar.magnitude;
+            float g = Mathf.Abs(Physics.gravity.y) * gravityScale;
+            if (dx < 0.05f || g < 0.0001f || speed <= 0f)
+                return fallback;
+            float dy = target.y - origin.y;
+            float v2 = speed * speed;
+            float disc = v2 * v2 - g * (g * dx * dx + 2f * dy * v2);
+            if (disc < 0f)
+                return fallback;
+            float angle = Mathf.Atan((v2 - Mathf.Sqrt(disc)) / (g * dx));
+            Vector3 flat = planar / dx;
+            return (flat * Mathf.Cos(angle) + Vector3.up * Mathf.Sin(angle)).normalized;
+        }
 
         private static bool WasFirePressed()
         {

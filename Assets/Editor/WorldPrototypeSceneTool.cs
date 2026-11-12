@@ -804,7 +804,7 @@ namespace Vhaldren.EditorTools
                 : position;
             CharacterController body = root.AddComponent<CharacterController>();
             body.height = boss ? 2.8f : 2f;
-            body.radius = boss ? 0.65f : 0.42f;
+            body.radius = boss ? 0.55f : 0.34f;
             body.center = Vector3.zero;
             body.minMoveDistance = 0f;
             CombatHealth health = root.AddComponent<CombatHealth>();
