@@ -1,0 +1,19 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!221 &22100000
+AnimatorOverrideController:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_Name: Skeleton_Warrior_Ranged
+  m_Controller: {fileID: 9100000, guid: 192a5c7714e25e94cbabe7c4bbf86537, type: 2}
+  m_Clips:
+  - m_OriginalClip: {fileID: -4431010552204222233, guid: 53dbfc078cbd145428269360f0307b2f, type: 3}
+    m_OverrideClip: {fileID: -4431010552204222233, guid: 53dbfc078cbd145428269360f0307b2f, type: 3}
+  - m_OriginalClip: {fileID: 2825485217256495706, guid: 53dbfc078cbd145428269360f0307b2f, type: 3}
+    m_OverrideClip: {fileID: 2825485217256495706, guid: 53dbfc078cbd145428269360f0307b2f, type: 3}
+  - m_OriginalClip: {fileID: 3963595363326709879, guid: 53dbfc078cbd145428269360f0307b2f, type: 3}
+    m_OverrideClip: {fileID: -1964166982296019383, guid: 53dbfc078cbd145428269360f0307b2f, type: 3}
+  - m_OriginalClip: {fileID: 5176603141605120071, guid: 53dbfc078cbd145428269360f0307b2f, type: 3}
+    m_OverrideClip: {fileID: 5176603141605120071, guid: 53dbfc078cbd145428269360f0307b2f, type: 3}

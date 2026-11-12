@@ -85,6 +85,8 @@ namespace Vhaldren.Gameplay.World
                 isBoss ? 0.16f : 0f, isBoss ? 0.26f : 0f);
             if (GetComponent<EnemyVisualPrototype>() == null)
                 gameObject.AddComponent<EnemyVisualPrototype>();
+            // Modelo KayKit animado (si la escena lo trae bajo "Visual enemigo").
+            EnemyAnimationDriver.Attach(this, modelRoot != null ? modelRoot.transform : transform.Find("Visual enemigo"));
             // Se agrega tambien a escenas 008 ya versionadas sin recompilar la escena.
             attackWarning = GetComponent<EnemyAttackTelegraph>();
             if (attackWarning == null)

@@ -97,14 +97,18 @@ namespace Vhaldren.EditorTools
             if (player.GetComponent<SurvivalHud>() == null)
                 player.AddComponent<SurvivalHud>();
 
-            Material ground = Mat("SueloBasico", new Color(0.19f, 0.17f, 0.18f));
-            Material forest = Mat("Bosque", new Color(0.11f, 0.18f, 0.14f));
-            Material ruins = Mat("Ruinas", new Color(0.23f, 0.22f, 0.26f));
-            Material crimson = Mat("Altar", new Color(0.28f, 0.075f, 0.11f));
-            Material path = Mat("Sendero", new Color(0.33f, 0.26f, 0.23f));
-            Material stone = Mat("Piedra", new Color(0.3f, 0.32f, 0.36f));
-            Material bark = Mat("Tronco", new Color(0.2f, 0.13f, 0.12f));
-            Material leaves = Mat("Hojas", new Color(0.13f, 0.24f, 0.17f));
+            // Texturas CC0 de Poly Haven con proyeccion triplanar (Assets/ThirdParty/PolyHaven).
+            Material ground = TexMat("SueloBasico", "brown_mud_rocks_01", new Color(0.72f, 0.68f, 0.66f), 5f);
+            Material forest = TexMat("Bosque", "forest_leaves_02", new Color(0.62f, 0.7f, 0.58f), 4f);
+            Material ruins = TexMat("Ruinas", "aerial_rocks_02", new Color(0.68f, 0.68f, 0.74f), 6f);
+            Material crimson = TexMat("Altar", "cobblestone_floor_13", new Color(0.78f, 0.42f, 0.45f), 3f);
+            Material path = TexMat("Sendero", "cobblestone_floor_08", new Color(0.85f, 0.8f, 0.76f), 3f);
+            Material stone = TexMat("Piedra", "castle_brick_07", new Color(0.8f, 0.8f, 0.84f), 2.5f);
+            Material bark = TexMat("Tronco", "bark_brown_02", new Color(0.8f, 0.72f, 0.68f), 1.5f);
+            Material leaves = TexMat("Hojas", "forest_leaves_02", new Color(0.45f, 0.65f, 0.42f), 2f);
+            Material castleWall = TexMat("MuroCastillo", "castle_brick_broken_06", new Color(0.75f, 0.75f, 0.78f), 3f);
+            Material obelisk = TexMat("Obelisco", "castle_brick_02_red", new Color(0.85f, 0.6f, 0.62f), 1.5f);
+            Material wildRock = TexMat("RocaNatural", "dark_rock", new Color(0.85f, 0.85f, 0.88f), 2f);
             Material red = Mat("Enemigo", new Color(0.47f, 0.13f, 0.2f));
             Material purple = Mat("Jefe", new Color(0.42f, 0.16f, 0.52f));
             Material atlas = AssetDatabase.LoadAssetAtPath<Material>(AtlasPath);
@@ -133,13 +137,13 @@ namespace Vhaldren.EditorTools
 
             // Limites fisicos: el usuario no puede caer al vacio durante esta prueba.
             Primitive("Muro norte", PrimitiveType.Cube, props,
-                new Vector3(0f, 3f, 46f), new Vector3(92f, 6f, 1.5f), stone, true);
+                new Vector3(0f, 3f, 46f), new Vector3(92f, 6f, 1.5f), castleWall, true);
             Primitive("Muro sur", PrimitiveType.Cube, props,
-                new Vector3(0f, 3f, -46f), new Vector3(92f, 6f, 1.5f), stone, true);
+                new Vector3(0f, 3f, -46f), new Vector3(92f, 6f, 1.5f), castleWall, true);
             Primitive("Muro este", PrimitiveType.Cube, props,
-                new Vector3(46f, 3f, 0f), new Vector3(1.5f, 6f, 92f), stone, true);
+                new Vector3(46f, 3f, 0f), new Vector3(1.5f, 6f, 92f), castleWall, true);
             Primitive("Muro oeste", PrimitiveType.Cube, props,
-                new Vector3(-46f, 3f, 0f), new Vector3(1.5f, 6f, 92f), stone, true);
+                new Vector3(-46f, 3f, 0f), new Vector3(1.5f, 6f, 92f), castleWall, true);
 
             // Bosque de la zona oeste. Se deja un corredor central transitable.
             System.Random rng = new System.Random(20261111);
@@ -163,7 +167,7 @@ namespace Vhaldren.EditorTools
                 Tree(props, new Vector3(x, 0f, z), size, bark, leaves);
             }
 
-            ResourceDeposits(props, stone, leaves);
+            ResourceDeposits(props, wildRock, leaves);
 
             // Ruinas a la derecha: posiciones predecibles, fuera del corredor principal.
             for (int i = 0; i < 16; i++)
@@ -194,7 +198,7 @@ namespace Vhaldren.EditorTools
             }
 
             Primitive("Obelisco de sangre", PrimitiveType.Cube, props,
-                new Vector3(0f, 1.7f, 41f), new Vector3(2.8f, 3.4f, 2.8f), crimson, true);
+                new Vector3(0f, 1.7f, 41f), new Vector3(2.8f, 3.4f, 2.8f), obelisk, true);
             if (atlas != null)
             {
                 KayKit("Cofre del bosque", "chest.obj", props,
@@ -211,6 +215,13 @@ namespace Vhaldren.EditorTools
             Enemy("Guardian del altar", enemies, player.transform, new Vector3(-9f, 1.08f, 24f), red, 90f, 12f, 3.0f, false);
             Enemy("JEFE - Caballero de sangre", enemies, player.transform, new Vector3(0f, 1.08f, 32f),
                 purple, 320f, 18f, 2.5f, true);
+            // Modelos KayKit animados (CC0) en lugar de capsulas.
+            AttachModel(enemies, "Acechador del bosque A", "Rogue", KayKitEnemySetup.AttackStyle.Melee);
+            AttachModel(enemies, "Acechador del bosque B", "Rogue", KayKitEnemySetup.AttackStyle.Melee);
+            AttachModel(enemies, "Centinela de ruinas A", "Knight", KayKitEnemySetup.AttackStyle.Melee);
+            AttachModel(enemies, "Centinela de ruinas B", "Knight", KayKitEnemySetup.AttackStyle.Melee);
+            AttachModel(enemies, "Guardian del altar", "Knight", KayKitEnemySetup.AttackStyle.Heavy);
+            AttachModel(enemies, "JEFE - Caballero de sangre", "Knight", KayKitEnemySetup.AttackStyle.Heavy);
 
             // Campamentos del bestiario 019: cada uno enseña un rol y lleva su esencia.
             foreach (Camp camp in Camps)
@@ -337,6 +348,39 @@ namespace Vhaldren.EditorTools
                 AssetDatabase.CreateFolder("Assets/WorldPrototype", "Materials");
         }
 
+        private const string PolyHavenFolder = "Assets/ThirdParty/PolyHaven";
+
+        /// <summary>
+        /// Material triplanar con textura de Poly Haven. Reutiliza el asset existente
+        /// (mismo GUID, la escena no pierde referencias) y solo cambia shader y mapas.
+        /// Si faltan las texturas, cae al color plano de siempre.
+        /// </summary>
+        private static Material TexMat(string name, string textureId, Color tint, float metersPerTile)
+        {
+            Material material = Mat(name, tint);
+            Shader triplanar = Shader.Find("Vhaldren/Triplanar");
+            string colorPath = PolyHavenFolder + "/" + textureId + "/color.jpg";
+            string normalPath = PolyHavenFolder + "/" + textureId + "/normal.jpg";
+            Texture2D color = AssetDatabase.LoadAssetAtPath<Texture2D>(colorPath);
+            if (triplanar == null || color == null)
+                return material;
+            TextureImporter normalImporter = AssetImporter.GetAtPath(normalPath) as TextureImporter;
+            if (normalImporter != null && normalImporter.textureType != TextureImporterType.NormalMap)
+            {
+                normalImporter.textureType = TextureImporterType.NormalMap;
+                normalImporter.SaveAndReimport();
+            }
+            Texture2D normal = AssetDatabase.LoadAssetAtPath<Texture2D>(normalPath);
+            material.shader = triplanar;
+            material.SetTexture("_MainTex", color);
+            if (normal != null)
+                material.SetTexture("_BumpMap", normal);
+            material.SetColor("_Color", tint);
+            material.SetFloat("_Tile", metersPerTile);
+            EditorUtility.SetDirty(material);
+            return material;
+        }
+
         private static Material Mat(string name, Color color)
         {
             EnsureFolders();
@@ -421,7 +465,7 @@ namespace Vhaldren.EditorTools
         /// <summary>Rocas, fibra y mineral cerca de la entrada para la primera base.</summary>
         private static void ResourceDeposits(Transform parent, Material stone, Material leaves)
         {
-            Material ore = Mat("Mineral", new Color(0.36f, 0.22f, 0.16f));
+            Material ore = TexMat("Mineral", "dark_rock", new Color(0.95f, 0.55f, 0.3f), 1.5f);
             Vector3[] rocks = { new Vector3(-8f, 0f, -6f), new Vector3(-11f, 0f, 5f), new Vector3(7f, 0f, -9f), new Vector3(10f, 0f, 7f) };
             foreach (Vector3 p in rocks)
             {
@@ -515,6 +559,59 @@ namespace Vhaldren.EditorTools
             serialized.FindProperty("attackRange").floatValue = data.AttackRange;
             serialized.FindProperty("aggroRange").floatValue = data.Aggro;
             serialized.ApplyModifiedPropertiesWithoutUndo();
+
+            switch (camp.Archetype)
+            {
+                case "saqueador": AttachModel(parent, camp.Name, "Barbarian", KayKitEnemySetup.AttackStyle.Melee); break;
+                case "ballestero": AttachModel(parent, camp.Name, "Rogue", KayKitEnemySetup.AttackStyle.Ranged); break;
+                case "acolito":
+                case "sanadora": AttachModel(parent, camp.Name, "Mage", KayKitEnemySetup.AttackStyle.Spell); break;
+                case "bruto": AttachModel(parent, camp.Name, "Barbarian", KayKitEnemySetup.AttackStyle.Heavy); break;
+                case "centinela_runico": AttachModel(parent, camp.Name, "Knight", KayKitEnemySetup.AttackStyle.Heavy); break;
+                case "esqueleto":
+                    AttachModel(parent, camp.Name, camp.Name.EndsWith("B") ? "Skeleton_Minion" : "Skeleton_Warrior",
+                        KayKitEnemySetup.AttackStyle.Melee);
+                    break;
+            }
+        }
+
+        /// <summary>
+        /// Coloca un personaje KayKit animado bajo "Visual enemigo" con los pies en el
+        /// suelo y escala uniforme, oculta la capsula provisional y asigna los clips
+        /// del estilo de ataque. Si los modelos no estan preparados, deja la capsula.
+        /// </summary>
+        private static void AttachModel(Transform parent, string enemyName, string modelId,
+            KayKitEnemySetup.AttackStyle style)
+        {
+            Transform root = parent.Find(enemyName);
+            Transform anchor = root != null ? root.Find("Visual enemigo") : null;
+            GameObject prefab = AssetDatabase.LoadAssetAtPath<GameObject>(KayKitEnemySetup.PrefabPath(modelId));
+            RuntimeAnimatorController overrides = AssetDatabase.LoadAssetAtPath<RuntimeAnimatorController>(
+                KayKitEnemySetup.OverridePath(modelId, style));
+            if (anchor == null || prefab == null)
+                return;
+            CharacterController body = root.GetComponent<CharacterController>();
+            float halfHeight = body != null ? body.height * 0.5f : 1f;
+            bool boss = body != null && body.height > 2.4f;
+            float worldScale = boss ? 1.12f : 0.82f;
+
+            GameObject model = (GameObject)PrefabUtility.InstantiatePrefab(prefab, anchor);
+            model.name = "Modelo texturizado";
+            Vector3 anchorScale = anchor.localScale;
+            model.transform.localPosition = new Vector3(0f, -halfHeight / Mathf.Max(0.01f, anchorScale.y), 0f);
+            model.transform.localRotation = Quaternion.identity;
+            model.transform.localScale = new Vector3(worldScale / anchorScale.x, worldScale / anchorScale.y,
+                worldScale / anchorScale.z);
+            Animator animator = model.GetComponent<Animator>();
+            if (animator != null && overrides != null)
+                animator.runtimeAnimatorController = overrides;
+
+            MeshRenderer placeholder = anchor.GetComponent<MeshRenderer>();
+            if (placeholder != null)
+                placeholder.enabled = false;
+            Transform eyes = anchor.Find("Ojos");
+            if (eyes != null)
+                eyes.gameObject.SetActive(false);
         }
 
         private static void Enemy(string name, Transform parent, Transform player,

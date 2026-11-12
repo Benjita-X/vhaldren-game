@@ -30,6 +30,27 @@ namespace Vhaldren.Gameplay.World
             props.SetParent(anchor, false);
             builtFor = data.Id;
 
+            // Con un personaje KayKit texturizado no se tiñe ni se añaden armas falsas:
+            // solo los brillos que delatan magia (mago, sanadora, elite).
+            Transform realModel = anchor.Find("Modelo texturizado");
+            bool textured = realModel != null && realModel.GetComponentInChildren<Animator>(true) != null;
+            if (textured)
+            {
+                if (data.Role == EnemyRole.Caster)
+                    Orb(new Vector3(0.45f, 0.95f, 0.25f), 0.2f, new Color(1f, 0.45f, 0.1f));
+                else if (data.Role == EnemyRole.Support)
+                    Orb(new Vector3(0f, 1.35f, 0f), 0.24f, new Color(0.35f, 1f, 0.45f));
+                else if (data.Role == EnemyRole.Elite)
+                {
+                    LineRenderer runes = PrototypeVfx.CreateRing("Runas del centinela", props, 0.75f, 0.05f, new Color(0.4f, 0.7f, 1f));
+                    if (runes != null)
+                        runes.transform.localPosition = new Vector3(0f, 0.1f, 0f);
+                }
+                else if (data.Role == EnemyRole.Brute)
+                    anchor.localScale = new Vector3(anchor.localScale.x * 1.25f, anchor.localScale.y * 1.12f, anchor.localScale.z * 1.25f);
+                return;
+            }
+
             Tint(anchor, data.Tint);
             Color glow = data.Tint * 1.6f;
             switch (data.Role)
