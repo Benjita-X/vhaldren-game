@@ -161,7 +161,7 @@ namespace Vhaldren.Tests
             CombatDamageReceiver receiver = target.GetComponent<CombatDamageReceiver>();
             receiver.ConfigureResistances(0f, 0f, 0.5f);
             StatusEffects status = StatusEffects.For(victim);
-            Assert.That(status.ApplyFrom(StatusKind.Ignition, player.transform.position), Is.True);
+            Assert.That(status.ApplyFrom(StatusKind.Ignition, player.transform), Is.True);
 
             float dealt = status.TickIgnition(Time.time + 1.01f);
             Assert.That(dealt, Is.EqualTo(StatusEffects.IgnitionDps * 0.5f).Within(0.01f));
