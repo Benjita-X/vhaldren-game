@@ -1,6 +1,7 @@
 using System;
 using System.Text;
 using UnityEngine;
+using Vhaldren.Gameplay.Settings;
 using Vhaldren.Gameplay.Combat;
 using Vhaldren.Gameplay.Player;
 using Vhaldren.Gameplay.Survival;
@@ -43,6 +44,15 @@ namespace Vhaldren.Gameplay.Progression
         public string LastMessage => message;
 
         public int TierOf(GearSlot slot) => tiers[(int)slot];
+
+        /// <summary>Vida base sin armadura (la fija la raza). Reaplica la armadura actual.</summary>
+        public void SetBaseMaxHealth(float value, bool refill)
+        {
+            if (float.IsNaN(value) || value < 1f)
+                return;
+            baseMaxHealth = value;
+            health.SetMaximumHealth(baseMaxHealth + GearCatalog.ArmorHealthBonus(tiers[(int)GearSlot.Armor]), refill);
+        }
 
         public string ItemName(GearSlot slot) =>
             GearCatalog.SlotName(slot) + " " + GearCatalog.Get(tiers[(int)slot]).Suffix;
@@ -177,7 +187,7 @@ namespace Vhaldren.Gameplay.Progression
         private static bool TogglePressed()
         {
 #if ENABLE_INPUT_SYSTEM
-            return Keyboard.current != null && Keyboard.current.uKey.wasPressedThisFrame;
+            return GameInput.Down(GameAction.Equipment);
 #elif ENABLE_LEGACY_INPUT_MANAGER
             return Input.GetKeyDown(KeyCode.U);
 #else

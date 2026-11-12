@@ -2,7 +2,8 @@
   "name": "Vhaldren.EditModeTests",
   "rootNamespace": "Vhaldren.Tests",
   "references": [
-    "Vhaldren.Gameplay"
+    "Vhaldren.Gameplay",
+    "Unity.InputSystem"
   ],
   "includePlatforms": [
     "Editor"

@@ -121,6 +121,9 @@ namespace Vhaldren.Gameplay.Magic
         {
             if (health == null || health.IsDefeated)
                 return false;
+            Vhaldren.Gameplay.Races.PlayerRace race = GetComponent<Vhaldren.Gameplay.Races.PlayerRace>();
+            if (race != null && race.IsImmune(kind))
+                return false;   // inmunidad de raza (p. ej. semidemonio e Ignicion)
             if (seconds <= 0f || float.IsNaN(seconds) || float.IsInfinity(seconds))
                 seconds = DefaultSeconds(kind);
             int index = (int)kind;

@@ -1,6 +1,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using Vhaldren.Gameplay.Settings;
 using Vhaldren.Gameplay.Combat;
 using Vhaldren.Gameplay.World;
 #if ENABLE_INPUT_SYSTEM
@@ -442,7 +443,7 @@ namespace Vhaldren.Gameplay.Player
         private static bool SwordPressed()
         {
 #if ENABLE_INPUT_SYSTEM
-            return Keyboard.current != null && Keyboard.current.vKey.wasPressedThisFrame;
+            return GameInput.Down(GameAction.Sword);
 #elif ENABLE_LEGACY_INPUT_MANAGER
             return Input.GetKeyDown(KeyCode.V);
 #else
@@ -453,7 +454,7 @@ namespace Vhaldren.Gameplay.Player
         private static bool FrostPressed()
         {
 #if ENABLE_INPUT_SYSTEM
-            return Keyboard.current != null && Keyboard.current.fKey.wasPressedThisFrame;
+            return GameInput.Down(GameAction.Frost);
 #elif ENABLE_LEGACY_INPUT_MANAGER
             return Input.GetKeyDown(KeyCode.F);
 #else
@@ -464,7 +465,7 @@ namespace Vhaldren.Gameplay.Player
         private static bool RunePressed()
         {
 #if ENABLE_INPUT_SYSTEM
-            return Keyboard.current != null && Keyboard.current.tKey.wasPressedThisFrame;
+            return GameInput.Down(GameAction.RunePulse);
 #elif ENABLE_LEGACY_INPUT_MANAGER
             return Input.GetKeyDown(KeyCode.T);
 #else

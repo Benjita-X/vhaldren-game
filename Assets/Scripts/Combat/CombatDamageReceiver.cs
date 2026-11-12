@@ -33,6 +33,12 @@ namespace Vhaldren.Gameplay.Combat
         float IncomingMultiplier { get; }
     }
 
+    /// <summary>Modificadores que dependen del tipo de daño (poder fisico o magico del atacante).</summary>
+    public interface IDamageKindModifier
+    {
+        float Multiplier(CombatDamageKind kind);
+    }
+
     /// <summary>Escudos que absorben daño antes de restar PV. Devuelven el daño que sobra.</summary>
     public interface IDamageAbsorber
     {
@@ -57,6 +63,8 @@ namespace Vhaldren.Gameplay.Combat
 
         private readonly System.Collections.Generic.List<IDamageTakenModifier> modifiers =
             new System.Collections.Generic.List<IDamageTakenModifier>();
+        private readonly System.Collections.Generic.List<IDamageKindModifier> kindModifiers =
+            new System.Collections.Generic.List<IDamageKindModifier>();
         private readonly System.Collections.Generic.List<IDamageAbsorber> absorbers =
             new System.Collections.Generic.List<IDamageAbsorber>();
         public event Action<CombatDamageResult> Resolved;
@@ -112,6 +120,13 @@ namespace Vhaldren.Gameplay.Combat
                 for (int i = 0; i < modifiers.Count; i++)
                 {
                     float factor = modifiers[i].IncomingMultiplier;
+                    if (!float.IsNaN(factor) && !float.IsInfinity(factor))
+                        amount *= Mathf.Clamp(factor, 0.1f, 3f);
+                }
+                GetComponents(kindModifiers);
+                for (int i = 0; i < kindModifiers.Count; i++)
+                {
+                    float factor = kindModifiers[i].Multiplier(kind);
                     if (!float.IsNaN(factor) && !float.IsInfinity(factor))
                         amount *= Mathf.Clamp(factor, 0.1f, 3f);
                 }

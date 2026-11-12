@@ -1,4 +1,5 @@
 using UnityEngine;
+using Vhaldren.Gameplay.Settings;
 using Vhaldren.Gameplay.Combat;
 #if ENABLE_INPUT_SYSTEM
 using UnityEngine.InputSystem;
@@ -112,7 +113,7 @@ namespace Vhaldren.Gameplay.Player
         private static bool ShieldHeld()
         {
 #if ENABLE_INPUT_SYSTEM
-            return Keyboard.current != null && Keyboard.current.zKey.isPressed;
+            return GameInput.Held(GameAction.Shield);
 #elif ENABLE_LEGACY_INPUT_MANAGER
             return Input.GetKey(KeyCode.Z);
 #else
@@ -122,7 +123,7 @@ namespace Vhaldren.Gameplay.Player
         private static bool WardHeld()
         {
 #if ENABLE_INPUT_SYSTEM
-            return Keyboard.current != null && Keyboard.current.cKey.isPressed;
+            return GameInput.Held(GameAction.Ward);
 #elif ENABLE_LEGACY_INPUT_MANAGER
             return Input.GetKey(KeyCode.C);
 #else
@@ -132,7 +133,7 @@ namespace Vhaldren.Gameplay.Player
         private static bool ParryPressed()
         {
 #if ENABLE_INPUT_SYSTEM
-            return Keyboard.current != null && Keyboard.current.xKey.wasPressedThisFrame;
+            return GameInput.Down(GameAction.Parry);
 #elif ENABLE_LEGACY_INPUT_MANAGER
             return Input.GetKeyDown(KeyCode.X);
 #else

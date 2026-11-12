@@ -249,7 +249,8 @@ namespace Vhaldren.Gameplay.Combat
         private void DrawDamagePopups(float x, float y)
         {
             Color previous = GUI.color;
-            for (int i = 0; i < PopupCapacity; i++)
+            // Opcion del menu: ocultar los numeros flotantes de daño y curacion.
+            for (int i = 0; Vhaldren.Gameplay.Settings.GameSettings.DamageNumbers && i < PopupCapacity; i++)
             {
                 DamagePopup popup = popups[i];
                 if (popup.Text == null)

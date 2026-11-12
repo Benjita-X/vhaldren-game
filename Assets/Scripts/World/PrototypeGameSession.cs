@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using UnityEngine;
+using Vhaldren.Gameplay.Settings;
 using Vhaldren.Gameplay.Combat;
 using Vhaldren.Gameplay.Player;
 using Vhaldren.Gameplay.Survival;
@@ -91,6 +92,10 @@ namespace Vhaldren.Gameplay.World
                 GameFeel.Enabled = true;
                 if (player.GetComponent<PlayerMovementFeedback>() == null)
                     player.gameObject.AddComponent<PlayerMovementFeedback>();
+                // Raza elegida en el menu principal.
+                if (player.GetComponent<Vhaldren.Gameplay.Races.PlayerRace>() == null)
+                    player.gameObject.AddComponent<Vhaldren.Gameplay.Races.PlayerRace>()
+                        .Configure(Vhaldren.Gameplay.Races.RaceSelection.Current);
                 if (GetComponent<DayNightCycle>() == null)
                     gameObject.AddComponent<DayNightCycle>();
                 if (player.GetComponent<SurvivalInventory>() != null &&
@@ -155,6 +160,8 @@ namespace Vhaldren.Gameplay.World
                             .Configure(Vhaldren.Gameplay.Progression.CombatLevel.LevelFor(candidate));
                     if (candidate.GetComponent<Vhaldren.Gameplay.Progression.EnemyLoot>() == null)
                         candidate.gameObject.AddComponent<Vhaldren.Gameplay.Progression.EnemyLoot>();
+                    if (candidate.GetComponent<Vhaldren.Gameplay.Races.RacePowerTaken>() == null)
+                        candidate.gameObject.AddComponent<Vhaldren.Gameplay.Races.RacePowerTaken>();
                 }
             minionCount = 0;
             defeated.Clear();
@@ -366,7 +373,7 @@ namespace Vhaldren.Gameplay.World
         private static bool WasHealPressed()
         {
 #if ENABLE_INPUT_SYSTEM
-            return Keyboard.current != null && Keyboard.current.qKey.wasPressedThisFrame;
+            return GameInput.Down(GameAction.Potion);
 #elif ENABLE_LEGACY_INPUT_MANAGER
             return Input.GetKeyDown(KeyCode.Q);
 #else

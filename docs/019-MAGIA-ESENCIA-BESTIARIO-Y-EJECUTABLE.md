@@ -93,8 +93,25 @@ La auditoría de los archivos de V Rising (`auditoria-v-rising/AUDITORIA.md`) se
 - Solo está activo en el mundo jugable: las salas de prueba no cambian.
 - Se activó el módulo integrado de partículas de Unity en `Packages/manifest.json`.
 
+### Razas, menú principal, opciones y códice
+- **8 razas** (`RaceCatalog`): Humano, Nacido de magia, Vampiro, Licántropo, No muerto, Semidemonio, Semicelestial e Híbrido. Cada una tiene:
+  - vida, resistencia y recuperación, velocidad, poder físico y mágico, y resistencias;
+  - afinidad por escuela de magia (por ejemplo, vampiro +30 % Hemomancia y −30 % Lumancia);
+  - escuelas aprendidas desde el principio, inmunidades, efectos de día y noche, ventajas y debilidades;
+  - un **poder propio con R**: Determinación, Sobrecarga arcana, Niebla carmesí, Furia lunar, Voluntad de hueso, Estallido infernal, Gracia o Adaptación.
+- El poder físico y mágico de la raza se aplica en el receptor de daño del enemigo (`RacePowerTaken`), así afecta a todas las armas y hechizos.
+- **Teclas reasignables** (`GameInput`, guardadas en PlayerPrefs): 31 acciones. Si eliges una tecla ocupada, se intercambian. El movimiento y la esquiva se actualizan al momento.
+- **Opciones** (`GameSettings`):
+  - audio general y de efectos;
+  - calidad, resolución, pantalla completa, VSync y límite de FPS;
+  - temblor de cámara, parón al golpear, números de daño y ayuda al empezar.
+- **Menú principal** (`MainMenu.unity`, primera escena del ejecutable): Nueva partida (elección de raza), Continuar (desactivado hasta que haya guardado), Opciones, Información, Créditos y Salir.
+- **Pausa (Esc)**: continuar, opciones, información, menú principal y salir.
+- **Información** (`CodexPanel`): controles actuales, explicación de cada elemento de la pantalla, los 18 hechizos con daño y recarga, estados, esencias, razas, bestiario y equipo. Se genera de los catálogos, así siempre está al día.
+- **Vídeo analizado** (LuisCanary, «Cómo crear un terreno en Unity SUPER rápido»): explica cómo esculpir un terreno de Unity, pintar capas de textura y repartir árboles y hierba. Propuesta pendiente: cambiar el suelo plano por un terreno con colinas en los bordes y las texturas Poly Haven pintadas, dejando planas las zonas de combate.
+
 ## Pruebas
-- **EditMode 77/77** y **PlayMode 110/110** en Unity 6000.2.12f1 (incluye 6 pruebas de progresión: forja atómica, banco, armadura sin curación gratis, diferencia de nivel, botín y aviso al grupo).
+- **EditMode 81/81** y **PlayMode 113/113** en Unity 6000.2.12f1 (incluye 6 pruebas de progresión: forja atómica, banco, armadura sin curación gratis, diferencia de nivel, botín y aviso al grupo).
 - Nuevas: catálogo de hechizos y esencias, ciclo día/noche, 11 de magia en PlayMode (proyectil, cargas, congelación, maldición, estática, Égida, escuelas en combate, absorción, ejecución, interrupción, Paso sombrío contra muro y regeneración), 7 del bestiario y una prueba de humo que carga `WorldPrototype001` completo y exige consola limpia.
 - El actualizador del Animator 017 se ejecutó al abrir Unity: el controlador pasó de 6 a 14 estados sin perder ninguno.
 

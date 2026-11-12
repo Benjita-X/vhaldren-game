@@ -65,7 +65,8 @@ namespace Vhaldren.Gameplay.Magic
                 return 0f;
             }
             // Curar en pulsos de 1 PV evita cientos de numeros verdes diminutos.
-            regenBank += RegenPerSecond * seconds;
+            Vhaldren.Gameplay.Races.PlayerRace race = GetComponent<Vhaldren.Gameplay.Races.PlayerRace>();
+            regenBank += RegenPerSecond * (race != null ? race.Data.OutOfCombatRegen : 1f) * seconds;
             if (regenBank < 1f)
                 return 0f;
             float whole = Mathf.Floor(regenBank);

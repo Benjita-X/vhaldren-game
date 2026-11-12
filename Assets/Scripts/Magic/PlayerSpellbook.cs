@@ -391,7 +391,8 @@ namespace Vhaldren.Gameplay.Magic
         {
             if (receiver == null || spell == null || receiver.transform.IsChildOf(transform))
                 return 0f;
-            float damage = spell.Damage * Mathf.Max(0f, power);
+            // Afinidad de la raza con la escuela (p. ej. vampiro +30 % Hemomancia).
+            float damage = spell.Damage * Mathf.Max(0f, power) * Vhaldren.Gameplay.Races.PlayerRace.AffinityFor(spell.School);
             bool critical = essence != null && random.NextDouble() < essence.CriticalChance;
             if (critical)
                 damage *= CriticalMultiplier;
@@ -744,6 +745,8 @@ namespace Vhaldren.Gameplay.Magic
             if (barrier != null && barrier.Active)
                 text.Append("   Égida ").Append(barrier.Remaining.ToString("0"));
             GUI.Box(new Rect(x, y, width, 24f), text.ToString(), style);
+            if (Vhaldren.Gameplay.Races.PlayerRace.Local != null)
+                GUI.Box(new Rect(x, y - 26f, width, 24f), Vhaldren.Gameplay.Races.PlayerRace.Local.HudText(), style);
 
             float slotWidth = (width - 8f) / 3f;
             for (int slot = 0; slot < SpellCatalog.SpellsPerSchool; slot++)

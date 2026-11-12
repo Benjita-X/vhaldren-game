@@ -1,4 +1,5 @@
 using UnityEngine;
+using Vhaldren.Gameplay.Settings;
 using Vhaldren.Gameplay.World;
 #if ENABLE_INPUT_SYSTEM
 using UnityEngine.InputSystem;
@@ -22,7 +23,7 @@ namespace Vhaldren.Gameplay.Player
 
         private void Awake()
         {
-            expanded = expandedByDefault;
+            expanded = expandedByDefault && Vhaldren.Gameplay.Settings.GameSettings.ShowHelpOnStart;
             autoHideAt = Time.time + 16f;
         }
 
@@ -67,29 +68,30 @@ namespace Vhaldren.Gameplay.Player
                 };
 
             GUI.Box(new Rect(x, 43f, width, 408f), "");
-            string guide =
-                "<b>MOVIMIENTO</b>\nWASD: mover | Espacio: esquivar\n" +
-                "Ratón: apuntar | Clic izquierdo: ballesta\n\n" +
-                "<b>HABILIDADES</b>\nV: espada | T: pulso rúnico | F: escarcha\n" +
-                "Z: escudo físico | C: barrera mágica\n" +
-                "X: parada precisa | Q: poción\n\n" +
-                "<b>MAGIA Y ESENCIA</b>\n1/2/3: hechizos de la escuela | Tab: escuela\n" +
-                "H (mantener): absorber esencia de un enemigo débil\n" +
-                "Clic mientras absorbes: ejecutar (sin esencia)\n" +
-                "U: forja de equipo (sube tu nivel)\n\n" +
-                "<b>SUPERVIVENCIA</b>\nE: recolectar | J/K: fabricar picos\n" +
-                "B: construir | 1–0: pieza | R: girar\n" +
-                "G: desmontar | Ctrl+Z: deshacer\n\n" +
-                "<b>PUEBLOS</b>\nN: abrir tablón | Y: aceptar/reclamar\n" +
-                "O: cambiar oferta | P: comerciar\n\n" +
-                "Esc: pausa y salir | F1: ocultar esta ayuda";
+            string guide = GuideText();
             GUI.Label(new Rect(x + 10f, 50f, width - 20f, 398f), guide, textStyle);
+        }
+
+        /// <summary>Ayuda con las teclas asignadas ahora mismo (cambian en Opciones).</summary>
+        private static string GuideText()
+        {
+            string K(GameAction a) => "<b>" + GameInput.Label(a) + "</b>";
+            return "<b>MOVIMIENTO</b>\n" + K(GameAction.MoveForward) + K(GameAction.MoveLeft) + K(GameAction.MoveBack) + K(GameAction.MoveRight) +
+                   ": mover | " + K(GameAction.Dash) + ": esquivar\nRatón: apuntar | Clic: ballesta\n\n" +
+                   "<b>HABILIDADES</b>\n" + K(GameAction.Sword) + " espada | " + K(GameAction.RunePulse) + " pulso | " + K(GameAction.Frost) + " escarcha\n" +
+                   K(GameAction.Shield) + " escudo | " + K(GameAction.Ward) + " barrera | " + K(GameAction.Parry) + " parada | " + K(GameAction.Potion) + " poción\n\n" +
+                   "<b>MAGIA Y RAZA</b>\n" + K(GameAction.Spell1) + "/" + K(GameAction.Spell2) + "/" + K(GameAction.Spell3) + " hechizos | " + K(GameAction.NextSchool) + " escuela\n" +
+                   K(GameAction.Absorb) + " (mantener) absorber esencia | " + K(GameAction.RacialPower) + " poder de raza\n" +
+                   K(GameAction.Equipment) + " forja de equipo\n\n" +
+                   "<b>SUPERVIVENCIA</b>\n" + K(GameAction.Gather) + " recolectar | " + K(GameAction.Build) + " construir | " + K(GameAction.CraftPick1) + "/" + K(GameAction.CraftPick2) + " picos\n\n" +
+                   "<b>PUEBLOS</b>\n" + K(GameAction.Noticeboard) + " tablón | " + K(GameAction.Accept) + " aceptar | " + K(GameAction.Offer) + " oferta | " + K(GameAction.Buy) + " comprar\n\n" +
+                   K(GameAction.Pause) + ": menú (opciones, información) | " + K(GameAction.Help) + ": ocultar ayuda";
         }
 
         private static bool WasHelpPressed()
         {
 #if ENABLE_INPUT_SYSTEM
-            return Keyboard.current != null && Keyboard.current.f1Key.wasPressedThisFrame;
+            return GameInput.Down(GameAction.Help);
 #elif ENABLE_LEGACY_INPUT_MANAGER
             return Input.GetKeyDown(KeyCode.F1);
 #else

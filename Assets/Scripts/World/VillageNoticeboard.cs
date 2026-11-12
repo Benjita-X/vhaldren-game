@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using UnityEngine;
+using Vhaldren.Gameplay.Settings;
 using Vhaldren.Gameplay.Player;
 using Vhaldren.Gameplay.Survival;
 #if ENABLE_INPUT_SYSTEM
@@ -268,7 +269,7 @@ namespace Vhaldren.Gameplay.World
         private static bool CycleTradePressed()
         {
 #if ENABLE_INPUT_SYSTEM
-            return Keyboard.current != null && Keyboard.current.oKey.wasPressedThisFrame;
+            return GameInput.Down(GameAction.Offer);
 #elif ENABLE_LEGACY_INPUT_MANAGER
             return Input.GetKeyDown(KeyCode.O);
 #else
@@ -279,7 +280,7 @@ namespace Vhaldren.Gameplay.World
         private static bool BuyPressed()
         {
 #if ENABLE_INPUT_SYSTEM
-            return Keyboard.current != null && Keyboard.current.pKey.wasPressedThisFrame;
+            return GameInput.Down(GameAction.Buy);
 #elif ENABLE_LEGACY_INPUT_MANAGER
             return Input.GetKeyDown(KeyCode.P);
 #else
@@ -290,7 +291,7 @@ namespace Vhaldren.Gameplay.World
         private static bool OpenPressed()
         {
 #if ENABLE_INPUT_SYSTEM
-            return Keyboard.current != null && Keyboard.current.nKey.wasPressedThisFrame;
+            return GameInput.Down(GameAction.Noticeboard);
 #elif ENABLE_LEGACY_INPUT_MANAGER
             return Input.GetKeyDown(KeyCode.N);
 #else
@@ -301,7 +302,7 @@ namespace Vhaldren.Gameplay.World
         private static bool ActionPressed()
         {
 #if ENABLE_INPUT_SYSTEM
-            return Keyboard.current != null && Keyboard.current.yKey.wasPressedThisFrame;
+            return GameInput.Down(GameAction.Accept);
 #elif ENABLE_LEGACY_INPUT_MANAGER
             return Input.GetKeyDown(KeyCode.Y);
 #else

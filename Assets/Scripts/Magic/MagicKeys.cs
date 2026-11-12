@@ -1,4 +1,5 @@
 using UnityEngine;
+using Vhaldren.Gameplay.Settings;
 #if ENABLE_INPUT_SYSTEM
 using UnityEngine.InputSystem;
 #endif
@@ -12,12 +13,9 @@ namespace Vhaldren.Gameplay.Magic
         public static int SpellSlotPressed()
         {
 #if ENABLE_INPUT_SYSTEM
-            Keyboard k = Keyboard.current;
-            if (k == null)
-                return -1;
-            if (k.digit1Key.wasPressedThisFrame) return 0;
-            if (k.digit2Key.wasPressedThisFrame) return 1;
-            if (k.digit3Key.wasPressedThisFrame) return 2;
+            if (GameInput.Down(GameAction.Spell1)) return 0;
+            if (GameInput.Down(GameAction.Spell2)) return 1;
+            if (GameInput.Down(GameAction.Spell3)) return 2;
             return -1;
 #elif ENABLE_LEGACY_INPUT_MANAGER
             if (Input.GetKeyDown(KeyCode.Alpha1)) return 0;
@@ -34,7 +32,7 @@ namespace Vhaldren.Gameplay.Magic
             get
             {
 #if ENABLE_INPUT_SYSTEM
-                return Keyboard.current != null && Keyboard.current.tabKey.wasPressedThisFrame;
+                return GameInput.Down(GameAction.NextSchool);
 #elif ENABLE_LEGACY_INPUT_MANAGER
                 return Input.GetKeyDown(KeyCode.Tab);
 #else
@@ -48,7 +46,7 @@ namespace Vhaldren.Gameplay.Magic
             get
             {
 #if ENABLE_INPUT_SYSTEM
-                return Keyboard.current != null && Keyboard.current.hKey.isPressed;
+                return GameInput.Held(GameAction.Absorb);
 #elif ENABLE_LEGACY_INPUT_MANAGER
                 return Input.GetKey(KeyCode.H);
 #else

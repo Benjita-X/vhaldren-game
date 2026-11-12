@@ -98,7 +98,7 @@ namespace Vhaldren.Gameplay.Combat
 
         public static void HitStop(float seconds)
         {
-            if (!Enabled || seconds <= 0f)
+            if (!Enabled || seconds <= 0f || !Vhaldren.Gameplay.Settings.GameSettings.HitStop)
                 return;
             // No encadenar parones en areas que golpean a muchos ni pisar la pausa.
             if (Time.unscaledTime - lastHitStopAt < MinHitStopGap || Time.timeScale < 0.99f)
@@ -112,7 +112,9 @@ namespace Vhaldren.Gameplay.Combat
         {
             if (!Enabled)
                 return;
-            Host().AddShake(amplitude, seconds);
+            float intensity = Vhaldren.Gameplay.Settings.GameSettings.ShakeIntensity;
+            if (intensity > 0.01f)
+                Host().AddShake(amplitude * intensity, seconds);
         }
 
         private static Vector3 Center(Component target)

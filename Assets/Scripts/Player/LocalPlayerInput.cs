@@ -1,4 +1,5 @@
 using UnityEngine;
+using Vhaldren.Gameplay.Settings;
 using Vhaldren.Gameplay.CameraSystem;
 #if ENABLE_INPUT_SYSTEM
 using UnityEngine.InputSystem;
@@ -53,6 +54,7 @@ namespace Vhaldren.Gameplay.Player
         {
             ForgetHeldKeys();
 #if ENABLE_INPUT_SYSTEM
+            GameInput.Changed -= RebuildMovementActions;
             DisableMovementActions();
 #endif
         }
@@ -63,6 +65,18 @@ namespace Vhaldren.Gameplay.Player
             CreateMovementActions();
             EnableMovementActions();
             SynchronizeHeldKeys();
+            GameInput.Changed += RebuildMovementActions;
+        }
+
+        /// <summary>Al reasignar teclas en el menu, recrear las acciones con las nuevas.</summary>
+        private void RebuildMovementActions()
+        {
+            ForgetHeldKeys();
+            DisableMovementActions();
+            DisposeMovementActions();
+            CreateMovementActions();
+            if (isActiveAndEnabled)
+                EnableMovementActions();
         }
 
         private void OnDestroy()
@@ -75,11 +89,12 @@ namespace Vhaldren.Gameplay.Player
             if (moveLeftAction != null)
                 return;
 
-            moveLeftAction = new InputAction("MoveLeft", InputActionType.Button, "<Keyboard>/a");
-            moveRightAction = new InputAction("MoveRight", InputActionType.Button, "<Keyboard>/d");
-            moveBackAction = new InputAction("MoveBack", InputActionType.Button, "<Keyboard>/s");
-            moveForwardAction = new InputAction("MoveForward", InputActionType.Button, "<Keyboard>/w");
-            dashAction = new InputAction("Dash", InputActionType.Button, "<Keyboard>/space");
+            // Teclas del mapa reasignable (por defecto WASD y Espacio).
+            moveLeftAction = new InputAction("MoveLeft", InputActionType.Button, GameInput.ControlPath(GameAction.MoveLeft));
+            moveRightAction = new InputAction("MoveRight", InputActionType.Button, GameInput.ControlPath(GameAction.MoveRight));
+            moveBackAction = new InputAction("MoveBack", InputActionType.Button, GameInput.ControlPath(GameAction.MoveBack));
+            moveForwardAction = new InputAction("MoveForward", InputActionType.Button, GameInput.ControlPath(GameAction.MoveForward));
+            dashAction = new InputAction("Dash", InputActionType.Button, GameInput.ControlPath(GameAction.Dash));
             dashAction.performed += HandleDashPressed;
 
             moveLeftAction.performed += HandleMovementKeyPressed;
@@ -151,10 +166,10 @@ namespace Vhaldren.Gameplay.Player
             if (keyboard == null)
                 return;
 
-            keyboardMovement.SetPressed(KeyboardMovementBuffer.Key.Left, keyboard.aKey.isPressed);
-            keyboardMovement.SetPressed(KeyboardMovementBuffer.Key.Right, keyboard.dKey.isPressed);
-            keyboardMovement.SetPressed(KeyboardMovementBuffer.Key.Back, keyboard.sKey.isPressed);
-            keyboardMovement.SetPressed(KeyboardMovementBuffer.Key.Forward, keyboard.wKey.isPressed);
+            keyboardMovement.SetPressed(KeyboardMovementBuffer.Key.Left, GameInput.Held(GameAction.MoveLeft));
+            keyboardMovement.SetPressed(KeyboardMovementBuffer.Key.Right, GameInput.Held(GameAction.MoveRight));
+            keyboardMovement.SetPressed(KeyboardMovementBuffer.Key.Back, GameInput.Held(GameAction.MoveBack));
+            keyboardMovement.SetPressed(KeyboardMovementBuffer.Key.Forward, GameInput.Held(GameAction.MoveForward));
         }
 #endif
 

@@ -14,7 +14,7 @@ namespace Vhaldren.EditorTools
     {
         public const string OutputPath = "Builds/Windows/Vhaldren.exe";
         public const string VariantFolder = "Assets/Resources/VariantesShader";
-        private static readonly string[] Scenes = { "Assets/Scenes/WorldPrototype001.unity" };
+        private static readonly string[] Scenes = { "Assets/Scenes/MainMenu.unity", "Assets/Scenes/WorldPrototype001.unity" };
 
         [MenuItem("Vhaldren/Compilar juego para Windows")]
         public static void BuildWindows()

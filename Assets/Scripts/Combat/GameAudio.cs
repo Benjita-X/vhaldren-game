@@ -48,7 +48,7 @@ namespace Vhaldren.Gameplay.Combat
             next = (next + 1) % sources.Length;
             source.transform.position = position;
             source.pitch = 1f + ((float)random.NextDouble() * 2f - 1f) * pitchJitter;
-            source.PlayOneShot(clip, Mathf.Clamp01(volume) * masterVolume);
+            source.PlayOneShot(clip, Mathf.Clamp01(volume) * masterVolume * Vhaldren.Gameplay.Settings.GameSettings.EffectsVolume);
             PlayedCount++;
         }
 

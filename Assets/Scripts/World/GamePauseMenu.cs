@@ -1,31 +1,43 @@
 using UnityEngine;
-#if ENABLE_INPUT_SYSTEM
-using UnityEngine.InputSystem;
-#endif
+using UnityEngine.SceneManagement;
+using Vhaldren.Gameplay.Settings;
+using Vhaldren.Gameplay.UI;
 
 namespace Vhaldren.Gameplay.World
 {
     /// <summary>
-    /// Menu de pausa de la version de escritorio. Esc pausa el juego y permite
-    /// continuar, alternar pantalla completa o salir de la aplicacion.
+    /// Menu de pausa (Esc): continuar, opciones (audio, graficos, controles, juego),
+    /// informacion del juego, volver al menu principal o salir.
     /// </summary>
     [DisallowMultipleComponent]
     public sealed class GamePauseMenu : MonoBehaviour
     {
+        public const string MenuScene = "MainMenu";
+
+        private enum Page { Main, Options, Codex }
+
+        private readonly OptionsPanel options = new OptionsPanel();
+        private readonly CodexPanel codex = new CodexPanel();
         private bool paused;
-        private GUIStyle title;
+        private Page page;
 
         public bool IsPaused => paused;
 
         private void Update()
         {
-            if (EscapePressed())
+            options.Tick();
+            if (options.IsRebinding || !GameInput.Down(GameAction.Pause))
+                return;
+            if (paused && page != Page.Main)
+                page = Page.Main;
+            else
                 SetPaused(!paused);
         }
 
         public void SetPaused(bool value)
         {
             paused = value;
+            page = Page.Main;
             Time.timeScale = paused ? 0f : 1f;
             AudioListener.pause = paused;
         }
@@ -40,38 +52,48 @@ namespace Vhaldren.Gameplay.World
         {
             if (!paused)
                 return;
-            if (title == null)
-                title = new GUIStyle(GUI.skin.label) { fontSize = 26, alignment = TextAnchor.MiddleCenter, richText = true };
-            float width = 320f;
-            float x = (Screen.width - width) * 0.5f;
-            float y = Screen.height * 0.5f - 130f;
-            GUI.Box(new Rect(x - 20f, y - 20f, width + 40f, 290f), GUIContent.none);
-            GUI.Label(new Rect(x, y, width, 40f), "<b>VHALDREN — PAUSA</b>", title);
-            if (GUI.Button(new Rect(x, y + 60f, width, 44f), "Continuar (Esc)"))
-                SetPaused(false);
-            if (GUI.Button(new Rect(x, y + 112f, width, 44f), Screen.fullScreen ? "Modo ventana" : "Pantalla completa"))
-                Screen.fullScreen = !Screen.fullScreen;
-            if (GUI.Button(new Rect(x, y + 164f, width, 44f), "Salir del juego"))
+            MenuStyle.Begin();
+            float w = MenuStyle.Width, h = MenuStyle.Height;
+            MenuStyle.Fill(new Rect(0f, 0f, w, h), new Color(0f, 0f, 0f, 0.6f));
+            Rect panel = new Rect(w * 0.5f - Mathf.Min(560f, w * 0.47f), 60f, Mathf.Min(1120f, w * 0.94f), h - 110f);
+            if (page == Page.Options)
             {
-                SetPaused(false);
-#if UNITY_EDITOR
-                UnityEditor.EditorApplication.isPlaying = false;
-#else
-                Application.Quit();
-#endif
+                if (options.Draw(panel))
+                    page = Page.Main;
             }
-            GUI.Label(new Rect(x, y + 216f, width, 30f), "F1: controles");
-        }
-
-        private static bool EscapePressed()
-        {
-#if ENABLE_INPUT_SYSTEM
-            return Keyboard.current != null && Keyboard.current.escapeKey.wasPressedThisFrame;
-#elif ENABLE_LEGACY_INPUT_MANAGER
-            return Input.GetKeyDown(KeyCode.Escape);
+            else if (page == Page.Codex)
+            {
+                if (codex.Draw(panel))
+                    page = Page.Main;
+            }
+            else
+            {
+                float bw = 360f, x = (w - bw) * 0.5f, y = h * 0.5f - 200f;
+                GUI.Label(new Rect(0f, y - 90f, w, 70f), "PAUSA", MenuStyle.Title);
+                if (GUI.Button(new Rect(x, y, bw, 54f), "Continuar", MenuStyle.Button)) SetPaused(false);
+                y += 64f;
+                if (GUI.Button(new Rect(x, y, bw, 54f), "Opciones", MenuStyle.Button)) page = Page.Options;
+                y += 64f;
+                if (GUI.Button(new Rect(x, y, bw, 54f), "Información", MenuStyle.Button)) page = Page.Codex;
+                y += 64f;
+                if (GUI.Button(new Rect(x, y, bw, 54f), "Menú principal", MenuStyle.Button))
+                {
+                    SetPaused(false);
+                    if (Application.CanStreamedLevelBeLoaded(MenuScene))
+                        SceneManager.LoadScene(MenuScene);
+                }
+                y += 64f;
+                if (GUI.Button(new Rect(x, y, bw, 54f), "Salir del juego", MenuStyle.Button))
+                {
+                    SetPaused(false);
+#if UNITY_EDITOR
+                    UnityEditor.EditorApplication.isPlaying = false;
 #else
-            return false;
+                    Application.Quit();
 #endif
+                }
+            }
+            MenuStyle.End();
         }
     }
 }
