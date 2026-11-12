@@ -409,7 +409,7 @@ namespace Vhaldren.Gameplay.Magic
                 hadBleed = status.Has(StatusKind.Bleed);
                 total += status.ConsumeStatic(transform.position);
                 for (int i = 0; i < spell.StatusStacks; i++)
-                    status.ApplyFrom(spell.Status, transform.position);
+                    status.ApplyFrom(spell.Status, this);
             }
 
             float steal = spell.LifeSteal + (essence != null ? essence.LifeSteal : 0f) +
