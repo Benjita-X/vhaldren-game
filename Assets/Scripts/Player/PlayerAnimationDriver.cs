@@ -1,4 +1,5 @@
 using UnityEngine;
+using Vhaldren.Gameplay.Survival;
 
 namespace Vhaldren.Gameplay.Player
 {
@@ -15,6 +16,8 @@ namespace Vhaldren.Gameplay.Player
         public static readonly int DodgeId = Animator.StringToHash("Dodge");
         public static readonly int DodgeDirId = Animator.StringToHash("DodgeDir");
         public static readonly int ShootId = Animator.StringToHash("Shoot");
+        public static readonly int HarvestId = Animator.StringToHash("Harvest");
+        public static readonly int HarvestStyleId = Animator.StringToHash("HarvestStyle");
 
         /// <summary>Direcciones de esquiva tal como las espera el Animator.</summary>
         public enum DodgeDirection { Forward = 0, Backward = 1, Left = 2, Right = 3 }
@@ -66,6 +69,37 @@ namespace Vhaldren.Gameplay.Player
                 lastShots = shooter.ShotsFired;
                 animator.SetTrigger(ShootId);
             }
+        }
+
+        /// <summary>
+        /// La animacion de recolectar no modifica PlayerMotor ni pierde entradas.
+        /// El controlador KayKit actualizado incluye PickUp y Chop. En escenas
+        /// con el controlador antiguo omite el trigger sin lanzar warnings.
+        /// </summary>
+        public bool TriggerHarvest(ResourceKind resource)
+        {
+            if (animator == null || animator.runtimeAnimatorController == null)
+                return false;
+
+            bool hasHarvest = false;
+            bool hasStyle = false;
+            foreach (AnimatorControllerParameter parameter in animator.parameters)
+            {
+                if (parameter.nameHash == HarvestId &&
+                    parameter.type == AnimatorControllerParameterType.Trigger)
+                    hasHarvest = true;
+                if (parameter.nameHash == HarvestStyleId &&
+                    parameter.type == AnimatorControllerParameterType.Int)
+                    hasStyle = true;
+            }
+            if (!hasHarvest || !hasStyle)
+                return false;
+
+            int style = resource == ResourceKind.Stone || resource == ResourceKind.Ore
+                ? 1 : 0;
+            animator.SetInteger(HarvestStyleId, style);
+            animator.SetTrigger(HarvestId);
+            return true;
         }
 
         /// <summary>
