@@ -20,6 +20,18 @@ El HUD de `PrototypeGameSession` todavía mostraba `LocalPlayerShooter.HitsLande
 
 Se agregaron dos pruebas EditMode para suma por tipo y rechazo de valores inválidos.
 
+
+## Habilidad adicional implementada en 013: F — Onda de escarcha
+
+- Activación con **F** (Input System y fallback legacy), resistencia compartida (22), cooldown 6 s.
+- Ataque frontal en cono de 75°, 6 m de alcance, aviso visual y espera de 0,25 s. No inmoviliza al jugador ni modifica `PlayerMotor`.
+- Inflige 14 PV de daño mágico antes de resistencias y defensa; nunca atraviesa obstáculos mediante la comprobación existente `Unobstructed`.
+- A los enemigos efectivamente dañados les aplica una ralentización del 45 % (velocidad ×0,55) por 1,75 segundos. No cambia permanentemente `moveSpeed`, no mueve colisiones y no acumula la reducción multiplicativamente.
+- La ralentización desaparece al reaparecer y puede renovarse sin llevar la velocidad a cero.
+- Los impactos registran daño efectivo en `PlayerDamageTracker` igual que espada, flecha y pulso.
+- Prueba PlayMode nueva: impacto delante, no impacto detrás, cooldown, ralentización y contador mágico.
+- **No se ejecutó Unity ni se verificó visualmente el efecto en Play Mode** en esta sesión.
+
 ## Limitaciones que persisten
 
 - Los enemigos `EnemyVisualPrototype` se componen de primitivas 3D y texturas procedurales de ruido. No son todavía modelos profesionales riggeados con animaciones de combate. El proyecto tiene un RogueHooded CC0 para el jugador; conviene importar enemigos con licencia, Animator y retargeting antes de añadir una biblioteca de jefes.
