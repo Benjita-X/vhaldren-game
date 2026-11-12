@@ -116,6 +116,13 @@ namespace Vhaldren.Gameplay.Survival
             IsBuilding = building;
             if (building)
             {
+                // Algunos sistemas de combate se instalan en runtime desde
+                // PrototypeGameSession.OnEnable, despues de PlayerBuilder.Awake.
+                // Resolver los componentes al entrar, no antes de crearlos.
+                combatBehaviours[0] = GetComponent<PlayerCombatAbilities>();
+                combatBehaviours[1] = GetComponent<PlayerDefensiveInput>();
+                if (modifiers == null)
+                    modifiers = GetComponent<PlayerActionModifiers>();
                 if (modifiers != null)
                     attackLock = modifiers.AddModifier(PlayerActionModifiers.LockedAction.Attack);
                 for (int i = 0; i < combatBehaviours.Length; i++)
