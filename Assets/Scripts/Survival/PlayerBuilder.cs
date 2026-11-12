@@ -35,6 +35,8 @@ namespace Vhaldren.Gameplay.Survival
 
         public static IReadOnlyList<PlayerBuilder> All => all;
         public bool IsBuilding { get; private set; }
+        /// <summary>Solo juego local: permite construir sin consumir materiales.</summary>
+        public bool CreativeMode { get; private set; }
         public int SelectedIndex { get; private set; }
         public int RotationSteps { get; private set; }
         public bool FreePlacement { get; private set; }
@@ -72,6 +74,8 @@ namespace Vhaldren.Gameplay.Survival
 
         private void Update()
         {
+            if (SurvivalKeys.ToggleCreative)
+                CreativeMode = !CreativeMode;
             if (SurvivalKeys.ToggleBuild)
                 SetBuildMode(!IsBuilding);
             if (!IsBuilding)
@@ -103,7 +107,7 @@ namespace Vhaldren.Gameplay.Survival
             }
 
             LastResult = BuildPlacement.Evaluate(Selected, hasSurface, basePosition, RotationSteps,
-                transform.position, inventory);
+                transform.position, inventory, CreativeMode);
             UpdatePreview(hasSurface, basePosition);
 
             if (SurvivalKeys.PlacePressed && LastResult == PlacementResult.Ok)
@@ -154,10 +158,12 @@ namespace Vhaldren.Gameplay.Survival
                 return null;
             }
             BuildPieceDefinition piece = BuildCatalog.Pieces[pieceIndex];
-            result = BuildPlacement.Evaluate(piece, true, basePosition, rotationSteps, transform.position, inventory);
+            result = BuildPlacement.Evaluate(piece, true, basePosition, rotationSteps,
+                transform.position, inventory, CreativeMode);
             if (result != PlacementResult.Ok)
                 return null;
-            if (!inventory.TrySpend(piece.Cost))
+            bool paid = !CreativeMode;
+            if (paid && (inventory == null || !inventory.TrySpend(piece.Cost)))
             {
                 result = PlacementResult.MissingResources;
                 return null;
@@ -170,7 +176,8 @@ namespace Vhaldren.Gameplay.Survival
                 BuiltPiece builtPiece = built != null ? built.GetComponent<BuiltPiece>() : null;
                 if (builtPiece == null)
                     throw new System.InvalidOperationException("La pieza no tiene BuiltPiece.");
-                builtPiece.MarkMaterialsPaid();
+                if (paid)
+                    builtPiece.MarkMaterialsPaid();
                 if (piece.Function == BuildFunction.Campfire)
                     GetComponent<VillageQuestJournal>()?.RecordAction(VillageObjective.BuildCampfire);
                 undoStack.Add(builtPiece);
@@ -187,7 +194,7 @@ namespace Vhaldren.Gameplay.Survival
                     Destroy(built);
                 }
                 // Si falla la fabrica visual, devolver el cobro completo.
-                if (!inventory.TryRefund(piece.Cost))
+                if (paid && !inventory.TryRefund(piece.Cost))
                     Debug.LogError("[Vhaldren] Error critico reembolsando una pieza fallida.");
                 result = PlacementResult.Blocked;
                 Debug.LogException(exception);
