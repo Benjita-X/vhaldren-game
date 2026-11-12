@@ -12,6 +12,7 @@ namespace Vhaldren.Tests
         private GameObject owner;
         private GameObject target;
         private GameObject blocker;
+        private GameObject secondEnemy;
         private GameObject floor;
 
         [UnityTearDown]
@@ -20,6 +21,7 @@ namespace Vhaldren.Tests
             if (owner != null) Object.Destroy(owner);
             if (target != null) Object.Destroy(target);
             if (blocker != null) Object.Destroy(blocker);
+            if (secondEnemy != null) Object.Destroy(secondEnemy);
             if (floor != null) Object.Destroy(floor);
             yield return null;
         }
@@ -160,6 +162,48 @@ namespace Vhaldren.Tests
             yield return new WaitForSeconds(0.6f);
             Assert.That(health.CurrentHealth, Is.EqualTo(100f),
                 "La flecha se detiene en la primera pared, no puede herir al enemigo detras.");
+        }
+
+        [UnityTest]
+        public IEnumerator RunePulseHitsSeveralTargetsButNotThroughWalls()
+        {
+            floor = GameObject.CreatePrimitive(PrimitiveType.Cube);
+            floor.transform.position = new Vector3(0f, -0.55f, 0f);
+            floor.transform.localScale = new Vector3(30f, 1f, 30f);
+
+            owner = new GameObject("PlayerRoot");
+            owner.transform.position = new Vector3(0f, 1.08f, 0f);
+            owner.AddComponent<CombatHealth>();
+            owner.AddComponent<CombatDefense>();
+            PlayerCombatAbilities abilities = owner.AddComponent<PlayerCombatAbilities>();
+
+            target = GameObject.CreatePrimitive(PrimitiveType.Cube);
+            target.transform.position = new Vector3(0f, 1f, 2.3f);
+            CombatHealth blockedHealth = target.AddComponent<CombatHealth>();
+            target.AddComponent<CombatDamageReceiver>();
+
+            secondEnemy = GameObject.CreatePrimitive(PrimitiveType.Cube);
+            secondEnemy.transform.position = new Vector3(0f, 1f, -2.3f);
+            CombatHealth exposedHealth = secondEnemy.AddComponent<CombatHealth>();
+            secondEnemy.AddComponent<CombatDamageReceiver>();
+
+            blocker = GameObject.CreatePrimitive(PrimitiveType.Cube);
+            blocker.transform.position = new Vector3(0f, 1f, 1.2f);
+            blocker.transform.localScale = new Vector3(3f, 2f, 0.25f);
+            Physics.SyncTransforms();
+
+            Assert.That(abilities.TryRunePulse(), Is.True);
+            Assert.That(blockedHealth.CurrentHealth, Is.EqualTo(100f),
+                "Hay un aviso visible antes del pulso; no daña al pulsar.");
+            Assert.That(abilities.TryRunePulse(), Is.False,
+                "La recarga evita lanzar pulsos repetidos sin coste.");
+
+            yield return new WaitForSeconds(0.75f);
+            Assert.That(blockedHealth.CurrentHealth, Is.EqualTo(100f),
+                "El pulso no atraviesa una pared.");
+            Assert.That(exposedHealth.CurrentHealth, Is.EqualTo(78f).Within(0.02f),
+                "El enemigo despejado debe recibir la magia.");
+            Assert.That(abilities.RuneTargetsHit, Is.EqualTo(1));
         }
 
         [UnityTest]
