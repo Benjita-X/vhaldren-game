@@ -13,6 +13,7 @@ namespace Vhaldren.Gameplay.Survival
 
         private Light glow;
         private float seed;
+        private float nextHealingPulse;
 
         private void Awake()
         {
@@ -25,12 +26,20 @@ namespace Vhaldren.Gameplay.Survival
             glow.range = 9f;
             glow.intensity = 2.2f;
             seed = Random.value * 10f;
+            nextHealingPulse = Time.time + 1f;
         }
 
         private void Update()
         {
             if (glow != null)
                 glow.intensity = 2f + Mathf.PerlinNoise(seed, Time.time * 3f) * 0.8f;
+
+            // Una sola curacion claramente visible por segundo. El esquema
+            // anterior generaba un evento Healed cada frame y saturaba los
+            // numeros flotantes del jugador con +0.06, +0.07, etc.
+            if (Time.time < nextHealingPulse)
+                return;
+            nextHealingPulse = Time.time + 1f;
 
             float squared = Radius * Radius;
             for (int i = 0; i < PlayerBuilder.All.Count; i++)
@@ -40,7 +49,7 @@ namespace Vhaldren.Gameplay.Survival
                     continue;
                 CombatHealth health = player.Health;
                 if (health != null && !health.IsDefeated && health.CurrentHealth < health.MaximumHealth)
-                    health.Heal(HealPerSecond * Time.deltaTime);
+                    health.Heal(HealPerSecond);
             }
         }
     }

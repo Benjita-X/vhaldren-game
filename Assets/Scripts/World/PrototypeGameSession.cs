@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using Vhaldren.Gameplay.Combat;
 using Vhaldren.Gameplay.Player;
+using Vhaldren.Gameplay.Survival;
 #if ENABLE_INPUT_SYSTEM
 using UnityEngine.InputSystem;
 #endif
@@ -26,6 +27,8 @@ namespace Vhaldren.Gameplay.World
         private PlayerMotor playerMotor;
         private LocalPlayerShooter playerShooter;
         private PlayerDamageTracker playerDamage;
+        private VillageQuestJournal villageJournal;
+        private GameObject ownedNoticeboard;
         private bool playerShooterWasEnabled;
         private Vector3 spawnPosition;
         private Vector3 originalSpawnPosition;
@@ -34,6 +37,8 @@ namespace Vhaldren.Gameplay.World
         private float respawnAt = float.PositiveInfinity;
         private string statusText = "";
         private string healText = "";
+        private string lastHealFeedback = "";
+        private float lastHealFeedbackUntil;
         private string combatText = "";
         private float nextHudRefresh;
         private int minionCount;
@@ -86,6 +91,34 @@ namespace Vhaldren.Gameplay.World
                     incoming = player.gameObject.AddComponent<CombatDamageFeedback>();
                 incoming.ConfigureForPlayer();
             }
+            if (Application.isPlaying && player.GetComponent<SurvivalInventory>() != null)
+            {
+                villageJournal = player.GetComponent<VillageQuestJournal>();
+                if (villageJournal == null)
+                    villageJournal = player.gameObject.AddComponent<VillageQuestJournal>();
+
+                // Un primer punto de interacción y misiones conectado al mundo
+                // existente. No genera otro inventario ni altera la escena 015.
+                bool alreadyHasBoard = false;
+                foreach (VillageNoticeboard candidate in
+                    FindObjectsByType<VillageNoticeboard>(FindObjectsSortMode.None))
+                {
+                    if (candidate != null && candidate.gameObject.scene == gameObject.scene)
+                    {
+                        alreadyHasBoard = true;
+                        break;
+                    }
+                }
+                if (!alreadyHasBoard)
+                {
+                    ownedNoticeboard = new GameObject("Puesto del Cruce - tablon de misiones");
+                    ownedNoticeboard.SetActive(false);
+                    ownedNoticeboard.transform.position = new Vector3(-4f, 0f, -6f);
+                    VillageNoticeboard board = ownedNoticeboard.AddComponent<VillageNoticeboard>();
+                    board.BindPlayer(player);
+                    ownedNoticeboard.SetActive(true);
+                }
+            }
             if (playerHealth != null)
                 playerHealth.Defeated += OnPlayerDefeated;
 
@@ -123,6 +156,11 @@ namespace Vhaldren.Gameplay.World
             }
             defeated.Clear();
             enemies = null;
+            if (ownedNoticeboard != null)
+            {
+                Destroy(ownedNoticeboard);
+                ownedNoticeboard = null;
+            }
         }
 
         private void OnEnemyDefeated(PrototypeEnemy enemy)
@@ -130,7 +168,12 @@ namespace Vhaldren.Gameplay.World
             if (enemy == null || !defeated.Add(enemy))
                 return;
             if (enemy.IsBoss)
+            {
                 bossDefeated = true;
+                villageJournal?.RecordAction(VillageObjective.DefeatBoss);
+            }
+            else
+                villageJournal?.RecordAction(VillageObjective.DefeatGuardians);
             nextHudRefresh = 0f;
         }
 
@@ -156,11 +199,8 @@ namespace Vhaldren.Gameplay.World
                 if (Time.time >= respawnAt)
                     RespawnPlayer();
             }
-            else if (WasHealPressed() && Time.time >= healReadyAt)
-            {
-                if (playerHealth.Heal(Mathf.Max(0f, healAmount)) > 0f)
-                    healReadyAt = Time.time + Mathf.Max(0.1f, healCooldown);
-            }
+            else if (WasHealPressed())
+                TryDrinkPotion();
 
             if (Time.time >= nextHudRefresh)
             {
@@ -178,8 +218,14 @@ namespace Vhaldren.Gameplay.World
                     playerHealth.MaximumHealth.ToString("0") + " | Guardianes " +
                     fallen + "/" + minionCount + " | Jefe " +
                     (bossDefeated ? "DERROTADO" : "PENDIENTE");
-                healText = Time.time >= healReadyAt ? "Q: curar +35 PV" :
-                    "Q: pocion en " + Mathf.CeilToInt(healReadyAt - Time.time) + " s";
+                float missing = Mathf.Max(0f,
+                    playerHealth.MaximumHealth - playerHealth.CurrentHealth);
+                float availableHealing = Mathf.Min(Mathf.Max(0f, healAmount), missing);
+                healText = Time.time < healReadyAt
+                    ? "Q: poción en " + Mathf.CeilToInt(healReadyAt - Time.time) + " s"
+                    : availableHealing > 0f
+                        ? "Q: poción (recupera +" + availableHealing.ToString("0.##") + " PV)"
+                        : "Q: vida llena (poción no consumida)";
                 combatText = playerDamage != null
                     ? "GOLPES: " + playerDamage.TotalHits +
                       "  |  DANO TOTAL: " + playerDamage.TotalDamage.ToString("0.#") +
@@ -188,6 +234,38 @@ namespace Vhaldren.Gameplay.World
                       " / MAGIA " + playerDamage.DamageFor(CombatDamageKind.Magic).ToString("0")
                     : "Estadisticas no disponibles";
             }
+        }
+
+        public float LastPotionHealed { get; private set; }
+
+        /// <summary>
+        /// Una pocion restaura hasta healAmount PV, nunca mas que la vida
+        /// faltante. Deja feedback con el valor real y solo inicia cooldown
+        /// si recupero vida. Se puede invocar desde Tests sin simular Input.
+        /// </summary>
+        public float TryDrinkPotion()
+        {
+            LastPotionHealed = 0f;
+            if (playerHealth == null || playerHealth.IsDefeated)
+                return 0f;
+
+            if (Time.time < healReadyAt)
+                lastHealFeedback = "Poción recargando";
+            else
+            {
+                LastPotionHealed = playerHealth.Heal(Mathf.Max(0f, healAmount));
+                if (LastPotionHealed > 0f)
+                {
+                    healReadyAt = Time.time + Mathf.Max(0.1f, healCooldown);
+                    lastHealFeedback = "Poción: +" +
+                        LastPotionHealed.ToString("0.##") + " PV reales";
+                }
+                else
+                    lastHealFeedback = "Vida completa: no se gastó la poción";
+            }
+            lastHealFeedbackUntil = Time.time + 2.0f;
+            nextHudRefresh = 0f;
+            return LastPotionHealed;
         }
 
         /// <summary>Una cama construida cambia el punto de reaparicion.</summary>
@@ -232,13 +310,16 @@ namespace Vhaldren.Gameplay.World
         {
             if (playerHealth == null)
                 return;
-            const float height = 100f;
+            const float height = 114f;
             Rect box = new Rect(12f, 12f, Mathf.Max(240f, Mathf.Min(Screen.width - 24f, 900f)), height);
             GUI.Box(box, "");
             GUI.Label(new Rect(22f, 16f, box.width - 20f, 22f), statusText);
             GUI.Label(new Rect(22f, 40f, box.width - 20f, 22f), combatText);
             GUI.Label(new Rect(22f, 65f, box.width - 20f, 22f),
-                "WASD mover | Espacio esquivar | Mouse apuntar/disparar | " + healText);
+                "WASD mover | Espacio esquivar | Clic ballesta | " + healText);
+            if (Time.time < lastHealFeedbackUntil)
+                GUI.Label(new Rect(22f, 88f, box.width - 20f, 22f),
+                    lastHealFeedback);
             if (playerHealth.IsDefeated)
                 GUI.Box(new Rect(Screen.width / 2f - 165f, Screen.height / 2f - 40f,
                     330f, 80f), "HAS CAIDO\nReapareceras en el cruce");
