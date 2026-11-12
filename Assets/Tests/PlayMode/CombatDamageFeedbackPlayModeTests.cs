@@ -5,7 +5,6 @@ using UnityEngine.TestTools;
 using Vhaldren.Gameplay.Combat;
 using Vhaldren.Gameplay.Player;
 using Vhaldren.Gameplay.World;
-using Vhaldren.Gameplay.World;
 
 namespace Vhaldren.Tests
 {
