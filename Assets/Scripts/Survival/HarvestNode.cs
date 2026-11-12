@@ -23,6 +23,12 @@ namespace Vhaldren.Gameplay.Survival
 
         public static IReadOnlyList<HarvestNode> All => all;
         public ResourceKind Resource => resource;
+        // Las rocas requieren herramienta. La madera y la fibra pueden
+        // recogerse a mano al comienzo (ramas y vegetacion suelta).
+        public GatheringTool RequiredTool => resource == ResourceKind.Ore
+            ? GatheringTool.StonePick
+            : resource == ResourceKind.Stone
+                ? GatheringTool.ImprovisedPick : GatheringTool.Hands;
         public int Remaining => remaining;
         public float GatherSeconds => gatherSeconds;
         public bool IsDepleted => remaining <= 0;
@@ -59,6 +65,12 @@ namespace Vhaldren.Gameplay.Survival
         public int Harvest(SurvivalInventory inventory)
         {
             if (inventory == null || IsDepleted)
+                return 0;
+            SurvivalToolbelt tools = inventory.GetComponent<SurvivalToolbelt>();
+            // Enforce at the resource itself: no external script can harvest
+            // a rock by calling Harvest() without unlocking the tool.
+            if (RequiredTool != GatheringTool.Hands &&
+                (tools == null || !tools.CanHarvest(this)))
                 return 0;
             int added = inventory.Add(resource, Mathf.Min(perGather, remaining));
             remaining -= added;
