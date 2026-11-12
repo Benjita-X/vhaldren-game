@@ -161,6 +161,9 @@ namespace Vhaldren.Tests
             enemyObject = new GameObject("GuardianRepetible");
             enemyObject.transform.position = new Vector3(4f, 1.08f, 0f);
             PrototypeEnemy enemy = enemyObject.AddComponent<PrototypeEnemy>();
+            typeof(PrototypeEnemy).GetField("respawnSeconds",
+                BindingFlags.Instance | BindingFlags.NonPublic)
+                .SetValue(enemy, 1f);
 
             sessionObject = new GameObject("TestSessionQuest");
             sessionObject.SetActive(false);
