@@ -34,6 +34,8 @@ namespace Vhaldren.Gameplay.World
         private float respawnAt = float.PositiveInfinity;
         private string statusText = "";
         private string healText = "";
+        private string lastHealFeedback = "";
+        private float lastHealFeedbackUntil;
         private string combatText = "";
         private float nextHudRefresh;
         private int minionCount;
@@ -156,10 +158,26 @@ namespace Vhaldren.Gameplay.World
                 if (Time.time >= respawnAt)
                     RespawnPlayer();
             }
-            else if (WasHealPressed() && Time.time >= healReadyAt)
+            else if (WasHealPressed())
             {
-                if (playerHealth.Heal(Mathf.Max(0f, healAmount)) > 0f)
-                    healReadyAt = Time.time + Mathf.Max(0.1f, healCooldown);
+                if (Time.time < healReadyAt)
+                {
+                    lastHealFeedback = "Poción recargando";
+                    lastHealFeedbackUntil = Time.time + 1.6f;
+                }
+                else
+                {
+                    float actual = playerHealth.Heal(Mathf.Max(0f, healAmount));
+                    if (actual > 0f)
+                    {
+                        healReadyAt = Time.time + Mathf.Max(0.1f, healCooldown);
+                        lastHealFeedback = "Poción: +" + actual.ToString("0.##") + " PV reales";
+                    }
+                    else
+                        lastHealFeedback = "Vida completa: no se gastó la poción";
+                    lastHealFeedbackUntil = Time.time + 2.0f;
+                    nextHudRefresh = 0f;
+                }
             }
 
             if (Time.time >= nextHudRefresh)
@@ -178,8 +196,14 @@ namespace Vhaldren.Gameplay.World
                     playerHealth.MaximumHealth.ToString("0") + " | Guardianes " +
                     fallen + "/" + minionCount + " | Jefe " +
                     (bossDefeated ? "DERROTADO" : "PENDIENTE");
-                healText = Time.time >= healReadyAt ? "Q: curar +35 PV" :
-                    "Q: pocion en " + Mathf.CeilToInt(healReadyAt - Time.time) + " s";
+                float missing = Mathf.Max(0f,
+                    playerHealth.MaximumHealth - playerHealth.CurrentHealth);
+                float availableHealing = Mathf.Min(Mathf.Max(0f, healAmount), missing);
+                healText = Time.time < healReadyAt
+                    ? "Q: poción en " + Mathf.CeilToInt(healReadyAt - Time.time) + " s"
+                    : availableHealing > 0f
+                        ? "Q: poción (recupera +" + availableHealing.ToString("0.##") + " PV)"
+                        : "Q: vida llena (poción no consumida)";
                 combatText = playerDamage != null
                     ? "GOLPES: " + playerDamage.TotalHits +
                       "  |  DANO TOTAL: " + playerDamage.TotalDamage.ToString("0.#") +
@@ -232,13 +256,16 @@ namespace Vhaldren.Gameplay.World
         {
             if (playerHealth == null)
                 return;
-            const float height = 100f;
+            const float height = 114f;
             Rect box = new Rect(12f, 12f, Mathf.Max(240f, Mathf.Min(Screen.width - 24f, 900f)), height);
             GUI.Box(box, "");
             GUI.Label(new Rect(22f, 16f, box.width - 20f, 22f), statusText);
             GUI.Label(new Rect(22f, 40f, box.width - 20f, 22f), combatText);
             GUI.Label(new Rect(22f, 65f, box.width - 20f, 22f),
-                "WASD mover | Espacio esquivar | Mouse apuntar/disparar | " + healText);
+                "WASD mover | Espacio esquivar | Clic ballesta | " + healText);
+            if (Time.time < lastHealFeedbackUntil)
+                GUI.Label(new Rect(22f, 88f, box.width - 20f, 22f),
+                    lastHealFeedback);
             if (playerHealth.IsDefeated)
                 GUI.Box(new Rect(Screen.width / 2f - 165f, Screen.height / 2f - 40f,
                     330f, 80f), "HAS CAIDO\nReapareceras en el cruce");
