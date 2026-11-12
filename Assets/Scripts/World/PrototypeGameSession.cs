@@ -31,6 +31,8 @@ namespace Vhaldren.Gameplay.World
         private Vector3 originalSpawnPosition;
         private bool hasCustomSpawn;
         private float healReadyAt;
+        private float lastHealAt = -100f;
+        private float lastHealActual;
         private float respawnAt = float.PositiveInfinity;
         private string statusText = "";
         private string healText = "";
@@ -103,6 +105,8 @@ namespace Vhaldren.Gameplay.World
                 enemy.Defeated += OnEnemyDefeated;
             }
             healReadyAt = 0f;
+            lastHealAt = -100f;
+            lastHealActual = 0f;
             respawnAt = float.PositiveInfinity;
             nextHudRefresh = 0f;
         }
@@ -158,8 +162,13 @@ namespace Vhaldren.Gameplay.World
             }
             else if (WasHealPressed() && Time.time >= healReadyAt)
             {
-                if (playerHealth.Heal(Mathf.Max(0f, healAmount)) > 0f)
+                float recovered = playerHealth.Heal(Mathf.Max(0f, healAmount));
+                if (recovered > 0f)
+                {
+                    lastHealActual = recovered;
+                    lastHealAt = Time.time;
                     healReadyAt = Time.time + Mathf.Max(0.1f, healCooldown);
+                }
             }
 
             if (Time.time >= nextHudRefresh)
@@ -178,8 +187,16 @@ namespace Vhaldren.Gameplay.World
                     playerHealth.MaximumHealth.ToString("0") + " | Guardianes " +
                     fallen + "/" + minionCount + " | Jefe " +
                     (bossDefeated ? "DERROTADO" : "PENDIENTE");
-                healText = Time.time >= healReadyAt ? "Q: curar +35 PV" :
-                    "Q: pocion en " + Mathf.CeilToInt(healReadyAt - Time.time) + " s";
+                float available = PreviewHealing(playerHealth.CurrentHealth,
+                    playerHealth.MaximumHealth, healAmount);
+                if (Time.time - lastHealAt <= 1.8f)
+                    healText = "Q: recuperaste +" + lastHealActual.ToString("0.#") + " PV";
+                else if (Time.time < healReadyAt)
+                    healText = "Q: disponible en " +
+                        Mathf.CeilToInt(healReadyAt - Time.time) + " s";
+                else
+                    healText = available <= 0f ? "Q: vida completa" :
+                        "Q: recuperar +" + available.ToString("0.#") + " PV";
                 combatText = playerDamage != null
                     ? "GOLPES: " + playerDamage.TotalHits +
                       "  |  DANO TOTAL: " + playerDamage.TotalDamage.ToString("0.#") +
@@ -188,6 +205,21 @@ namespace Vhaldren.Gameplay.World
                       " / MAGIA " + playerDamage.DamageFor(CombatDamageKind.Magic).ToString("0")
                     : "Estadisticas no disponibles";
             }
+        }
+
+        /// <summary>
+        /// Valor exacto de curacion disponible. Sin prometer puntos
+        /// que excedan la vida maxima del personaje.
+        /// </summary>
+        public static float PreviewHealing(float current, float maximum, float requested)
+        {
+            if (float.IsNaN(current) || float.IsInfinity(current) ||
+                float.IsNaN(maximum) || float.IsInfinity(maximum) ||
+                float.IsNaN(requested) || float.IsInfinity(requested) ||
+                maximum <= 0f || requested <= 0f || current <= 0f)
+                return 0f;
+            return Mathf.Min(Mathf.Max(0f, requested),
+                Mathf.Max(0f, maximum - Mathf.Clamp(current, 0f, maximum)));
         }
 
         /// <summary>Una cama construida cambia el punto de reaparicion.</summary>
