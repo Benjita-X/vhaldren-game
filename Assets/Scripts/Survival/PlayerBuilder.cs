@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using Vhaldren.Gameplay.Combat;
 using Vhaldren.Gameplay.Player;
+using Vhaldren.Gameplay.World;
 
 namespace Vhaldren.Gameplay.Survival
 {
@@ -170,6 +171,8 @@ namespace Vhaldren.Gameplay.Survival
                 if (builtPiece == null)
                     throw new System.InvalidOperationException("La pieza no tiene BuiltPiece.");
                 builtPiece.MarkMaterialsPaid();
+                if (piece.Function == BuildFunction.Campfire)
+                    GetComponent<VillageQuestJournal>()?.RecordAction(VillageObjective.BuildCampfire);
                 undoStack.Add(builtPiece);
                 if (undoStack.Count > UndoLimit)
                     undoStack.RemoveAt(0);
