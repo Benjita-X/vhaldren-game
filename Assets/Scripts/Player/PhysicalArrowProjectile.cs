@@ -196,7 +196,12 @@ namespace Vhaldren.Gameplay.Player
             child.transform.localScale = scale;
             Collider body = child.GetComponent<Collider>();
             if (body != null)
+            {
+                // Destroy se difiere hasta final de frame: desactivarlo ahora
+                // evita que una flecha choque con su propio modelo visual.
+                body.enabled = false;
                 Destroy(body);
+            }
             child.GetComponent<Renderer>().sharedMaterial = material;
         }
 
@@ -240,7 +245,10 @@ namespace Vhaldren.Gameplay.Player
             flash.transform.localScale = Vector3.one * (onTarget ? 0.28f : 0.18f);
             Collider collision = flash.GetComponent<Collider>();
             if (collision != null)
+            {
+                collision.enabled = false;
                 Destroy(collision);
+            }
             Renderer renderer = flash.GetComponent<Renderer>();
             if (renderer != null && spark != null)
                 renderer.sharedMaterial = spark;
