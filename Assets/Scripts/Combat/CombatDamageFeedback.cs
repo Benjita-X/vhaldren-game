@@ -21,6 +21,7 @@ namespace Vhaldren.Gameplay.Combat
             public float Time;
             public int Lane;
             public bool Healing;
+            public bool Defended;
         }
 
         [SerializeField, Min(2f)] private float maximumDisplayDistance = 42f;
@@ -123,7 +124,8 @@ namespace Vhaldren.Gameplay.Combat
                 Text = "-" + actualAmount.ToString("0.##"),
                 Time = Time.time,
                 Lane = index,
-                Healing = false
+                Healing = false,
+                Defended = false
             };
             cachedHealth = float.NaN;
         }
@@ -142,9 +144,28 @@ namespace Vhaldren.Gameplay.Combat
                 Text = "+" + actualAmount.ToString("0.##"),
                 Time = Time.time,
                 Lane = index,
-                Healing = true
+                Healing = true,
+                Defended = false
             };
             cachedHealth = float.NaN;
+        }
+
+        /// <summary>Mostrar una defensa efectiva sin inventar daño recibido.</summary>
+        public void ShowDefenseResult(float prevented, bool parry, bool evaded)
+        {
+            if (float.IsNaN(prevented) || float.IsInfinity(prevented) || prevented <= 0f)
+                return;
+            int index = nextPopup % PopupCapacity;
+            nextPopup++;
+            popups[index] = new DamagePopup
+            {
+                Text = evaded ? "ESQUIVA" : parry ? "PARADA" :
+                    "RESISTE " + prevented.ToString("0.#"),
+                Time = Time.time,
+                Lane = index,
+                Healing = false,
+                Defended = true
+            };
         }
 
         private void OnDefeated()
@@ -241,9 +262,11 @@ namespace Vhaldren.Gameplay.Combat
                 float spread = (popup.Lane - 2.5f) * 16f;
                 GUI.color = popup.Healing
                     ? new Color(0.35f, 1f, 0.54f, fade)
-                    : playerTarget
-                        ? new Color(1f, 0.3f, 0.35f, fade)
-                        : new Color(1f, 0.87f, 0.35f, fade);
+                    : popup.Defended
+                        ? new Color(0.38f, 0.86f, 1f, fade)
+                        : playerTarget
+                            ? new Color(1f, 0.3f, 0.35f, fade)
+                            : new Color(1f, 0.87f, 0.35f, fade);
                 GUI.Label(new Rect(x - 40f + spread,
                     y - 56f - age * 55f, 80f, 36f), popup.Text, numberStyle);
             }
