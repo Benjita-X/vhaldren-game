@@ -152,6 +152,8 @@ namespace Vhaldren.EditorTools
             controller.AddParameter("Dodge", AnimatorControllerParameterType.Trigger);
             controller.AddParameter("DodgeDir", AnimatorControllerParameterType.Int);
             controller.AddParameter("Shoot", AnimatorControllerParameterType.Trigger);
+            controller.AddParameter("Harvest", AnimatorControllerParameterType.Trigger);
+            controller.AddParameter("HarvestStyle", AnimatorControllerParameterType.Int);
 
             AnimatorStateMachine machine = controller.layers[0].stateMachine;
 
@@ -199,6 +201,28 @@ namespace Vhaldren.EditorTools
             shootExit.hasExitTime = true;
             shootExit.exitTime = 0.6f;
             shootExit.duration = 0.12f;
+
+            // KayKit ya contiene las animaciones originales PickUp y
+            // 1H_Melee_Attack_Chop. Las reutilizamos: ninguna animacion nueva
+            // bloquea locomocion ni traslada la capsula.
+            string[] gatherClips = { "PickUp", "1H_Melee_Attack_Chop" };
+            string[] gatherStates = { "Recolectar a mano", "Picar roca" };
+            for (int i = 0; i < gatherClips.Length; i++)
+            {
+                AnimatorState gather = machine.AddState(gatherStates[i]);
+                gather.motion = Clip(clips, gatherClips[i]);
+                gather.speed = i == 0 ? 1.65f : 1.9f;
+                AnimatorStateTransition gatherEnter = machine.AddAnyStateTransition(gather);
+                gatherEnter.AddCondition(AnimatorConditionMode.If, 0f, "Harvest");
+                gatherEnter.AddCondition(AnimatorConditionMode.Equals, i, "HarvestStyle");
+                gatherEnter.duration = 0.05f;
+                gatherEnter.canTransitionToSelf = false;
+
+                AnimatorStateTransition gatherExit = gather.AddTransition(locomotion);
+                gatherExit.hasExitTime = true;
+                gatherExit.exitTime = 0.75f;
+                gatherExit.duration = 0.08f;
+            }
 
             EditorUtility.SetDirty(controller);
             AssetDatabase.SaveAssets();
