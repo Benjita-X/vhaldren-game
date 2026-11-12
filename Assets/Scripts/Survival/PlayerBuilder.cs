@@ -240,17 +240,64 @@ namespace Vhaldren.Gameplay.Survival
         public const float Range = 2.8f;
 
         private SurvivalInventory inventory;
+        private SurvivalToolbelt tools;
+        private PlayerAnimationDriver animations;
+        private CombatHealth health;
+        private PlayerBuilder builder;
         private float progress;
         private HarvestNode current;
+        private bool gatheringStarted;
 
         public HarvestNode Target => current;
+        public SurvivalToolbelt Tools => tools;
         public float Progress01 => current != null ? Mathf.Clamp01(progress / current.GatherSeconds) : 0f;
+        public bool CanGatherTarget => current != null &&
+            (current.RequiredTool == GatheringTool.Hands ||
+             (tools != null && tools.CanHarvest(current)));
+        public CraftingResult LastCraftingResult { get; private set; } = CraftingResult.InvalidTool;
 
-        private void Awake() => inventory = GetComponent<SurvivalInventory>();
+        private void Awake()
+        {
+            inventory = GetComponent<SurvivalInventory>();
+            tools = GetComponent<SurvivalToolbelt>();
+            if (tools == null)
+                tools = gameObject.AddComponent<SurvivalToolbelt>();
+            animations = GetComponent<PlayerAnimationDriver>();
+            health = GetComponent<CombatHealth>();
+            builder = GetComponent<PlayerBuilder>();
+        }
 
-        private void Update() => Tick(SurvivalKeys.GatherHeld, Time.deltaTime);
+        private void Update()
+        {
+            if (health != null && health.IsDefeated)
+            {
+                Tick(false, Time.deltaTime);
+                return;
+            }
 
-        /// <summary>Avanza la recoleccion. Separado de Update para poder probarlo.</summary>
+            if (SurvivalKeys.CraftImprovisedPick)
+                TryCraftTool(GatheringTool.ImprovisedPick);
+            if (SurvivalKeys.CraftStonePick)
+                TryCraftTool(GatheringTool.StonePick);
+
+            Tick(SurvivalKeys.GatherHeld && (builder == null || !builder.IsBuilding),
+                Time.deltaTime);
+        }
+
+        public CraftingResult TryCraftTool(GatheringTool tool)
+        {
+            if (health != null && health.IsDefeated)
+                return CraftingResult.InvalidTool;
+            LastCraftingResult = tools != null ? tools.TryCraft(tool) :
+                CraftingResult.MissingMaterials;
+            return LastCraftingResult;
+        }
+
+        /// <summary>
+        /// Cada ciclo de E ejecuta una accion visible y un solo pago de recursos.
+        /// El punto de extraccion permanece ligado al objetivo inicial. No se
+        /// permite extraer piedra/mineral sin fabricar primero la herramienta.
+        /// </summary>
         public int Tick(bool held, float deltaTime)
         {
             HarvestNode nearest = HarvestNode.Nearest(transform.position, Range);
@@ -258,17 +305,33 @@ namespace Vhaldren.Gameplay.Survival
             {
                 current = nearest;
                 progress = 0f;
+                gatheringStarted = false;
             }
-            if (current == null || !held || float.IsNaN(deltaTime) || deltaTime <= 0f)
+
+            if (current == null || !held || float.IsNaN(deltaTime) ||
+                float.IsInfinity(deltaTime) || deltaTime <= 0f ||
+                !CanGatherTarget)
             {
-                if (!held)
-                    progress = 0f;
+                progress = 0f;
+                gatheringStarted = false;
                 return 0;
             }
+
+            if (!gatheringStarted)
+            {
+                gatheringStarted = true;
+                if (animations == null)
+                    animations = GetComponent<PlayerAnimationDriver>();
+                if (animations != null)
+                    animations.TriggerHarvest(current.Resource);
+            }
+
             progress += deltaTime;
             if (progress < current.GatherSeconds)
                 return 0;
+
             progress = 0f;
+            gatheringStarted = false;
             return current.Harvest(inventory);
         }
     }
