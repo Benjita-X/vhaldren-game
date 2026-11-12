@@ -11,7 +11,7 @@ namespace Vhaldren.Tests
 {
     public sealed class RacePlayModeTests
     {
-        private GameObject ground, player, target;
+        private GameObject ground, player, target, wall;
 
         private PlayerRace MakePlayer(RaceId race)
         {
@@ -36,6 +36,7 @@ namespace Vhaldren.Tests
         public IEnumerator TearDown()
         {
             if (target != null) Object.Destroy(target);
+            if (wall != null) Object.Destroy(wall);
             if (player != null) Object.Destroy(player);
             if (ground != null) Object.Destroy(ground);
             yield return null;
@@ -78,6 +79,37 @@ namespace Vhaldren.Tests
             yield return null;
             Assert.That(player.GetComponent<PlayerSpellbook>().UnlockedCount, Is.EqualTo(5));
             Assert.That(player.GetComponent<CombatHealth>().MaximumHealth, Is.EqualTo(85f).Within(0.01f));
+        }
+
+        [UnityTest]
+        public IEnumerator InfernalBurstCannotHitThroughWallEvenWhenRayBufferSaturates()
+        {
+            PlayerRace race = MakePlayer(RaceId.HalfDemon);
+            target = new GameObject("ObjetivoDetrasPared");
+            target.transform.position = new Vector3(0f, 1.08f, 3f);
+            target.AddComponent<CapsuleCollider>();
+            CombatHealth targetHealth = target.AddComponent<CombatHealth>();
+            target.AddComponent<CombatDamageReceiver>();
+
+            for (int i = 0; i < 24; i++)
+            {
+                GameObject clutter = new GameObject("Collider propio " + i);
+                clutter.transform.SetParent(player.transform, false);
+                clutter.transform.localPosition = new Vector3(
+                    (i % 3 - 1) * 0.04f, 0f, 0.2f + i * 0.035f);
+                BoxCollider box = clutter.AddComponent<BoxCollider>();
+                box.size = new Vector3(0.25f, 0.8f, 0.10f);
+            }
+
+            wall = GameObject.CreatePrimitive(PrimitiveType.Cube);
+            wall.transform.position = new Vector3(0f, 1.08f, 1.7f);
+            wall.transform.localScale = new Vector3(5f, 3f, 0.3f);
+            Physics.SyncTransforms();
+            yield return null;
+
+            Assert.That(race.TryUsePower(), Is.True);
+            Assert.That(targetHealth.CurrentHealth, Is.EqualTo(targetHealth.MaximumHealth).Within(0.01f),
+                "El estallido infernal no puede dañar a través del escenario.");
         }
 
         [UnityTest]
