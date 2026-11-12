@@ -95,10 +95,101 @@ namespace Vhaldren.Tests
             Object.Destroy(wall);
             wall = null;
             yield return null; // Dejar que se actualice la escena de fisicas.
-            yield return new WaitForSeconds(0.2f);
+            // Los ataques ahora tienen aviso antes del impacto.
+            yield return new WaitForSeconds(0.8f);
 
             Assert.That(playerHealth.CurrentHealth, Is.LessThan(100f),
                 "El enemigo debe poder golpear si esta cerca y hay linea de vision.");
+        }
+
+        [UnityTest]
+        public IEnumerator EnemyMustWarnBeforeDealingDamage()
+        {
+            PrototypeEnemy enemy = CreateEnemy(1.40f, out _);
+            CombatHealth playerHealth = player.GetComponent<CombatHealth>();
+
+            yield return null; // Primer Update del enemigo: inicia su aviso.
+            Assert.That(enemy.IsAttackTelegraphed, Is.True,
+                "Un golpe no puede resolverse en el mismo frame en que empieza el aviso.");
+            Assert.That(enemyObject.GetComponent<EnemyAttackTelegraph>(), Is.Not.Null);
+            Assert.That(playerHealth.CurrentHealth, Is.EqualTo(100f));
+
+            yield return new WaitForSeconds(0.16f);
+            Assert.That(playerHealth.CurrentHealth, Is.EqualTo(100f),
+                "La vida debe quedar intacta mientras el jugador aun puede reaccionar.");
+
+            yield return new WaitForSeconds(0.45f);
+            Assert.That(playerHealth.CurrentHealth, Is.LessThan(100f),
+                "Tras el aviso el enemigo debe golpear si el objetivo sigue en alcance.");
+        }
+
+        [UnityTest]
+        public IEnumerator EscapingTelegraphRangePreventsDamage()
+        {
+            PrototypeEnemy enemy = CreateEnemy(1.40f, out _);
+            CombatHealth playerHealth = player.GetComponent<CombatHealth>();
+            yield return null;
+            Assert.That(enemy.IsAttackTelegraphed, Is.True);
+            float initialHealth = playerHealth.CurrentHealth;
+
+            player.transform.position = new Vector3(0f, 1.08f, -4f);
+            Physics.SyncTransforms();
+            yield return new WaitForSeconds(0.6f);
+
+            Assert.That(playerHealth.CurrentHealth, Is.EqualTo(initialHealth),
+                "Salir del alcance durante la carga debe evitar el golpe.");
+            Assert.That(enemy.IsAttackTelegraphed, Is.False,
+                "El ataque debe cancelarse al perder el objetivo.");
+        }
+
+        [UnityTest]
+        public IEnumerator HittingOrdinaryEnemyInterruptsButDoesNotTeleportIt()
+        {
+            PrototypeEnemy enemy = CreateEnemy(1.40f, out CombatHealth health);
+            yield return null;
+            Assert.That(enemy.IsAttackTelegraphed, Is.True);
+            Vector3 before = enemy.transform.position;
+            CombatHealth playerHealth = player.GetComponent<CombatHealth>();
+
+            health.ApplyDamage(10f);
+            Assert.That(enemy.IsAttackTelegraphed, Is.False,
+                "El ataque anunciado por un guardian se cancela al recibir dano.");
+            Assert.That(Vector3.Distance(before, enemy.transform.position),
+                Is.LessThan(0.02f), "El stagger no debe teletransportar al enemigo.");
+
+            yield return new WaitForSeconds(0.6f);
+            Assert.That(playerHealth.CurrentHealth, Is.EqualTo(100f),
+                "El ataque cancelado no debe ejecutarse fuera de su estado.");
+        }
+
+        [UnityTest]
+        public IEnumerator DashProtectsOnImpactWithoutForcingPlayerToLeaveReach()
+        {
+            PrototypeEnemy enemy = CreateEnemy(1.40f, out _);
+            PlayerMotor motor = player.AddComponent<PlayerMotor>();
+            typeof(PlayerMotor).GetField("dashDistance",
+                BindingFlags.Instance | BindingFlags.NonPublic).SetValue(motor, 0f);
+            typeof(PrototypeEnemy).GetField("targetMotor",
+                BindingFlags.Instance | BindingFlags.NonPublic).SetValue(enemy, motor);
+            CombatHealth playerHealth = player.GetComponent<CombatHealth>();
+
+            yield return null;
+            Assert.That(enemy.IsAttackTelegraphed, Is.True);
+
+            // Forzar el instante de resolucion para comprobar solo la regla de
+            // invulnerabilidad, sin depender de FPS ni temporizadores de PlayMode.
+            typeof(PrototypeEnemy).GetField("attackReleaseAt",
+                BindingFlags.Instance | BindingFlags.NonPublic).SetValue(enemy, Time.time - 0.01f);
+            motor.Simulate(new PlayerMotionCommand(Vector3.zero, Vector3.forward, true),
+                1f / 60f);
+            Assert.That(motor.IsDashing, Is.True);
+            Assert.That(Vector3.Distance(player.transform.position,
+                enemy.transform.position), Is.LessThan(1.65f));
+
+            yield return null;
+            Assert.That(enemy.IsAttackTelegraphed, Is.False);
+            Assert.That(playerHealth.CurrentHealth, Is.EqualTo(100f),
+                "Una esquiva activa evita daño aunque el personaje siga en el alcance.");
         }
 
         [UnityTest]

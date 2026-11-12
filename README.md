@@ -37,6 +37,12 @@ La escena es un circuito de prueba. Cada pieza sirve para comprobar algo:
 
 Si cambias el generador, la escena se vuelve a crear con **Vhaldren → Crear escena de prueba → Movimiento 001** y se comprueba con **Vhaldren → Validar escena 001**.
 
+## Combate 011 — ataques avisados, esquiva justa y reaccion al impacto
+
+Rama `feature/011-ataques-telegrafiados`: enemigos anuncian sus golpes con un anillo de peligro (el jefe tiene una preparacion mas larga), el daño se calcula al terminar la preparacion y puede evitarse esquivando, alejandose o usando una pared. Los guardianes normales pueden ver interrumpido su ataque al recibir daño; el modelo visual reacciona sin mover colisiones. Al curarse salen numeros verdes `+35` basados en la salud realmente recuperada.
+
+**Prueba:** abrir directamente `Assets/Scenes/WorldPrototype001.unity` en Unity. No hace falta regenerar mapa ni modificar PlayerMotor. Ver [auditoria y pruebas 011](docs/011-COMBATE-LEGIBLE.md). Los nuevos tests no se han ejecutado en esta sesion.
+
 ## Combate 009 — vida enemiga y numeros de dano
 
 Esta rama añade **barras de vida sobre cada enemigo**, barra violeta mas grande para el jefe, numeros de dano por golpe real, aviso de derrota y numeros rojos al recibir dano el jugador. El HUD muestra **impactos acertados, dano total y ultimo golpe**. No hay que regenerar el mapa que ya preparo Claude.
