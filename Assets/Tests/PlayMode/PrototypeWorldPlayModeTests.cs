@@ -163,6 +163,36 @@ namespace Vhaldren.Tests
         }
 
         [UnityTest]
+        public IEnumerator DashProtectsOnImpactWithoutForcingPlayerToLeaveReach()
+        {
+            PrototypeEnemy enemy = CreateEnemy(1.40f, out _);
+            PlayerMotor motor = player.AddComponent<PlayerMotor>();
+            typeof(PlayerMotor).GetField("dashDistance",
+                BindingFlags.Instance | BindingFlags.NonPublic).SetValue(motor, 0f);
+            typeof(PrototypeEnemy).GetField("targetMotor",
+                BindingFlags.Instance | BindingFlags.NonPublic).SetValue(enemy, motor);
+            CombatHealth playerHealth = player.GetComponent<CombatHealth>();
+
+            yield return null;
+            Assert.That(enemy.IsAttackTelegraphed, Is.True);
+
+            // Forzar el instante de resolucion para comprobar solo la regla de
+            // invulnerabilidad, sin depender de FPS ni temporizadores de PlayMode.
+            typeof(PrototypeEnemy).GetField("attackReleaseAt",
+                BindingFlags.Instance | BindingFlags.NonPublic).SetValue(enemy, Time.time - 0.01f);
+            motor.Simulate(new PlayerMotionCommand(Vector3.zero, Vector3.forward, true),
+                1f / 60f);
+            Assert.That(motor.IsDashing, Is.True);
+            Assert.That(Vector3.Distance(player.transform.position,
+                enemy.transform.position), Is.LessThan(1.65f));
+
+            yield return null;
+            Assert.That(enemy.IsAttackTelegraphed, Is.False);
+            Assert.That(playerHealth.CurrentHealth, Is.EqualTo(100f),
+                "Una esquiva activa evita daño aunque el personaje siga en el alcance.");
+        }
+
+        [UnityTest]
         public IEnumerator EnemyReturnsHomeAfterCrossingItsLeashBoundary()
         {
             PrototypeEnemy enemy = CreateEnemy(8f, out _);
