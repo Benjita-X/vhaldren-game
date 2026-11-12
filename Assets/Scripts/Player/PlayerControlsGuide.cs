@@ -67,17 +67,21 @@ namespace Vhaldren.Gameplay.Player
                     alignment = TextAnchor.UpperLeft
                 };
 
-            GUI.Box(new Rect(x, 43f, width, 408f), "");
+            GUI.Box(new Rect(x, 43f, width, 448f), "");
             string guide = GuideText();
-            GUI.Label(new Rect(x + 10f, 50f, width - 20f, 398f), guide, textStyle);
+            GUI.Label(new Rect(x + 10f, 50f, width - 20f, 438f), guide, textStyle);
         }
 
         /// <summary>Ayuda con las teclas asignadas ahora mismo (cambian en Opciones).</summary>
         private static string GuideText()
         {
             string K(GameAction a) => "<b>" + GameInput.Label(a) + "</b>";
+            string camera = "Rueda: zoom";
+            if (GameSettings.CameraRotation)
+                camera += " | Botón central o " + K(GameAction.CameraRotateLeft) + "/" + K(GameAction.CameraRotateRight) +
+                          ": girar cámara | " + K(GameAction.CameraReset) + ": ángulo inicial";
             return "<b>MOVIMIENTO</b>\n" + K(GameAction.MoveForward) + K(GameAction.MoveLeft) + K(GameAction.MoveBack) + K(GameAction.MoveRight) +
-                   ": mover | " + K(GameAction.Dash) + ": esquivar\nRatón: apuntar | Clic: ballesta\n\n" +
+                   ": mover | " + K(GameAction.Dash) + ": esquivar\nRatón: apuntar | Clic: ballesta\n" + camera + "\n\n" +
                    "<b>HABILIDADES</b>\n" + K(GameAction.Sword) + " espada | " + K(GameAction.RunePulse) + " pulso | " + K(GameAction.Frost) + " escarcha\n" +
                    K(GameAction.Shield) + " escudo | " + K(GameAction.Ward) + " barrera | " + K(GameAction.Parry) + " parada | " + K(GameAction.Potion) + " poción\n\n" +
                    "<b>MAGIA Y RAZA</b>\n" + K(GameAction.Spell1) + "/" + K(GameAction.Spell2) + "/" + K(GameAction.Spell3) + " hechizos | " + K(GameAction.NextSchool) + " escuela\n" +

@@ -20,7 +20,9 @@ namespace Vhaldren.Gameplay.Settings
         Equipment, Build, BuildSlot1, BuildSlot2, BuildSlot3, BuildSlot4, BuildSlot5,
         BuildSlot6, BuildSlot7, BuildSlot8, BuildSlot9, BuildSlot10,
         Rotate, Dismantle, Gather, CraftPick1, CraftPick2,
-        Noticeboard, Accept, Offer, Buy, Help, Pause
+        Noticeboard, Accept, Offer, Buy, Help, Pause,
+        // Al final: los valores anteriores no cambian.
+        CameraRotateLeft, CameraRotateRight, CameraReset
     }
 
     /// <summary>
@@ -67,6 +69,10 @@ namespace Vhaldren.Gameplay.Settings
             Add(GameAction.MoveLeft, "Izquierda", "Movimiento", Key.A);
             Add(GameAction.MoveRight, "Derecha", "Movimiento", Key.D);
             Add(GameAction.Dash, "Esquivar", "Movimiento", Key.Space);
+            // Tambien se gira arrastrando con el boton central del raton.
+            Add(GameAction.CameraRotateLeft, "Girar cámara a la izquierda", "Cámara", Key.Insert);
+            Add(GameAction.CameraRotateRight, "Girar cámara a la derecha", "Cámara", Key.Delete);
+            Add(GameAction.CameraReset, "Cámara al ángulo inicial", "Cámara", Key.Home);
             Add(GameAction.Sword, "Tajo de espada", "Combate", Key.V);
             Add(GameAction.RunePulse, "Pulso rúnico", "Combate", Key.T);
             Add(GameAction.Frost, "Onda de escarcha", "Combate", Key.F);
@@ -248,6 +254,10 @@ namespace Vhaldren.Gameplay.Settings
                 case Key.LeftShift: return "Mayús";
                 case Key.LeftCtrl: return "Ctrl";
                 case Key.Enter: return "Intro";
+                case Key.Insert: return "Insert";
+                case Key.Delete: return "Supr";
+                case Key.Home: return "Inicio";
+                case Key.End: return "Fin";
                 case Key.None: return "—";
             }
             string name = key.ToString();

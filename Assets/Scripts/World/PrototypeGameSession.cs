@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 using Vhaldren.Gameplay.Settings;
+using Vhaldren.Gameplay.CameraSystem;
 using Vhaldren.Gameplay.Combat;
 using Vhaldren.Gameplay.Player;
 using Vhaldren.Gameplay.Survival;
@@ -17,6 +18,11 @@ namespace Vhaldren.Gameplay.World
     [DisallowMultipleComponent]
     public sealed class PrototypeGameSession : MonoBehaviour
     {
+        /// <summary>Camara cenital de accion del mundo: inclinacion hacia abajo, en grados.</summary>
+        public const float ActionCameraPitch = 54f;
+        /// <summary>Campo de vision vertical estrecho: aspecto casi isometrico.</summary>
+        public const float ActionCameraFieldOfView = 40f;
+
         [SerializeField] private Transform player;
         [SerializeField] private float healAmount = 35f;
         [SerializeField, Min(0.1f)] private float healCooldown = 12f;
@@ -44,6 +50,10 @@ namespace Vhaldren.Gameplay.World
         private float nextHudRefresh;
         private int minionCount;
         private bool bossDefeated;
+        private SimpleFollowCamera worldCamera;
+
+        /// <summary>Camara del mundo configurada por esta sesion (null en salas de prueba).</summary>
+        public SimpleFollowCamera WorldCamera => worldCamera;
 
         private void OnEnable()
         {
@@ -108,6 +118,12 @@ namespace Vhaldren.Gameplay.World
                 // de entrenamiento conservan el disparo legacy configurable.
                 if (playerShooter != null)
                     playerShooter.SetPhysicalArrows(true);
+            }
+            if (Application.isPlaying)
+            {
+                // Camara cenital de accion solo en el mundo; las salas de prueba conservan la suya.
+                ConfigureWorldCamera(true);
+                GameSettings.Changed += OnSettingsChanged;
             }
             if (playerHealth != null)
             {
@@ -180,8 +196,51 @@ namespace Vhaldren.Gameplay.World
             nextHudRefresh = 0f;
         }
 
+        private void Start()
+        {
+            // Al cargar la escena, la camara puede activarse despues que esta sesion.
+            if (Application.isPlaying && worldCamera == null)
+                ConfigureWorldCamera(true);
+        }
+
+        private void OnSettingsChanged() => ConfigureWorldCamera(false);
+
+        /// <summary>
+        /// Encuadre del mundo: perspectiva inclinada con FOV estrecho, distancia por defecto
+        /// de las opciones, zoom entre los limites, giro y adelanto segun las opciones.
+        /// Los objetos que tapan al personaje se ocultan; solo el terreno acerca la camara.
+        /// Solo toca la camara principal si sigue a este jugador.
+        /// </summary>
+        private void ConfigureWorldCamera(bool immediate)
+        {
+            if (player == null)
+                return;
+            if (worldCamera == null)
+            {
+                Camera view = Camera.main;
+                SimpleFollowCamera follow = view != null ? view.GetComponent<SimpleFollowCamera>() : null;
+                if (follow == null || follow.Target != player)
+                    return;
+                worldCamera = follow;
+                immediate = true;
+            }
+
+            worldCamera.ConfigureActionView(ActionCameraPitch, GameSettings.CameraDistance,
+                GameSettings.CameraDistanceMin, GameSettings.CameraDistanceMax,
+                ActionCameraFieldOfView, immediate);
+            worldCamera.AllowRotation = GameSettings.CameraRotation;
+            worldCamera.LookAheadEnabled = GameSettings.CameraLookAhead;
+            worldCamera.ObstructionTerrainOnly = true;
+
+            CameraOcclusionHider hider = worldCamera.GetComponent<CameraOcclusionHider>();
+            if (hider == null)
+                hider = worldCamera.gameObject.AddComponent<CameraOcclusionHider>();
+            hider.SetTarget(player);
+        }
+
         private void OnDisable()
         {
+            GameSettings.Changed -= OnSettingsChanged;
             GameFeel.Enabled = false;
             if (playerHealth != null)
                 playerHealth.Defeated -= OnPlayerDefeated;
