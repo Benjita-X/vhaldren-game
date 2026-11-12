@@ -8,7 +8,10 @@ using UnityEngine.InputSystem.Controls;
 
 namespace Vhaldren.Gameplay.Settings
 {
-    /// <summary>Todas las acciones de teclado del juego. El clic izquierdo (ballesta) y la rueda no se reasignan.</summary>
+    /// <summary>
+    /// Acciones principales de teclado. El clic izquierdo, la rueda, Mayús de colocación
+    /// libre y Ctrl+Z de deshacer permanecen como atajos fijos.
+    /// </summary>
     public enum GameAction
     {
         MoveForward, MoveBack, MoveLeft, MoveRight, Dash,
