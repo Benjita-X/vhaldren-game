@@ -1,3 +1,9 @@
+## Combate 012 — ballesta con flecha, defensas diferenciadas, habilidades y enemigos 3D
+
+La rama `feature/012-armas-defensas-enemigos` incorpora un prototipo jugable sin regenerar la escena guardada. **Clic izquierdo:** ballesta y flecha viajera con colision real. **Espacio:** esquiva. **Z mantener:** escudo contra espadas/flechas. **C mantener:** barrera contra magia. **X:** parada de precision. **V:** tajo frontal de espada. **T:** pulso runico de area. Q sigue curando. El HUD muestra stamina; cada enemigo tiene modelo 3D procedural texturizado y el jefe alterna golpe fisico/runico.
+
+Abre `Assets/Scenes/WorldPrototype001.unity` y prueba todo. La nueva version **no ha sido compilada ni probada en Unity desde este chat**. La [auditoria visual de los dos videos y plan de pruebas](docs/012-VIDEOS-ARMAS-DEFENSAS.md) distingue lo implementado de lo que falta.
+
 # Vhaldren
 
 Juego de acción de fantasía oscura con cámara elevada: te mueves con WASD y apuntas con el mouse. Proyecto de Unity 6 (`6000.2.12f1`, pipeline de render integrado).
