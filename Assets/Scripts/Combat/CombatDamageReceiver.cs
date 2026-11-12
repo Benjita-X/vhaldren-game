@@ -95,6 +95,12 @@ namespace Vhaldren.Gameplay.Combat
             LastAppliedDamage = applied;
             float prevented = Mathf.Max(0f, requestedDamage - amount);
             CombatDamageResult result = new CombatDamageResult(applied, prevented, parried, evaded);
+            if (prevented > 0f)
+            {
+                CombatDamageFeedback feedback = GetComponent<CombatDamageFeedback>();
+                if (feedback != null)
+                    feedback.ShowDefenseResult(prevented, parried, evaded);
+            }
             if (prevented > 0f || applied > 0f)
                 Resolved?.Invoke(result);
             return result;
