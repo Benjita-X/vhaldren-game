@@ -1,45 +1,46 @@
-# Traspaso — dónde quedó el trabajo
+# Traspaso — línea activa
 
-Actualizado: 11 de noviembre de 2026, por Claude. Si retomas (Claude o Codex), lee esto y `docs/ESTADO.md` primero.
+Actualizado: 12 de noviembre de 2026.
 
-## Ramas (de la más antigua a la más nueva, cada una contiene a la anterior)
+## Continuar aquí
 
-| Rama | PR | Qué trae |
-|---|---|---|
-| `feature/001-movimiento-base` | #1 | Control base, circuito de prueba |
-| `feature/002-esquiva-zoom` | #2 | Esquiva y zoom |
-| `audit/correcciones-control-camara-2026-11-10` | #3 | Cámara evita paredes (Codex) |
-| `feature/004-kaykit-combat-slice` | #5 | Sala KayKit, vida y daño, modificadores (Codex) |
-| `audit/claude-004` | #4 | Arreglo de importación KayKit y modificadores conectados al motor |
-| `feature/006-personaje-kaykit` | #6 | Personaje Rogue encapuchado animado |
-| `feature/007-integracion` | #7 | **La más completa.** 006 + las 14 correcciones finales de Codex en 004 |
+Rama: `feature/018-consolidacion-pre-modelado`.
+Base de respaldo: `feature/017-integracion-jugable-pueblos-combate` (PR #16).
+Escena de juego: `Assets/Scenes/WorldPrototype001.unity`.
+No desarrollar nuevas features sobre 007/012/015: son historia del proyecto.
 
-Para probar todo: abrir en Unity una copia de `feature/007-integracion` y pulsar Play en `Movement001` o `KayKitCombat001`.
+## Regla de escena
 
-## Última verificación
+`WorldPrototype001.unity` es persistente y se editará para arte final.
+`WorldPrototypeSceneTool` fue aislado en 018: su menú `Vhaldren/Blockout/...` genera
+`WorldBlockoutGenerated.unity`, no la escena jugable. Nunca volver a apuntar ese generador al mundo final.
 
-Unity 6000.2.12f1, modo batch, rama 007 con Library limpia: EditMode 60 de 60, PlayMode 39 de 39. Nadie ha jugado todavía nada posterior a la rama 001.
+## Regla de modelos Blender
 
-## Personaje animado (rama 006)
+Gameplay en raíz; arte en hijo. Añadir `AuthoredVisual` a la raíz visual del modelo/prefab.
+`EnemyVisualPrototype` y `EnemyArchetypeVisual` respetan esa marca y no crean primitivas encima.
+Los prefabs KayKit generados también reciben la marca.
 
-- Modelo CC0 `Assets/ThirdParty/KayKitAdventurers/RogueHooded.fbx` (70 animaciones). Licencia en la misma carpeta.
-- `KayKitCharacterSetup` (editor) configura la importación y crea el Animator: mezcla direccional de piernas (correr, atrás, lados) según hacia dónde mira, esquivas en 4 direcciones y disparo.
-- `PlayerAnimationDriver` (juego) solo lee el motor y alimenta el Animator. Nunca mueve al personaje (`applyRootMotion = false`).
-- Si el modelo no está, el generador vuelve al muñeco de formas básicas.
+No trasladar colliders/vida/IA al FBX. El FBX es apariencia y animación; el prefab de Unity hace la unión.
 
-## Siguiente paso recomendado
+## Correcciones 018 ya publicadas
 
-1. Que el dueño juegue la rama 006 y diga qué se siente mal.
-2. Enemigo esqueleto CC0 (ya descargado en `work/terceros/KayKit-Character-Pack-Skeletons-1.0`) que persiga y ataque, usando `CombatHealth`.
-3. Multijugador cooperativo: elegir UNA red (Netcode for GameObjects o FishNet) con un prototipo de 2 jugadores; el disparo debe validarse en el servidor.
+Raycasts/SphereCasts/Overlap saturables críticos tienen fallback completo; DOT y Estática usan el receptor
+central; Estallido infernal respeta paredes; misiones aceptan derrotas posteriores de enemigos reaparecidos;
+ranuras 1–0 de construcción son reasignables; puntero de construcción funciona en escenas densas; build
+settings deja solo menú y mundo final habilitados.
 
-## Reglas
+Hay nuevas pruebas para saturación de física, DOT/resistencias, tracking de daño, misiones reaparecidas,
+controles contextuales y protección de modelos autorales.
 
-- No fusionar a `main` sin que el dueño lo apruebe jugando.
-- Cada arreglo con una prueba que fallaba antes. Anotar resultados reales.
-- Dos agentes no deben trabajar en la misma carpeta a la vez.
+## Validación
 
-## Lecciones
+La 017 fue reportada por Claude con 81/81 EditMode y 113/113 PlayMode en Unity 6000.2.12f1.
+La 018 NO se ha ejecutado todavía en Unity desde esta auditoría. No afirmar que compila/pasa tests hasta
+hacer esa ejecución.
 
-- No copiar `Library` de otra carpeta: deja scripts "missing" en las escenas. Borrarla y dejar que Unity reimporte.
-- En EditMode Unity no llama `OnDisable` al cambiar `enabled`.
+## Próximo paso después de validar
+
+Empezar modelado por un vertical slice artístico, no por cientos de assets: kit modular de una villa,
+entrada/interior corto de cueva, un enemigo original completo y una pieza de construcción. Integrarlos
+mediante `AuthoredVisual`, comprobar escala/rig/colisiones/LOD/materiales y recién después producir variantes.
