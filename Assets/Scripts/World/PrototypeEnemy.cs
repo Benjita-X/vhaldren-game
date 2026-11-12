@@ -1,6 +1,7 @@
 using System;
 using UnityEngine;
 using Vhaldren.Gameplay.Combat;
+using Vhaldren.Gameplay.Player;
 
 namespace Vhaldren.Gameplay.World
 {
@@ -21,12 +22,16 @@ namespace Vhaldren.Gameplay.World
         [SerializeField, Min(0.5f)] private float attackRange = 1.65f;
         [SerializeField, Min(0f)] private float attackDamage = 10f;
         [SerializeField, Min(0.1f)] private float attackCooldown = 1.3f;
+        [SerializeField, Min(0.1f)] private float attackWindup = 0.48f;
+        [SerializeField, Min(0f)] private float hitReactionSeconds = 0.18f;
         [SerializeField, Min(1f)] private float respawnSeconds = 18f;
         [SerializeField] private GameObject modelRoot;
 
         private CharacterController controller;
         private CombatHealth health;
         private CombatHealth targetHealth;
+        private PlayerMotor targetMotor;
+        private EnemyAttackTelegraph attackWarning;
         private Vector3 spawnPosition;
         private float fallingSpeed;
         private float nextAttackTime;
@@ -34,9 +39,13 @@ namespace Vhaldren.Gameplay.World
         private float provokedUntil;
         private bool defeated;
         private bool returningHome;
+        private bool windingUp;
+        private float attackReleaseAt;
+        private float staggerUntil;
 
         public bool IsBoss => isBoss;
         public bool IsDefeated => defeated;
+        public bool IsAttackTelegraphed => windingUp;
         public event Action<PrototypeEnemy> Defeated;
 
         private void Awake()
@@ -49,6 +58,10 @@ namespace Vhaldren.Gameplay.World
             if (feedback == null)
                 feedback = gameObject.AddComponent<CombatDamageFeedback>();
             feedback.ConfigureForEnemy(isBoss);
+            // Se agrega tambien a escenas 008 ya versionadas sin recompilar la escena.
+            attackWarning = GetComponent<EnemyAttackTelegraph>();
+            if (attackWarning == null)
+                attackWarning = gameObject.AddComponent<EnemyAttackTelegraph>();
             spawnPosition = transform.position;
             if (target == null)
             {
@@ -57,7 +70,10 @@ namespace Vhaldren.Gameplay.World
                     target = player.transform;
             }
             if (target != null)
+            {
                 targetHealth = target.GetComponent<CombatHealth>();
+                targetMotor = target.GetComponent<PlayerMotor>();
+            }
         }
 
         private void OnEnable()
@@ -70,6 +86,7 @@ namespace Vhaldren.Gameplay.World
 
         private void OnDisable()
         {
+            CancelAttack();
             if (health != null)
             {
                 health.Defeated -= HandleDefeated;
@@ -81,6 +98,10 @@ namespace Vhaldren.Gameplay.World
         {
             provokedUntil = Time.time + 12f;
             returningHome = false;
+            // Los guardianes menores dan una oportunidad real de contraatacar.
+            // El jefe no queda bloqueado permanentemente por ataques de disparo rapido.
+            if (!isBoss)
+                InterruptAttack(hitReactionSeconds);
         }
 
         private void HandleDefeated()
@@ -88,6 +109,7 @@ namespace Vhaldren.Gameplay.World
             if (defeated)
                 return;
             defeated = true;
+            CancelAttack();
             respawnAt = Time.time + Mathf.Max(1f, respawnSeconds);
             if (controller != null)
                 controller.enabled = false;
@@ -109,8 +131,43 @@ namespace Vhaldren.Gameplay.World
             if (controller == null || !controller.enabled)
                 return;
 
+            // Durante la preparación, el enemigo permanece quieto. Si el jugador
+            // se aleja, se esconde tras una pared o muere, el ataque se cancela.
+            // En el instante del golpe se valida de nuevo todo: no hay daño gratis.
+            bool holdPosition = windingUp || Time.time < staggerUntil;
+            if (windingUp)
+            {
+                Vector3 toTarget = target != null ? target.position - transform.position : Vector3.zero;
+                toTarget.y = 0f;
+                Vector3 fromHomeNow = transform.position - spawnPosition;
+                fromHomeNow.y = 0f;
+                bool valid = target != null && targetHealth != null &&
+                    !targetHealth.IsDefeated &&
+                    toTarget.sqrMagnitude <= attackRange * attackRange &&
+                    fromHomeNow.sqrMagnitude <= leashRange * leashRange &&
+                    HasLineOfSight();
+
+                if (!valid)
+                    CancelAttack();
+                else if (Time.time >= attackReleaseAt)
+                {
+                    windingUp = false;
+                    if (attackWarning != null)
+                        attackWarning.Strike();
+                    // La esquiva ofrece una ventana de invulnerabilidad corta.
+                    // El jugador puede evitar el impacto sin bloquear su movimiento.
+                    if (targetMotor == null ||
+                        (!targetMotor.IsDashing && !targetMotor.DashMovedThisStep))
+                        targetHealth.ApplyDamage(Mathf.Max(0f, attackDamage));
+                }
+            }
+
             Vector3 move = Vector3.zero;
-            if (target != null && targetHealth != null && !targetHealth.IsDefeated)
+            if (holdPosition)
+            {
+                // Gravedad normal incluso durante la carga o un stagger.
+            }
+            else if (target != null && targetHealth != null && !targetHealth.IsDefeated)
             {
                 Vector3 planar = target.position - transform.position;
                 planar.y = 0f;
@@ -139,8 +196,7 @@ namespace Vhaldren.Gameplay.World
                         move = planar / distance;
                     else if (Time.time >= nextAttackTime && HasLineOfSight())
                     {
-                        nextAttackTime = Time.time + Mathf.Max(0.1f, attackCooldown);
-                        targetHealth.ApplyDamage(Mathf.Max(0f, attackDamage));
+                        BeginAttack();
                     }
                 }
                 else
@@ -174,6 +230,44 @@ namespace Vhaldren.Gameplay.World
             Vector3 velocity = move * Mathf.Max(0f, moveSpeed) +
                 Vector3.up * fallingSpeed;
             controller.Move(velocity * Time.deltaTime);
+        }
+
+        /// <summary>
+        /// Interrumpe un ataque anunciado sin desplazar al enemigo. Util para
+        /// habilidades futuras que apliquen aturdimiento o rompimiento de postura.
+        /// </summary>
+        public void InterruptAttack(float recoverySeconds = 0.18f)
+        {
+            CancelAttack();
+            if (float.IsNaN(recoverySeconds) || float.IsInfinity(recoverySeconds))
+                recoverySeconds = 0f;
+            float safe = Mathf.Clamp(recoverySeconds, 0f, 3f);
+            staggerUntil = Mathf.Max(staggerUntil, Time.time + safe);
+            nextAttackTime = Mathf.Max(nextAttackTime, staggerUntil + 0.08f);
+        }
+
+        private void BeginAttack()
+        {
+            if (windingUp || defeated)
+                return;
+            float safeWindup = float.IsNaN(attackWindup) || float.IsInfinity(attackWindup)
+                ? 0.48f : Mathf.Max(0.1f, attackWindup);
+            if (isBoss)
+                safeWindup = Mathf.Max(0.75f, safeWindup);
+
+            windingUp = true;
+            attackReleaseAt = Time.time + safeWindup;
+            nextAttackTime = Time.time + Mathf.Max(Mathf.Max(0.1f, attackCooldown),
+                safeWindup + 0.2f);
+            if (attackWarning != null)
+                attackWarning.Begin(attackRange, safeWindup, isBoss);
+        }
+
+        private void CancelAttack()
+        {
+            windingUp = false;
+            if (attackWarning != null)
+                attackWarning.Cancel();
         }
 
         private static readonly RaycastHit[] SightHits = new RaycastHit[16];
@@ -216,6 +310,8 @@ namespace Vhaldren.Gameplay.World
             transform.position = spawnPosition;
             fallingSpeed = 0f;
             nextAttackTime = Time.time + 1f;
+            staggerUntil = 0f;
+            CancelAttack();
             provokedUntil = 0f;
             returningHome = false;
             health.ResetToFull();
