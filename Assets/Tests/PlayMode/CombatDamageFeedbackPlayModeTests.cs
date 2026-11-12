@@ -5,6 +5,7 @@ using UnityEngine.TestTools;
 using Vhaldren.Gameplay.Combat;
 using Vhaldren.Gameplay.Player;
 using Vhaldren.Gameplay.World;
+using Vhaldren.Gameplay.World;
 
 namespace Vhaldren.Tests
 {
@@ -86,6 +87,51 @@ namespace Vhaldren.Tests
             Assert.That(feedback.DamageEventsReceived, Is.EqualTo(2),
                 "Reactivar no puede multiplicar las suscripciones.");
             Assert.That(feedback.TotalDamageReceived, Is.EqualTo(20f));
+        }
+
+        [UnityTest]
+        public IEnumerator HealingNumbersReflectOnlyActualRecovery()
+        {
+            CombatHealth health = CreateHealthWithFeedback(out CombatDamageFeedback feedback);
+            yield return null;
+
+            Assert.That(health.ApplyDamage(70f), Is.EqualTo(70f));
+            Assert.That(health.Heal(30f), Is.EqualTo(30f));
+            Assert.That(feedback.HealingEventsReceived, Is.EqualTo(1));
+            Assert.That(feedback.LastHealingReceived, Is.EqualTo(30f));
+            Assert.That(feedback.HealthFraction, Is.EqualTo(0.6f).Within(0.001f));
+
+            // Intento de overheal: 100 solicitados, solo 40 reales.
+            Assert.That(health.Heal(100f), Is.EqualTo(40f));
+            Assert.That(feedback.LastHealingReceived, Is.EqualTo(40f));
+            Assert.That(feedback.HealingEventsReceived, Is.EqualTo(2));
+            Assert.That(health.Heal(10f), Is.Zero);
+            Assert.That(feedback.HealingEventsReceived, Is.EqualTo(2),
+                "La vida llena no debe producir avisos verdes falsos.");
+        }
+
+        [UnityTest]
+        public IEnumerator HitReactionChangesOnlyVisualThenRestoresScale()
+        {
+            CombatHealth health = CreateHealthWithFeedback(out _);
+            GameObject model = new GameObject("Visual enemigo");
+            model.transform.SetParent(actor.transform, false);
+            model.transform.localScale = new Vector3(1.3f, 0.85f, 1.3f);
+            Vector3 baseline = model.transform.localScale;
+            Vector3 rootPosition = actor.transform.position;
+            EnemyHitReaction reaction = actor.AddComponent<EnemyHitReaction>();
+            reaction.BindVisual(model.transform);
+            yield return null;
+
+            health.ApplyDamage(12f);
+            Assert.That(reaction.Recovering, Is.True);
+            Assert.That(model.transform.localScale.x, Is.LessThan(baseline.x));
+            Assert.That(actor.transform.position, Is.EqualTo(rootPosition),
+                "El feedback visual no puede desplazar fisicamente a un enemigo.");
+
+            yield return new WaitForSeconds(0.28f);
+            Assert.That(reaction.Recovering, Is.False);
+            Assert.That(Vector3.Distance(model.transform.localScale, baseline), Is.LessThan(0.001f));
         }
 
         [UnityTest]
