@@ -207,6 +207,36 @@ namespace Vhaldren.Tests
         }
 
         [UnityTest]
+        public IEnumerator SuccessfulParryEnablesOneEnhancedSwordCounterattack()
+        {
+            owner = new GameObject("PlayerRoot");
+            owner.transform.position = new Vector3(0f, 1.08f, 0f);
+            owner.AddComponent<CombatHealth>();
+            CombatDefense defense = owner.AddComponent<CombatDefense>();
+            CombatDamageReceiver defender = owner.AddComponent<CombatDamageReceiver>();
+            PlayerCombatAbilities abilities = owner.AddComponent<PlayerCombatAbilities>();
+
+            target = GameObject.CreatePrimitive(PrimitiveType.Cube);
+            target.transform.position = new Vector3(0f, 1.08f, 1.9f);
+            CombatHealth enemyHealth = target.AddComponent<CombatHealth>();
+            target.AddComponent<CombatDamageReceiver>();
+            Physics.SyncTransforms();
+
+            Assert.That(defense.TryParry(), Is.True);
+            CombatDamageResult parry = defender.Receive(20f, CombatDamageKind.Melee,
+                target.transform.position);
+            Assert.That(parry.Parried, Is.True);
+            Assert.That(defense.CounterReady, Is.True);
+            Assert.That(abilities.TrySwordSweep(), Is.True);
+            Assert.That(abilities.CounterStrikes, Is.EqualTo(1));
+            Assert.That(defense.CounterReady, Is.False);
+
+            yield return new WaitForSeconds(0.24f);
+            Assert.That(enemyHealth.CurrentHealth, Is.EqualTo(47.5f).Within(0.05f),
+                "El tajo de respuesta debe causar 35 x 1.5 = 52.5 PV.");
+        }
+
+        [UnityTest]
         public IEnumerator HeavySwordAbilityUsesMeleeDamageAndSingleTargetHit()
         {
             floor = GameObject.CreatePrimitive(PrimitiveType.Cube);
