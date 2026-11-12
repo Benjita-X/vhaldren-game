@@ -112,12 +112,14 @@ namespace Vhaldren.Gameplay.Magic
         }
 
         public bool IsDone => done;
+        public Vector3 LastImpactPoint { get; private set; }
 
         private void Finish(Vector3 point)
         {
             if (done)
                 return;
             done = true;
+            LastImpactPoint = point;
             if (spell != null)
                 SpellImpactFlash.Spawn(point, SpellCatalog.SchoolColor(spell.School), 0.55f, 0.22f);
             Destroy(gameObject);
