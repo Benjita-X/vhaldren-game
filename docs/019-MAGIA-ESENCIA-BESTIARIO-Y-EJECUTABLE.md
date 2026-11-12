@@ -108,7 +108,7 @@ La auditoría de los archivos de V Rising (`auditoria-v-rising/AUDITORIA.md`) se
 - **Menú principal** (`MainMenu.unity`, primera escena del ejecutable): Nueva partida (elección de raza), Continuar (desactivado hasta que haya guardado), Opciones, Información, Créditos y Salir.
 - **Pausa (Esc)**: continuar, opciones, información, menú principal y salir.
 - **Información** (`CodexPanel`): controles actuales, explicación de cada elemento de la pantalla, los 18 hechizos con daño y recarga, estados, esencias, razas, bestiario y equipo. Se genera de los catálogos, así siempre está al día.
-- **Vídeo analizado** (LuisCanary, «Cómo crear un terreno en Unity SUPER rápido»): explica cómo esculpir un terreno de Unity, pintar capas de textura y repartir árboles y hierba. Propuesta pendiente: cambiar el suelo plano por un terreno con colinas en los bordes y las texturas Poly Haven pintadas, dejando planas las zonas de combate.
+- **Vídeo analizado** (LuisCanary, «Cómo crear un terreno en Unity SUPER rápido»): explica cómo esculpir un terreno de Unity, pintar capas de textura y repartir árboles y hierba. Aplicado: el suelo es un terreno de Unity de 192x192 m generado por código (TerrenoMundo.asset). La zona de juego es plana dentro de los muros y fuera hay montañas de hasta unos 20 m con ruido Perlin. Tiene 6 capas pintadas con bordes irregulares (tierra, hojarasca, roca de ruinas, adoquín, adoquín del altar y roca de montaña), 140 árboles de fondo y niebla suave.
 
 ## Pruebas
 - **EditMode 81/81** y **PlayMode 113/113** en Unity 6000.2.12f1 (incluye 6 pruebas de progresión: forja atómica, banco, armadura sin curación gratis, diferencia de nivel, botín y aviso al grupo).

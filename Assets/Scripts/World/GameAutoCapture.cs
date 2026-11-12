@@ -79,6 +79,21 @@ namespace Vhaldren.Gameplay.World
                 Physics.SyncTransforms();
             }
 
+            if (player != null)
+            {
+                // Vista alejada desde una esquina: terreno pintado, muros y montañas.
+                player.transform.position = new Vector3(-36f, 1.08f, -34f);
+                Physics.SyncTransforms();
+                Vhaldren.Gameplay.CameraSystem.SimpleFollowCamera follow =
+                    Camera.main != null ? Camera.main.GetComponent<Vhaldren.Gameplay.CameraSystem.SimpleFollowCamera>() : null;
+                follow?.SetZoom(2.2f, true);
+                yield return new WaitForSeconds(1.2f);
+                yield return Shot("9-terreno-montanas.png");
+                follow?.SetZoom(1f, true);
+                player.transform.position = new Vector3(0f, 1.08f, -24f);
+                Physics.SyncTransforms();
+            }
+
             if (DayNightCycle.Active != null)
             {
                 DayNightCycle.Active.SetElapsed((3f * 24f + 14f) * DayNightCycle.DaySeconds / 24f);

@@ -119,21 +119,15 @@ namespace Vhaldren.EditorTools
             Transform props = ChildRoot(root, "Naturaleza y ruinas");
             Transform enemies = ChildRoot(root, "Enemigos");
 
-            // Piso fisico continuo: sin saltos entre regiones ni numerosos colliders por baldosa.
-            Primitive("Suelo fisico", PrimitiveType.Cube, environment,
-                new Vector3(0f, -0.55f, 0f), new Vector3(92f, 1.1f, 92f), ground, true);
-
-            // Capas visuales ultrafinas SIN colision: terreno continuo y zonas diferenciadas.
-            Surface("Region forestal", environment, new Vector3(-29f, 0.005f, -1f),
-                new Vector3(32f, 0.01f, 88f), forest);
-            Surface("Region de ruinas", environment, new Vector3(29f, 0.006f, -1f),
-                new Vector3(32f, 0.012f, 88f), ruins);
-            Surface("Camino central", environment, new Vector3(0f, 0.008f, -2f),
-                new Vector3(13f, 0.014f, 74f), path);
-            Surface("Cruce de caminos", environment, new Vector3(0f, 0.01f, 0f),
-                new Vector3(38f, 0.014f, 7f), path);
-            Surface("Patio del altar", environment, new Vector3(0f, 0.012f, 30f),
-                new Vector3(25f, 0.014f, 25f), crimson);
+            // Terreno de Unity (como en el video de LuisCanary, pero generado por codigo):
+            // zona de juego plana dentro de los muros, montanas fuera y texturas pintadas
+            // por region. Se llama "Suelo fisico" para que el validador lo reconozca.
+            BuildTerrain(environment);
+            BackdropForest(props, bark, leaves);
+            RenderSettings.fog = true;
+            RenderSettings.fogMode = FogMode.ExponentialSquared;
+            RenderSettings.fogColor = new Color(0.16f, 0.15f, 0.19f);
+            RenderSettings.fogDensity = 0.011f;
 
             // Limites fisicos: el usuario no puede caer al vacio durante esta prueba.
             Primitive("Muro norte", PrimitiveType.Cube, props,
@@ -472,6 +466,153 @@ namespace Vhaldren.EditorTools
             else
                 item.isStatic = true;
             return item;
+        }
+
+        // -- Terreno ------------------------------------------------------
+        private const string TerrainFolder = "Assets/WorldPrototype/Terrain";
+        private const float TerrainSize = 192f;
+        private const float TerrainHeight = 26f;
+        private const float TerrainBase = 1f;      // metros bajo el suelo jugable
+        private const float PlayableHalf = 46f;    // dentro de los muros: plano
+
+        /// <summary>Altura del terreno en coordenadas del mundo (0 = suelo jugable).</summary>
+        public static float TerrainHeightAt(float x, float z)
+        {
+            float edge = Mathf.Max(Mathf.Abs(x), Mathf.Abs(z));
+            if (edge <= PlayableHalf + 0.5f)
+                return 0f;
+            float t = Mathf.Clamp01((edge - PlayableHalf - 0.5f) / 16f);
+            t = t * t * (3f - 2f * t);
+            float ridges = Mathf.PerlinNoise(x * 0.028f + 13.1f, z * 0.028f + 7.7f);
+            float detail = Mathf.PerlinNoise(x * 0.09f + 3.3f, z * 0.09f + 9.1f);
+            return t * (5f + 15f * ridges + 2.5f * detail);
+        }
+
+        private static TerrainLayer Layer(string name, string textureId, float tile, Color tint)
+        {
+            string path = TerrainFolder + "/" + name + ".terrainlayer";
+            TerrainLayer layer = AssetDatabase.LoadAssetAtPath<TerrainLayer>(path);
+            if (layer == null)
+            {
+                layer = new TerrainLayer();
+                AssetDatabase.CreateAsset(layer, path);
+            }
+            string folder = PolyHavenFolder + "/" + textureId;
+            layer.diffuseTexture = AssetDatabase.LoadAssetAtPath<Texture2D>(folder + "/color.jpg");
+            TextureImporter normalImporter = AssetImporter.GetAtPath(folder + "/normal.jpg") as TextureImporter;
+            if (normalImporter != null && normalImporter.textureType != TextureImporterType.NormalMap)
+            {
+                normalImporter.textureType = TextureImporterType.NormalMap;
+                normalImporter.SaveAndReimport();
+            }
+            layer.normalMapTexture = AssetDatabase.LoadAssetAtPath<Texture2D>(folder + "/normal.jpg");
+            layer.tileSize = new Vector2(tile, tile);
+            layer.diffuseRemapMax = new Vector4(tint.r, tint.g, tint.b, 1f);
+            layer.smoothness = 0.08f;
+            EditorUtility.SetDirty(layer);
+            return layer;
+        }
+
+        private static void BuildTerrain(Transform parent)
+        {
+            if (!AssetDatabase.IsValidFolder(TerrainFolder))
+                AssetDatabase.CreateFolder("Assets/WorldPrototype", "Terrain");
+            string dataPath = TerrainFolder + "/TerrenoMundo.asset";
+            AssetDatabase.DeleteAsset(dataPath);
+            TerrainData data = new TerrainData { heightmapResolution = 257, alphamapResolution = 256 };
+            data.size = new Vector3(TerrainSize, TerrainHeight, TerrainSize);
+            AssetDatabase.CreateAsset(data, dataPath);
+
+            int hr = data.heightmapResolution;
+            float[,] heights = new float[hr, hr];
+            for (int zi = 0; zi < hr; zi++)
+                for (int xi = 0; xi < hr; xi++)
+                {
+                    float x = -TerrainSize * 0.5f + TerrainSize * xi / (hr - 1);
+                    float z = -TerrainSize * 0.5f + TerrainSize * zi / (hr - 1);
+                    heights[zi, xi] = (TerrainHeightAt(x, z) + TerrainBase) / TerrainHeight;
+                }
+            data.SetHeights(0, 0, heights);
+
+            data.terrainLayers = new[]
+            {
+                Layer("Tierra", "brown_mud_rocks_01", 5f, new Color(0.78f, 0.74f, 0.72f)),
+                Layer("Hojarasca", "forest_leaves_02", 4f, new Color(0.7f, 0.78f, 0.64f)),
+                Layer("RocaRuinas", "aerial_rocks_02", 6f, new Color(0.75f, 0.75f, 0.8f)),
+                Layer("Adoquin", "cobblestone_floor_08", 3f, new Color(0.9f, 0.85f, 0.8f)),
+                Layer("AdoquinAltar", "cobblestone_floor_13", 3f, new Color(0.85f, 0.45f, 0.48f)),
+                Layer("Montana", "dark_rock", 7f, new Color(0.7f, 0.7f, 0.75f)),
+            };
+
+            int ar = data.alphamapResolution;
+            float[,,] alpha = new float[ar, ar, 6];
+            for (int zi = 0; zi < ar; zi++)
+                for (int xi = 0; xi < ar; xi++)
+                {
+                    float x = -TerrainSize * 0.5f + TerrainSize * (xi + 0.5f) / ar;
+                    float z = -TerrainSize * 0.5f + TerrainSize * (zi + 0.5f) / ar;
+                    // Bordes irregulares: el ruido desplaza los limites unos metros.
+                    float wobble = (Mathf.PerlinNoise(x * 0.12f + 5f, z * 0.12f + 2f) - 0.5f) * 5f;
+                    float[] w = new float[6];
+                    float edge = Mathf.Max(Mathf.Abs(x), Mathf.Abs(z));
+                    if (edge > PlayableHalf + 1f)
+                    {
+                        float slope = Mathf.Clamp01(TerrainHeightAt(x, z) / 6f);
+                        w[5] = slope;
+                        w[1] = 1f - slope;
+                    }
+                    else
+                    {
+                        w[0] = 1f;
+                        w[1] = Band(-x - 13f + wobble, 4f);
+                        w[2] = Band(x - 13f + wobble, 4f);
+                        bool road = Mathf.Abs(x) < 6.5f + wobble * 0.25f && z > -39f && z < 35f;
+                        bool cross = Mathf.Abs(z) < 3.5f + wobble * 0.2f && Mathf.Abs(x) < 19f;
+                        bool patio = Mathf.Abs(x) < 12.5f + wobble * 0.3f && z > 17.5f && z < 43f;
+                        if (patio) w[4] = 1.4f;
+                        else if (road || cross) w[3] = 1.2f;
+                    }
+                    float sum = 0f;
+                    for (int l = 0; l < 6; l++) sum += w[l];
+                    for (int l = 0; l < 6; l++) alpha[zi, xi, l] = sum > 0f ? w[l] / sum : (l == 0 ? 1f : 0f);
+                }
+            data.SetAlphamaps(0, 0, alpha);
+            EditorUtility.SetDirty(data);
+
+            GameObject terrainObject = Terrain.CreateTerrainGameObject(data);
+            terrainObject.name = "Suelo fisico";
+            terrainObject.transform.SetParent(parent, false);
+            terrainObject.transform.position = new Vector3(-TerrainSize * 0.5f, -TerrainBase, -TerrainSize * 0.5f);
+            Terrain terrain = terrainObject.GetComponent<Terrain>();
+            terrain.heightmapPixelError = 4f;
+            terrain.basemapDistance = 120f;
+            terrain.drawInstanced = true;
+        }
+
+        private static float Band(float distanceInside, float blend) => Mathf.Clamp01(distanceInside / blend + 0.5f);
+
+        /// <summary>Bosque decorativo fuera de los muros (sin colision ni recoleccion).</summary>
+        private static void BackdropForest(Transform parent, Material bark, Material leaves)
+        {
+            Transform root = ChildRoot(parent, "Bosque de fondo");
+            System.Random rng = new System.Random(42);
+            for (int i = 0; i < 140; i++)
+            {
+                float x = -88f + (float)rng.NextDouble() * 176f;
+                float z = -88f + (float)rng.NextDouble() * 176f;
+                if (Mathf.Max(Mathf.Abs(x), Mathf.Abs(z)) < PlayableHalf + 4f)
+                    continue;
+                float y = TerrainHeightAt(x, z);
+                if (y > 14f)
+                    continue;
+                float size = 0.9f + (float)rng.NextDouble() * 0.9f;
+                Transform tree = ChildRoot(root, "Arbol lejano");
+                Vector3 p = new Vector3(x, y, z);
+                Primitive("Tronco", PrimitiveType.Cylinder, tree, p + Vector3.up * (1.75f * size),
+                    new Vector3(0.7f * size, 1.75f * size, 0.7f * size), bark, false);
+                Primitive("Copa", PrimitiveType.Sphere, tree, p + Vector3.up * (4.1f * size),
+                    new Vector3(3.3f * size, 3.0f * size, 3.3f * size), leaves, false);
+            }
         }
 
         private static void Surface(string name, Transform parent,
