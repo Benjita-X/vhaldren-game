@@ -76,8 +76,20 @@ namespace Vhaldren.EditorTools
                 playerFeedback = player.AddComponent<CombatDamageFeedback>();
             playerFeedback.ConfigureForPlayer();
             // Supervivencia 015: inventario, construccion (B), recoleccion (E) e interfaz.
-            if (player.GetComponent<SurvivalInventory>() == null)
-                player.AddComponent<SurvivalInventory>();
+            SurvivalInventory survival = player.GetComponent<SurvivalInventory>();
+            if (survival == null)
+                survival = player.AddComponent<SurvivalInventory>();
+            // Nuevas escenas comienzan sin recursos magicos de demostracion:
+            // el jugador recoge madera/fibra, fabrica picos y extrae mineral.
+            SerializedObject survivalConfig = new SerializedObject(survival);
+            SerializedProperty demoSupplies = survivalConfig.FindProperty("grantDemoSupplies");
+            if (demoSupplies != null)
+            {
+                demoSupplies.boolValue = false;
+                survivalConfig.ApplyModifiedPropertiesWithoutUndo();
+            }
+            if (player.GetComponent<SurvivalToolbelt>() == null)
+                player.AddComponent<SurvivalToolbelt>();
             if (player.GetComponent<PlayerBuilder>() == null)
                 player.AddComponent<PlayerBuilder>();
             if (player.GetComponent<PlayerGatherer>() == null)
