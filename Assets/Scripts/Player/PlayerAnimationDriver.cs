@@ -1,5 +1,6 @@
 using UnityEngine;
 using Vhaldren.Gameplay.Survival;
+using Vhaldren.Gameplay.Combat;
 
 namespace Vhaldren.Gameplay.Player
 {
@@ -18,6 +19,12 @@ namespace Vhaldren.Gameplay.Player
         public static readonly int ShootId = Animator.StringToHash("Shoot");
         public static readonly int HarvestId = Animator.StringToHash("Harvest");
         public static readonly int HarvestStyleId = Animator.StringToHash("HarvestStyle");
+        public static readonly int GuardingId = Animator.StringToHash("Guarding");
+        public static readonly int GuardStyleId = Animator.StringToHash("GuardStyle");
+        public static readonly int ParryId = Animator.StringToHash("Parry");
+        public static readonly int SwordAttackId = Animator.StringToHash("SwordAttack");
+        public static readonly int RuneSpellId = Animator.StringToHash("RuneSpell");
+        public static readonly int FrostSpellId = Animator.StringToHash("FrostSpell");
 
         /// <summary>Direcciones de esquiva tal como las espera el Animator.</summary>
         public enum DodgeDirection { Forward = 0, Backward = 1, Left = 2, Right = 3 }
@@ -33,6 +40,9 @@ namespace Vhaldren.Gameplay.Player
 
         private bool wasDashing;
         private int lastShots;
+        private CombatDefense defense;
+        private RuntimeAnimatorController lastController;
+        private bool hasGuardParameters;
 
         private void Awake()
         {
@@ -42,12 +52,26 @@ namespace Vhaldren.Gameplay.Player
                 shooter = GetComponent<LocalPlayerShooter>();
             if (shooter != null)
                 lastShots = shooter.ShotsFired;
+            defense = GetComponent<CombatDefense>();
         }
 
         private void LateUpdate()
         {
             if (motor == null || animator == null || animator.runtimeAnimatorController == null)
                 return;
+
+            RefreshControllerCapabilities();
+            if (defense == null)
+                defense = GetComponent<CombatDefense>();
+            if (hasGuardParameters)
+            {
+                CombatDefense.GuardMode guard = defense != null
+                    ? defense.Guard : CombatDefense.GuardMode.None;
+                animator.SetInteger(GuardStyleId,
+                    guard == CombatDefense.GuardMode.ArcaneWard ? 2 : 1);
+                animator.SetBool(GuardingId,
+                    guard != CombatDefense.GuardMode.None);
+            }
 
             Vector3 forward = visualRoot != null ? visualRoot.forward : transform.forward;
             Vector2 local = LocalMoveDirection(motor.ActualVelocity, forward, runSpeed);
@@ -69,6 +93,41 @@ namespace Vhaldren.Gameplay.Player
                 lastShots = shooter.ShotsFired;
                 animator.SetTrigger(ShootId);
             }
+        }
+
+        /// <summary>Activar clips de combate solamente si el controller los contiene.</summary>
+        public bool TriggerSwordAttack() => TriggerIfAvailable(SwordAttackId);
+        public bool TriggerRuneSpell() => TriggerIfAvailable(RuneSpellId);
+        public bool TriggerFrostSpell() => TriggerIfAvailable(FrostSpellId);
+        public bool TriggerParry() => TriggerIfAvailable(ParryId);
+
+        private bool TriggerIfAvailable(int hash)
+        {
+            if (animator == null || animator.runtimeAnimatorController == null)
+                return false;
+            if (!HasParameter(hash, AnimatorControllerParameterType.Trigger))
+                return false;
+            animator.SetTrigger(hash);
+            return true;
+        }
+
+        private bool HasParameter(int hash, AnimatorControllerParameterType type)
+        {
+            if (animator == null || animator.runtimeAnimatorController == null)
+                return false;
+            foreach (AnimatorControllerParameter parameter in animator.parameters)
+                if (parameter.nameHash == hash && parameter.type == type)
+                    return true;
+            return false;
+        }
+
+        private void RefreshControllerCapabilities()
+        {
+            if (lastController == animator.runtimeAnimatorController)
+                return;
+            lastController = animator.runtimeAnimatorController;
+            hasGuardParameters = HasParameter(GuardingId, AnimatorControllerParameterType.Bool) &&
+                HasParameter(GuardStyleId, AnimatorControllerParameterType.Int);
         }
 
         /// <summary>
