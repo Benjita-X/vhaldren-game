@@ -250,13 +250,23 @@ namespace Vhaldren.Gameplay.Survival
             Ray ray = viewCamera.ScreenPointToRay(SurvivalKeys.Pointer);
             int count = Physics.RaycastNonAlloc(ray, hits, 200f, Physics.DefaultRaycastLayers,
                 QueryTriggerInteraction.Ignore);
+            RaycastHit[] complete = null;
+            if (count >= hits.Length)
+            {
+                complete = Physics.RaycastAll(ray, 200f, Physics.DefaultRaycastLayers,
+                    QueryTriggerInteraction.Ignore);
+                count = complete.Length;
+            }
             float bestDistance = float.PositiveInfinity;
             for (int i = 0; i < count; i++)
             {
-                if (hits[i].collider.transform.IsChildOf(transform) || hits[i].distance >= bestDistance)
+                RaycastHit candidate = complete != null ? complete[i] : hits[i];
+                if (candidate.collider == null ||
+                    candidate.collider.transform.IsChildOf(transform) ||
+                    candidate.distance >= bestDistance)
                     continue;
-                bestDistance = hits[i].distance;
-                best = hits[i];
+                bestDistance = candidate.distance;
+                best = candidate;
             }
             return bestDistance < float.PositiveInfinity;
         }
