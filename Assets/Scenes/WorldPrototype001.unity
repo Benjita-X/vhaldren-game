@@ -4518,7 +4518,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Vhaldren.Gameplay::Vhaldren.Gameplay.Survival.SurvivalInventory
   maxItems: 240
-  grantDemoSupplies: 1
+  grantDemoSupplies: 0
 --- !u!114 &717056728
 MonoBehaviour:
   m_ObjectHideFlags: 0
