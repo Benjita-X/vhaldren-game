@@ -27,6 +27,18 @@ namespace Vhaldren.Gameplay.Combat
         }
     }
 
+    /// <summary>Componentes que alteran el daño recibido (maldicion, esencia, vulnerabilidad).</summary>
+    public interface IDamageTakenModifier
+    {
+        float IncomingMultiplier { get; }
+    }
+
+    /// <summary>Escudos que absorben daño antes de restar PV. Devuelven el daño que sobra.</summary>
+    public interface IDamageAbsorber
+    {
+        float Absorb(float amount);
+    }
+
     /// <summary>
     /// Unica puerta opcional para ataques nuevos. Las armas eligen su clase de daño;
     /// la salud existente sigue enviando eventos del daño REAL aplicado.
@@ -43,6 +55,10 @@ namespace Vhaldren.Gameplay.Combat
         private CombatHealth health;
         private CombatDefense defense;
 
+        private readonly System.Collections.Generic.List<IDamageTakenModifier> modifiers =
+            new System.Collections.Generic.List<IDamageTakenModifier>();
+        private readonly System.Collections.Generic.List<IDamageAbsorber> absorbers =
+            new System.Collections.Generic.List<IDamageAbsorber>();
         public event Action<CombatDamageResult> Resolved;
         public float LastAppliedDamage { get; private set; }
 
@@ -88,6 +104,20 @@ namespace Vhaldren.Gameplay.Combat
                 amount *= protection.Multiplier;
                 parried = protection.Parried;
                 evaded = protection.Evaded;
+            }
+
+            if (amount > 0f)
+            {
+                GetComponents(modifiers);
+                for (int i = 0; i < modifiers.Count; i++)
+                {
+                    float factor = modifiers[i].IncomingMultiplier;
+                    if (!float.IsNaN(factor) && !float.IsInfinity(factor))
+                        amount *= Mathf.Clamp(factor, 0.1f, 3f);
+                }
+                GetComponents(absorbers);
+                for (int i = 0; i < absorbers.Count && amount > 0f; i++)
+                    amount = Mathf.Clamp(absorbers[i].Absorb(amount), 0f, amount);
             }
 
             amount = Mathf.Max(0f, amount);

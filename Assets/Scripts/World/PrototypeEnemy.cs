@@ -51,6 +51,7 @@ namespace Vhaldren.Gameplay.World
         public bool IsDefeated => defeated;
         public bool IsSlowed => !defeated && Time.time < slowUntil;
         public bool IsAttackTelegraphed => windingUp;
+        public bool IsStaggered => !defeated && Time.time < staggerUntil;
         public event Action<PrototypeEnemy> Defeated;
 
         private void Awake()
@@ -254,8 +255,11 @@ namespace Vhaldren.Gameplay.World
             {
                 // El receptor central resuelve dash/parry/bloqueos y puede
                 // mostrar ESQUIVA sin fingir que se descontaron PV.
+                // Deslumbrado (Lumancia) reduce el daño que causa este enemigo.
+                float outgoing = Mathf.Max(0f, attackDamage) *
+                    Vhaldren.Gameplay.Magic.StatusEffects.OutgoingFor(this);
                 CombatDamageResult response = defender.Receive(
-                    Mathf.Max(0f, attackDamage), activeAttackKind, transform.position);
+                    outgoing, activeAttackKind, transform.position);
                 if (response.Parried)
                     InterruptAttack(0.70f);
             }

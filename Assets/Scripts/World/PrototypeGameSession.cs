@@ -80,6 +80,11 @@ namespace Vhaldren.Gameplay.World
                     player.gameObject.AddComponent<PlayerCombatAbilities>();
                 if (player.GetComponent<PlayerControlsGuide>() == null)
                     player.gameObject.AddComponent<PlayerControlsGuide>();
+                // Magia de escuelas, esencia y estado de combate (019).
+                if (player.GetComponent<Vhaldren.Gameplay.Magic.PlayerSpellbook>() == null)
+                    player.gameObject.AddComponent<Vhaldren.Gameplay.Magic.PlayerSpellbook>();
+                if (player.GetComponent<Vhaldren.Gameplay.Magic.PlayerFeeding>() == null)
+                    player.gameObject.AddComponent<Vhaldren.Gameplay.Magic.PlayerFeeding>();
 
                 // Solo el mundo usa flechas fisicas; las pruebas y la sala
                 // de entrenamiento conservan el disparo legacy configurable.
@@ -125,6 +130,10 @@ namespace Vhaldren.Gameplay.World
                 playerHealth.Defeated += OnPlayerDefeated;
 
             enemies = FindObjectsByType<PrototypeEnemy>(FindObjectsSortMode.None);
+            if (Application.isPlaying)
+                foreach (PrototypeEnemy candidate in enemies)
+                    if (candidate != null && candidate.GetComponent<Vhaldren.Gameplay.Magic.EssenceSource>() == null)
+                        candidate.gameObject.AddComponent<Vhaldren.Gameplay.Magic.EssenceSource>();
             minionCount = 0;
             defeated.Clear();
             bossDefeated = false;
@@ -301,6 +310,7 @@ namespace Vhaldren.Gameplay.World
             if (character != null)
                 character.enabled = true;
             playerHealth.ResetToFull();
+            player.GetComponent<Vhaldren.Gameplay.Magic.PlayerSpellbook>()?.ResetCooldowns();
             if (playerMotor != null)
                 playerMotor.enabled = true;
             if (playerShooter != null)
