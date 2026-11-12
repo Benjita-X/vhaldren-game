@@ -29,6 +29,15 @@ namespace Vhaldren.Gameplay.Player
         [SerializeField, Min(0f)] private float runeStaminaCost = 26f;
         [SerializeField, Min(0.1f)] private float runeWindup = 0.55f;
 
+        [Header("F — Onda de escarcha")]
+        [SerializeField, Min(0f)] private float frostDamage = 14f;
+        [SerializeField, Min(0.5f)] private float frostRange = 6f;
+        [SerializeField, Range(10f, 170f)] private float frostConeDegrees = 75f;
+        [SerializeField, Min(0.1f)] private float frostCooldown = 6f;
+        [SerializeField, Min(0f)] private float frostStaminaCost = 22f;
+        [SerializeField, Min(0.1f)] private float frostSlowSeconds = 1.75f;
+        [SerializeField, Range(0.25f, 1f)] private float frostSpeedMultiplier = 0.55f;
+
         private Collider[] candidates = new Collider[48];
         private readonly HashSet<CombatDamageReceiver> applied = new HashSet<CombatDamageReceiver>();
         private CombatHealth health;
@@ -37,6 +46,7 @@ namespace Vhaldren.Gameplay.Player
         private PlayerDamageTracker damageTracker;
         private float swordReadyAt;
         private float runeReadyAt;
+        private float frostReadyAt;
         private float nextLabel;
         private string labelText = "";
         private static Material effectMaterial;
@@ -44,6 +54,8 @@ namespace Vhaldren.Gameplay.Player
         public int SwordTargetsHit { get; private set; }
         public int CounterStrikes { get; private set; }
         public int RuneTargetsHit { get; private set; }
+        public int FrostTargetsHit { get; private set; }
+        public float FrostCooldownRemaining => Mathf.Max(0f, frostReadyAt - Time.time);
         public float SwordCooldownRemaining => Mathf.Max(0f, swordReadyAt - Time.time);
         public float RuneCooldownRemaining => Mathf.Max(0f, runeReadyAt - Time.time);
 
@@ -63,6 +75,8 @@ namespace Vhaldren.Gameplay.Player
                     TrySwordSweep();
                 if (RunePressed())
                     TryRunePulse();
+                if (FrostPressed())
+                    TryFrostWave();
             }
 
             if (Time.time >= nextLabel)
@@ -73,7 +87,10 @@ namespace Vhaldren.Gameplay.Player
                         SwordCooldownRemaining.ToString("0.0") + "s") +
                     "   |   T PULSO RÚNICO: " +
                     (RuneCooldownRemaining <= 0f ? "LISTO" :
-                        RuneCooldownRemaining.ToString("0.0") + "s");
+                        RuneCooldownRemaining.ToString("0.0") + "s") +
+                    "   |   F ESCARCHA: " +
+                    (FrostCooldownRemaining <= 0f ? "LISTA" :
+                        FrostCooldownRemaining.ToString("0.0") + "s");
             }
         }
 
@@ -101,6 +118,69 @@ namespace Vhaldren.Gameplay.Player
             Vector3 center = transform.position;
             StartCoroutine(RuneSequence(center));
             return true;
+        }
+
+        public bool TryFrostWave()
+        {
+            if (health == null || health.IsDefeated || Time.time < frostReadyAt ||
+                defense == null || !defense.TrySpend(frostStaminaCost))
+                return false;
+
+            frostReadyAt = Time.time + Mathf.Max(0.1f, frostCooldown);
+            Vector3 facing = motor != null ? motor.CurrentFacing : transform.forward;
+            facing.y = 0f;
+            if (facing.sqrMagnitude < 0.001f)
+                facing = Vector3.forward;
+            StartCoroutine(FrostSequence(facing.normalized));
+            return true;
+        }
+
+        private IEnumerator FrostSequence(Vector3 direction)
+        {
+            Vector3 point = transform.position;
+            MakeArc(point, direction, frostRange,
+                new Color(0.35f, 0.92f, 1f), 0.50f);
+            yield return new WaitForSeconds(0.25f);
+
+            if (health == null || health.IsDefeated)
+                yield break;
+            Vector3 origin = transform.position;
+            int count = QueryEnemies(origin, frostRange);
+            float halfConeCos = Mathf.Cos(Mathf.Clamp(frostConeDegrees, 10f, 170f) *
+                Mathf.Deg2Rad * 0.5f);
+            for (int i = 0; i < count; i++)
+            {
+                Collider body = candidates[i];
+                if (body == null)
+                    continue;
+                CombatDamageReceiver receiver =
+                    body.GetComponentInParent<CombatDamageReceiver>();
+                if (receiver == null || !applied.Add(receiver) ||
+                    receiver.transform.IsChildOf(transform))
+                    continue;
+
+                Vector3 delta = receiver.transform.position - origin;
+                delta.y = 0f;
+                if (delta.sqrMagnitude < 0.001f ||
+                    delta.sqrMagnitude > frostRange * frostRange ||
+                    Vector3.Dot(direction, delta.normalized) < halfConeCos ||
+                    !Unobstructed(receiver, origin + Vector3.up * 0.55f))
+                    continue;
+
+                CombatDamageResult result = receiver.Receive(
+                    frostDamage, CombatDamageKind.Magic, origin);
+                if (result.Applied <= 0f)
+                    continue;
+
+                FrostTargetsHit++;
+                if (damageTracker == null)
+                    damageTracker = GetComponent<PlayerDamageTracker>();
+                if (damageTracker != null)
+                    damageTracker.Record(result.Applied, CombatDamageKind.Magic);
+                PrototypeEnemy enemy = receiver.GetComponent<PrototypeEnemy>();
+                if (enemy != null)
+                    enemy.ApplySlow(frostSpeedMultiplier, frostSlowSeconds);
+            }
         }
 
         private IEnumerator SwordSequence(bool counter)
@@ -293,6 +373,17 @@ namespace Vhaldren.Gameplay.Player
             return Keyboard.current != null && Keyboard.current.vKey.wasPressedThisFrame;
 #elif ENABLE_LEGACY_INPUT_MANAGER
             return Input.GetKeyDown(KeyCode.V);
+#else
+            return false;
+#endif
+        }
+
+        private static bool FrostPressed()
+        {
+#if ENABLE_INPUT_SYSTEM
+            return Keyboard.current != null && Keyboard.current.fKey.wasPressedThisFrame;
+#elif ENABLE_LEGACY_INPUT_MANAGER
+            return Input.GetKeyDown(KeyCode.F);
 #else
             return false;
 #endif
