@@ -156,7 +156,7 @@ namespace Vhaldren.Gameplay.UI
         {
             GUI.Label(new Rect(area.x, area.y, area.width, 30f),
                 waiting ? "<color=#f5c96b>Pulsa la nueva tecla para «" + LabelOf(waitingFor) + "» (Esc cancela)</color>"
-                        : "Haz clic en una tecla para cambiarla. Si ya estaba en uso, se intercambian. Clic izquierdo = ballesta, rueda = zoom.",
+                        : "Haz clic en una tecla para cambiarla. Si ya estaba en uso, se intercambian. Clic = ballesta, rueda = zoom; Mayús libre y Ctrl+Z deshacer son atajos fijos.",
                 MenuStyle.Small);
             Rect view = new Rect(area.x, area.y + 36f, area.width, area.height - 36f);
             float rowHeight = 38f;
