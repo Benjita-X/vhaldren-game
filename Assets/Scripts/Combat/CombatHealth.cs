@@ -27,6 +27,8 @@ namespace Vhaldren.Gameplay.Combat
         }
         public bool IsDefeated => CurrentHealth <= 0f;
         public event Action<float> Damaged;
+        /// <summary>Solo se emite por salud efectivamente recuperada, sin overheal.</summary>
+        public event Action<float> Healed;
         public event Action Defeated;
 
         private void Awake() => ResetToFull();
@@ -60,6 +62,8 @@ namespace Vhaldren.Gameplay.Combat
             float available = Mathf.Max(0f, MaximumHealth - currentHealth);
             float applied = Mathf.Min(available, amount);
             currentHealth = Mathf.Min(MaximumHealth, currentHealth + applied);
+            if (applied > 0f)
+                Healed?.Invoke(applied);
             return applied;
         }
 
