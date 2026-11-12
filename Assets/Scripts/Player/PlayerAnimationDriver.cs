@@ -18,6 +18,14 @@ namespace Vhaldren.Gameplay.Player
         public static readonly int ShootId = Animator.StringToHash("Shoot");
         public static readonly int HarvestId = Animator.StringToHash("Harvest");
         public static readonly int HarvestStyleId = Animator.StringToHash("HarvestStyle");
+        public static readonly int SwordActionId = Animator.StringToHash("SwordAction");
+        public static readonly int SpellActionId = Animator.StringToHash("SpellAction");
+        public static readonly int FrostActionId = Animator.StringToHash("FrostAction");
+        public static readonly int ShieldActionId = Animator.StringToHash("ShieldAction");
+        public static readonly int WardActionId = Animator.StringToHash("WardAction");
+        public static readonly int ParryActionId = Animator.StringToHash("ParryAction");
+
+        public enum CombatAction { Sword, Spell, Frost, Shield, Ward, Parry }
 
         /// <summary>Direcciones de esquiva tal como las espera el Animator.</summary>
         public enum DodgeDirection { Forward = 0, Backward = 1, Left = 2, Right = 3 }
@@ -100,6 +108,39 @@ namespace Vhaldren.Gameplay.Player
             animator.SetInteger(HarvestStyleId, style);
             animator.SetTrigger(HarvestId);
             return true;
+        }
+
+        /// <summary>
+        /// Lanza el clip de combate que corresponde a la accion aceptada.
+        /// Si el controlador es antiguo, omite el trigger sin bloquear controles.
+        /// Actualizarlo desde Vhaldren/Personaje/Preparar personaje KayKit.
+        /// </summary>
+        public bool PlayCombatAction(CombatAction action)
+        {
+            if (animator == null || animator.runtimeAnimatorController == null)
+                return false;
+
+            int trigger;
+            switch (action)
+            {
+                case CombatAction.Sword: trigger = SwordActionId; break;
+                case CombatAction.Spell: trigger = SpellActionId; break;
+                case CombatAction.Frost: trigger = FrostActionId; break;
+                case CombatAction.Shield: trigger = ShieldActionId; break;
+                case CombatAction.Ward: trigger = WardActionId; break;
+                case CombatAction.Parry: trigger = ParryActionId; break;
+                default: return false;
+            }
+            foreach (AnimatorControllerParameter parameter in animator.parameters)
+            {
+                if (parameter.nameHash == trigger &&
+                    parameter.type == AnimatorControllerParameterType.Trigger)
+                {
+                    animator.SetTrigger(trigger);
+                    return true;
+                }
+            }
+            return false;
         }
 
         /// <summary>
