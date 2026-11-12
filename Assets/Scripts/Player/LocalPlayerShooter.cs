@@ -31,6 +31,13 @@ namespace Vhaldren.Gameplay.Player
         [SerializeField, Min(0.05f)] private float arrowCooldown = 0.38f;
 
         private float nextArrowAt;
+        private const int ShotBufferCapacity = 2;
+        private readonly Vector3[] bufferedAimPoints = new Vector3[ShotBufferCapacity];
+        private readonly float[] bufferedUntil = new float[ShotBufferCapacity];
+        private int bufferedCount;
+#if ENABLE_INPUT_SYSTEM
+        private InputAction fireAction;
+#endif
 
         private RaycastHit[] aimHits = new RaycastHit[AimHitCapacity];
         private LineRenderer tracer;
@@ -47,11 +54,15 @@ namespace Vhaldren.Gameplay.Player
         public float TotalDamageDealt { get; private set; }
         public float LastDamageDealt { get; private set; }
         public bool UsesPhysicalArrows => usePhysicalArrows;
+        public int BufferedShots => bufferedCount;
+        public int RejectedShotRequests { get; private set; }
 
         /// <summary>Activar flechas en el mundo sin cambiar el disparo legacy de tests.</summary>
         public void SetPhysicalArrows(bool enabled)
         {
             usePhysicalArrows = enabled;
+            if (!enabled)
+                bufferedCount = 0;
             if (!Application.isPlaying || shotOrigin == null)
                 return;
 
@@ -111,8 +122,37 @@ namespace Vhaldren.Gameplay.Player
             tracer.enabled = false;
         }
 
+        private void OnEnable()
+        {
+#if ENABLE_INPUT_SYSTEM
+            // InputAction recibe cada evento performed, incluso si hay
+            // varios clics entre dos Update. Se evita perder el segundo clic
+            // por depender solo de wasPressedThisFrame.
+            if (fireAction == null)
+            {
+                fireAction = new InputAction("CrossbowFire", InputActionType.Button,
+                    "<Mouse>/leftButton");
+                fireAction.performed += OnFirePerformed;
+            }
+            fireAction.Enable();
+#endif
+        }
+
+#if ENABLE_INPUT_SYSTEM
+        private void OnFirePerformed(InputAction.CallbackContext context)
+        {
+            if (Mouse.current != null)
+                RequestShot(Mouse.current.position.ReadValue());
+        }
+#endif
+
         private void OnDisable()
         {
+#if ENABLE_INPUT_SYSTEM
+            if (fireAction != null)
+                fireAction.Disable();
+#endif
+            bufferedCount = 0;
             if (tracer != null)
                 tracer.enabled = false;
             tracerTimeRemaining = 0f;
@@ -120,6 +160,14 @@ namespace Vhaldren.Gameplay.Player
 
         private void OnDestroy()
         {
+#if ENABLE_INPUT_SYSTEM
+            if (fireAction != null)
+            {
+                fireAction.performed -= OnFirePerformed;
+                fireAction.Dispose();
+                fireAction = null;
+            }
+#endif
             if (tracerMaterial != null)
             {
                 if (Application.isPlaying)
@@ -131,6 +179,7 @@ namespace Vhaldren.Gameplay.Player
 
         private void Update()
         {
+            ProcessBufferedShot();
             if (viewCamera == null)
                 viewCamera = Camera.main;
 
@@ -147,8 +196,10 @@ namespace Vhaldren.Gameplay.Player
             if (TryGetAimPoint(pointer, out Vector3 aimPoint) && aimMarker != null)
                 aimMarker.position = aimPoint + Vector3.up * 0.025f;
 
+#if !ENABLE_INPUT_SYSTEM
             if (WasFirePressed())
-                FireAtScreenPosition(pointer);
+                RequestShot(pointer);
+#endif
         }
 
         /// <summary>Resuelve el punto exacto del mundo que atraviesa el pixel indicado.</summary>
@@ -177,12 +228,81 @@ namespace Vhaldren.Gameplay.Player
             return true;
         }
 
-        /// <summary>Dispara hacia el punto resuelto por la camara para esta posicion del mouse.</summary>
+        /// <summary>
+        /// Entrada del jugador con buffer de dos disparos. La mira se guarda
+        /// en coordenadas del mundo en el instante del clic. Cada peticion
+        /// aceptada conserva su propio impacto y crea su propio proyectil.
+        /// </summary>
+        public bool RequestShot(Vector2 screenPosition)
+        {
+            if (actionModifiers != null && !actionModifiers.AllowsAttack)
+            {
+                RejectedShotRequests++;
+                return false;
+            }
+            if (viewCamera == null)
+                viewCamera = Camera.main;
+            if (!TryGetAimPoint(screenPosition, out Vector3 aimPoint))
+            {
+                RejectedShotRequests++;
+                return false;
+            }
+
+            if (!usePhysicalArrows || (bufferedCount == 0 && Time.time >= nextArrowAt))
+                return FireAtAimPoint(aimPoint);
+
+            if (bufferedCount >= ShotBufferCapacity)
+            {
+                RejectedShotRequests++;
+                return false;
+            }
+
+            bufferedAimPoints[bufferedCount] = aimPoint;
+            bufferedUntil[bufferedCount] = Time.time +
+                Mathf.Max(0.8f, Mathf.Max(0.05f, arrowCooldown) * 3.5f);
+            bufferedCount++;
+            return true;
+        }
+
+        private void ProcessBufferedShot()
+        {
+            if (bufferedCount <= 0 || Time.time < nextArrowAt)
+                return;
+            if (!usePhysicalArrows || (actionModifiers != null &&
+                !actionModifiers.AllowsAttack))
+            {
+                RejectedShotRequests += bufferedCount;
+                bufferedCount = 0;
+                return;
+            }
+
+            // Cada Update procesa como maximo un disparo; respetar su propia
+            // recarga y nunca juntar dos peticiones en el mismo proyectil.
+            Vector3 aimPoint = bufferedAimPoints[0];
+            float expiry = bufferedUntil[0];
+            for (int i = 1; i < bufferedCount; i++)
+            {
+                bufferedAimPoints[i - 1] = bufferedAimPoints[i];
+                bufferedUntil[i - 1] = bufferedUntil[i];
+            }
+            bufferedCount--;
+            if (Time.time > expiry || !FireAtAimPoint(aimPoint))
+                RejectedShotRequests++;
+        }
+
+        /// <summary>Dispara hacia el punto resuelto por la camara.</summary>
         public bool FireAtScreenPosition(Vector2 screenPosition)
         {
             if (actionModifiers != null && !actionModifiers.AllowsAttack)
                 return false;
             if (!TryGetAimPoint(screenPosition, out Vector3 aimPoint))
+                return false;
+            return FireAtAimPoint(aimPoint);
+        }
+
+        private bool FireAtAimPoint(Vector3 aimPoint)
+        {
+            if (actionModifiers != null && !actionModifiers.AllowsAttack)
                 return false;
 
             Vector3 origin = shotOrigin != null
