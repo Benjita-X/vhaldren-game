@@ -1,4 +1,6 @@
 using UnityEngine;
+using Vhaldren.Gameplay.Player;
+using Vhaldren.Gameplay.Survival;
 #if ENABLE_INPUT_SYSTEM
 using UnityEngine.InputSystem;
 #endif
@@ -18,6 +20,10 @@ namespace Vhaldren.Gameplay.World
         [SerializeField] private Transform player;
 
         private VillageQuestJournal journal;
+        private PlayerActionModifiers actionModifiers;
+        private PlayerBuilder builder;
+        private int attackLock;
+        private int tradeIndex;
         private bool open;
         private string feedback = "";
         private float feedbackUntil;
@@ -29,6 +35,9 @@ namespace Vhaldren.Gameplay.World
         {
             player = target;
             journal = target != null ? target.GetComponent<VillageQuestJournal>() : null;
+            actionModifiers = target != null
+                ? target.GetComponent<PlayerActionModifiers>() : null;
+            builder = target != null ? target.GetComponent<PlayerBuilder>() : null;
         }
 
         private void Awake()
@@ -40,7 +49,7 @@ namespace Vhaldren.Gameplay.World
                     player = found.transform;
             }
             if (player != null)
-                journal = player.GetComponent<VillageQuestJournal>();
+                BindPlayer(player);
 
             if (transform.childCount == 0)
                 CreateVisuals();
@@ -51,16 +60,68 @@ namespace Vhaldren.Gameplay.World
             if (player == null || journal == null)
                 return;
 
-            if (!PlayerNearby)
+            if (!PlayerNearby || (builder != null && builder.IsBuilding))
             {
-                open = false;
+                SetOpen(false);
                 return;
             }
 
             if (OpenPressed())
-                open = !open;
-            if (open && ActionPressed())
+                SetOpen(!open);
+            if (!open)
+                return;
+            if (ActionPressed())
                 TryInteract();
+            if (CycleTradePressed())
+                tradeIndex = (tradeIndex + 1) % VillageTradeCatalog.Offers.Count;
+            if (BuyPressed())
+                TryBuyCurrentOffer();
+        }
+
+        private void SetOpen(bool requested)
+        {
+            if (requested == open)
+                return;
+            open = requested;
+            if (actionModifiers == null && player != null)
+                actionModifiers = player.GetComponent<PlayerActionModifiers>();
+            if (open && actionModifiers != null)
+                attackLock = actionModifiers.AddModifier(
+                    PlayerActionModifiers.LockedAction.Attack);
+            else if (!open && actionModifiers != null && attackLock != 0)
+            {
+                actionModifiers.RemoveModifier(attackLock);
+                attackLock = 0;
+            }
+        }
+
+        private void OnDisable() => SetOpen(false);
+
+        public VillageTradeResult TryBuyCurrentOffer()
+        {
+            if (journal == null || !PlayerNearby)
+                return VillageTradeResult.NoOffer;
+            VillageTradeResult result = journal.TryTrade(tradeIndex);
+            switch (result)
+            {
+                case VillageTradeResult.Purchased:
+                    feedback = "Trato cerrado. Materiales intercambiados.";
+                    break;
+                case VillageTradeResult.ReputationTooLow:
+                    feedback = "Aún no confían en ti: ayuda al pueblo.";
+                    break;
+                case VillageTradeResult.NoStock:
+                    feedback = "Sin existencias. Espera a la próxima caravana.";
+                    break;
+                case VillageTradeResult.InventoryFull:
+                    feedback = "La mochila no tiene espacio.";
+                    break;
+                default:
+                    feedback = "No tienes suficientes materiales para el trato.";
+                    break;
+            }
+            feedbackUntil = Time.time + 2.7f;
+            return result;
         }
 
         public bool PlayerNearby => player != null &&
@@ -121,13 +182,25 @@ namespace Vhaldren.Gameplay.World
                 " | Arcanistas: " +
                 journal.Reputation(SettlementCulture.Arcane) +
                 "\nEvento actual: " + eventText + "\n\n" +
-                mission + "\n\n" + action +
-                "\nN: cerrar";
+                mission + "\n\n" + action;
+
+            VillageTradeOffer offer = VillageTradeCatalog.Offers[tradeIndex];
+            int price = VillageTradeCatalog.Price(offer,
+                journal.CurrentEvent, journal.Reputation(offer.Faction));
+            text += "\n\n<b>MERCADO DEL CRUCE</b> (O: siguiente, P: comprar)" +
+                "\n" + offer.DisplayName + " | Precio: " + price + " " +
+                HarvestNode.ResourceName(offer.PriceResource) +
+                " → +" + offer.RewardAmount + " " +
+                HarvestNode.ResourceName(offer.Reward) +
+                " | Stock: " + journal.TradeStock(tradeIndex);
+            if (journal.Reputation(offer.Faction) < offer.ReputationNeeded)
+                text += " | Requiere reputación " + offer.ReputationNeeded;
+            text += "\nN: cerrar";
             if (Time.time < feedbackUntil)
                 text += "\n\n" + feedback;
 
             GUI.Box(new Rect(Mathf.Max(10f, Screen.width - 385f),
-                Mathf.Max(10f, Screen.height - 470f), 370f, 285f),
+                Mathf.Max(10f, Screen.height - 530f), 370f, 370f),
                 text, labelStyle);
         }
 
@@ -173,6 +246,28 @@ namespace Vhaldren.Gameplay.World
                 return;
             Material material = new Material(shader) { color = color };
             renderer.sharedMaterial = material;
+        }
+
+        private static bool CycleTradePressed()
+        {
+#if ENABLE_INPUT_SYSTEM
+            return Keyboard.current != null && Keyboard.current.oKey.wasPressedThisFrame;
+#elif ENABLE_LEGACY_INPUT_MANAGER
+            return Input.GetKeyDown(KeyCode.O);
+#else
+            return false;
+#endif
+        }
+
+        private static bool BuyPressed()
+        {
+#if ENABLE_INPUT_SYSTEM
+            return Keyboard.current != null && Keyboard.current.pKey.wasPressedThisFrame;
+#elif ENABLE_LEGACY_INPUT_MANAGER
+            return Input.GetKeyDown(KeyCode.P);
+#else
+            return false;
+#endif
         }
 
         private static bool OpenPressed()
