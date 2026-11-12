@@ -49,11 +49,13 @@ namespace Vhaldren.Gameplay.Combat
         private float nextParryAt;
         private GuardMode guard;
         private bool initialized;
+        private bool guardBroken;
 
         public GuardMode Guard => guard;
         public float Stamina => stamina;
         public float MaximumStamina => Mathf.Max(1f, maximumStamina);
         public bool ParryWindowActive => Time.time < parryUntil;
+        public bool GuardBroken => guardBroken;
         public bool CanParry => Time.time >= nextParryAt && stamina >= parryCost;
 
         private void Awake()
@@ -83,6 +85,8 @@ namespace Vhaldren.Gameplay.Combat
             {
                 stamina = Mathf.MoveTowards(stamina, MaximumStamina,
                     Mathf.Max(0f, regenerationPerSecond) * Time.deltaTime);
+                if (guardBroken && stamina >= MaximumStamina * 0.25f)
+                    guardBroken = false;
                 return;
             }
 
@@ -92,6 +96,7 @@ namespace Vhaldren.Gameplay.Combat
             if (stamina <= 0f)
             {
                 guard = GuardMode.None;
+                guardBroken = true;
                 parryUntil = 0f;
             }
         }
@@ -111,7 +116,7 @@ namespace Vhaldren.Gameplay.Combat
                 return true;
             }
 
-            if (stamina < 1f || ParryWindowActive)
+            if (guardBroken || stamina < 1f || ParryWindowActive)
                 return false;
             guard = requested;
             return true;
@@ -135,7 +140,7 @@ namespace Vhaldren.Gameplay.Combat
             Initialize();
             if (health != null && health.IsDefeated)
                 return false;
-            if (!CanParry)
+            if (!CanParry || guardBroken)
                 return false;
 
             stamina -= Mathf.Max(0f, parryCost);
