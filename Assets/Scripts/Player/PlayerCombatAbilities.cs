@@ -29,7 +29,7 @@ namespace Vhaldren.Gameplay.Player
         [SerializeField, Min(0f)] private float runeStaminaCost = 26f;
         [SerializeField, Min(0.1f)] private float runeWindup = 0.55f;
 
-        private readonly Collider[] candidates = new Collider[48];
+        private Collider[] candidates = new Collider[48];
         private readonly HashSet<CombatDamageReceiver> applied = new HashSet<CombatDamageReceiver>();
         private CombatHealth health;
         private CombatDefense defense;
@@ -187,10 +187,13 @@ namespace Vhaldren.Gameplay.Player
                 Collider[] all = Physics.OverlapSphere(
                     center, range, Physics.DefaultRaycastLayers,
                     QueryTriggerInteraction.Ignore);
-                // El mundo actual solo tiene seis enemigos, pero se evita
-                // iterar fuera del array o inventar impactos.
-                count = Mathf.Min(candidates.Length, all.Length);
-                System.Array.Copy(all, candidates, count);
+                // No perder enemigos al saturarse con arboles o pilares;
+                // ampliar el buffer reutilizable para siguientes ataques.
+                if (all.Length >= candidates.Length)
+                    System.Array.Resize(ref candidates,
+                        Mathf.NextPowerOfTwo(all.Length + 1));
+                System.Array.Copy(all, candidates, all.Length);
+                count = all.Length;
             }
             return count;
         }
