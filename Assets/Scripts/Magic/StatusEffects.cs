@@ -223,7 +223,7 @@ namespace Vhaldren.Gameplay.Magic
                     receiver = GetComponent<CombatDamageReceiver>();
                 if (receiver == null)
                     break;
-                dealt += receiver.Receive(IgnitionDps, CombatDamageKind.Magic,
+                dealt += receiver.Receive(IgnitionDps, CombatDamageKind.DamageOverTime,
                     IsFinite(ignitionSource) ? ignitionSource : transform.position).Applied;
                 if (health.IsDefeated)
                     break;
