@@ -44,6 +44,18 @@ namespace Vhaldren.Gameplay.Player
         private CombatDefense defense;
         private PlayerMotor motor;
         private PlayerDamageTracker damageTracker;
+        private PlayerAnimationDriver animationDriver;
+        private PlayerActionModifiers actionModifiers;
+        private string actionFeedback = "";
+        private float actionFeedbackUntil;
+#if ENABLE_INPUT_SYSTEM
+        private InputAction swordAction;
+        private InputAction runeAction;
+        private InputAction frostAction;
+        private bool swordRequested;
+        private bool runeRequested;
+        private bool frostRequested;
+#endif
         private float swordReadyAt;
         private float runeReadyAt;
         private float frostReadyAt;
@@ -65,6 +77,26 @@ namespace Vhaldren.Gameplay.Player
             defense = GetComponent<CombatDefense>();
             motor = GetComponent<PlayerMotor>();
             damageTracker = GetComponent<PlayerDamageTracker>();
+            animationDriver = GetComponent<PlayerAnimationDriver>();
+            actionModifiers = GetComponent<PlayerActionModifiers>();
+        }
+
+        private void OnEnable()
+        {
+#if ENABLE_INPUT_SYSTEM
+            if (swordAction == null)
+            {
+                swordAction = new InputAction("Sword", InputActionType.Button, "<Keyboard>/v");
+                runeAction = new InputAction("Rune", InputActionType.Button, "<Keyboard>/t");
+                frostAction = new InputAction("Frost", InputActionType.Button, "<Keyboard>/f");
+                swordAction.performed += _ => swordRequested = true;
+                runeAction.performed += _ => runeRequested = true;
+                frostAction.performed += _ => frostRequested = true;
+            }
+            swordAction.Enable();
+            runeAction.Enable();
+            frostAction.Enable();
+#endif
         }
 
         private void Update()
@@ -96,10 +128,10 @@ namespace Vhaldren.Gameplay.Player
 
         public bool TrySwordSweep()
         {
-            if (health == null || health.IsDefeated || Time.time < swordReadyAt ||
-                defense == null || !defense.TrySpend(swordStaminaCost))
+            if (!CanPerform(swordReadyAt, swordStaminaCost, "Tajo"))
                 return false;
 
+            animationDriver?.TriggerSwordAttack();
             swordReadyAt = Time.time + Mathf.Max(0.1f, swordCooldown);
             bool counter = defense.TryConsumeCounter();
             if (counter)
@@ -110,10 +142,10 @@ namespace Vhaldren.Gameplay.Player
 
         public bool TryRunePulse()
         {
-            if (health == null || health.IsDefeated || Time.time < runeReadyAt ||
-                defense == null || !defense.TrySpend(runeStaminaCost))
+            if (!CanPerform(runeReadyAt, runeStaminaCost, "Pulso runico"))
                 return false;
 
+            animationDriver?.TriggerRuneSpell();
             runeReadyAt = Time.time + Mathf.Max(0.1f, runeCooldown);
             Vector3 center = transform.position;
             StartCoroutine(RuneSequence(center));
@@ -122,10 +154,10 @@ namespace Vhaldren.Gameplay.Player
 
         public bool TryFrostWave()
         {
-            if (health == null || health.IsDefeated || Time.time < frostReadyAt ||
-                defense == null || !defense.TrySpend(frostStaminaCost))
+            if (!CanPerform(frostReadyAt, frostStaminaCost, "Escarcha"))
                 return false;
 
+            animationDriver?.TriggerFrostSpell();
             frostReadyAt = Time.time + Mathf.Max(0.1f, frostCooldown);
             Vector3 facing = motor != null ? motor.CurrentFacing : transform.forward;
             facing.y = 0f;
@@ -133,6 +165,30 @@ namespace Vhaldren.Gameplay.Player
                 facing = Vector3.forward;
             StartCoroutine(FrostSequence(facing.normalized));
             return true;
+        }
+
+        /// <summary>
+        /// El jugador debe saber por qué una habilidad no funcionó.
+        /// La misma regla de bloqueo aplica durante el modo construcción.
+        /// </summary>
+        private bool CanPerform(float readyAt, float staminaCost, string name)
+        {
+            if (health == null || health.IsDefeated)
+                return Reject(name + ": personaje derrotado");
+            if (actionModifiers != null && !actionModifiers.AllowsAttack)
+                return Reject(name + ": sal del modo construccion");
+            if (Time.time < readyAt)
+                return Reject(name + ": recarga " + (readyAt - Time.time).ToString("0.0") + "s");
+            if (defense == null || !defense.TrySpend(staminaCost))
+                return Reject(name + ": resistencia insuficiente");
+            return true;
+        }
+
+        private bool Reject(string message)
+        {
+            actionFeedback = message;
+            actionFeedbackUntil = Time.time + 1.5f;
+            return false;
         }
 
         private IEnumerator FrostSequence(Vector3 direction)
@@ -365,14 +421,36 @@ namespace Vhaldren.Gameplay.Player
             Rect box = new Rect(12f, 166f, Mathf.Min(510f, Screen.width - 24f), 29f);
             GUI.Box(box, "");
             GUI.Label(new Rect(box.x + 8f, box.y + 4f, box.width - 16f, 21f), labelText);
+            if (Time.time < actionFeedbackUntil)
+                GUI.Box(new Rect(box.x, box.yMax + 3f, box.width, 26f), actionFeedback);
         }
 
-        private void OnDisable() => StopAllCoroutines();
+        private void OnDisable()
+        {
+            StopAllCoroutines();
+#if ENABLE_INPUT_SYSTEM
+            swordRequested = runeRequested = frostRequested = false;
+            swordAction?.Disable();
+            runeAction?.Disable();
+            frostAction?.Disable();
+#endif
+        }
 
-        private static bool SwordPressed()
+        private void OnDestroy()
         {
 #if ENABLE_INPUT_SYSTEM
-            return Keyboard.current != null && Keyboard.current.vKey.wasPressedThisFrame;
+            swordAction?.Dispose();
+            runeAction?.Dispose();
+            frostAction?.Dispose();
+#endif
+        }
+
+        private bool SwordPressed()
+        {
+#if ENABLE_INPUT_SYSTEM
+            bool buffered = swordRequested;
+            swordRequested = false;
+            return buffered || (Keyboard.current != null && Keyboard.current.vKey.wasPressedThisFrame);
 #elif ENABLE_LEGACY_INPUT_MANAGER
             return Input.GetKeyDown(KeyCode.V);
 #else
@@ -380,10 +458,12 @@ namespace Vhaldren.Gameplay.Player
 #endif
         }
 
-        private static bool FrostPressed()
+        private bool FrostPressed()
         {
 #if ENABLE_INPUT_SYSTEM
-            return Keyboard.current != null && Keyboard.current.fKey.wasPressedThisFrame;
+            bool buffered = frostRequested;
+            frostRequested = false;
+            return buffered || (Keyboard.current != null && Keyboard.current.fKey.wasPressedThisFrame);
 #elif ENABLE_LEGACY_INPUT_MANAGER
             return Input.GetKeyDown(KeyCode.F);
 #else
@@ -391,10 +471,12 @@ namespace Vhaldren.Gameplay.Player
 #endif
         }
 
-        private static bool RunePressed()
+        private bool RunePressed()
         {
 #if ENABLE_INPUT_SYSTEM
-            return Keyboard.current != null && Keyboard.current.tKey.wasPressedThisFrame;
+            bool buffered = runeRequested;
+            runeRequested = false;
+            return buffered || (Keyboard.current != null && Keyboard.current.tKey.wasPressedThisFrame);
 #elif ENABLE_LEGACY_INPUT_MANAGER
             return Input.GetKeyDown(KeyCode.T);
 #else

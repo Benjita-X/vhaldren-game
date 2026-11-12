@@ -26,7 +26,8 @@ namespace Vhaldren.EditorTools
         private static readonly string[] LoopingClips =
         {
             "Idle", "Running_A", "Running_B", "Running_Strafe_Left", "Running_Strafe_Right",
-            "Walking_A", "Walking_B", "Walking_C", "Walking_Backwards", "1H_Ranged_Aiming"
+            "Walking_A", "Walking_B", "Walking_C", "Walking_Backwards", "1H_Ranged_Aiming",
+            "Blocking", "Spellcasting"
         };
 
         // Armas que trae el modelo: solo se deja visible la ballesta de una mano.
@@ -154,6 +155,12 @@ namespace Vhaldren.EditorTools
             controller.AddParameter("Shoot", AnimatorControllerParameterType.Trigger);
             controller.AddParameter("Harvest", AnimatorControllerParameterType.Trigger);
             controller.AddParameter("HarvestStyle", AnimatorControllerParameterType.Int);
+            controller.AddParameter("Guarding", AnimatorControllerParameterType.Bool);
+            controller.AddParameter("GuardStyle", AnimatorControllerParameterType.Int);
+            controller.AddParameter("Parry", AnimatorControllerParameterType.Trigger);
+            controller.AddParameter("SwordAttack", AnimatorControllerParameterType.Trigger);
+            controller.AddParameter("RuneSpell", AnimatorControllerParameterType.Trigger);
+            controller.AddParameter("FrostSpell", AnimatorControllerParameterType.Trigger);
 
             AnimatorStateMachine machine = controller.layers[0].stateMachine;
 
@@ -224,6 +231,21 @@ namespace Vhaldren.EditorTools
                 gatherExit.duration = 0.08f;
             }
 
+            // Cada accion aceptada tiene animacion real en el personaje, sin
+            // trasladar la capsula fisica ni alterar la locomocion.
+            AddActionState(machine, locomotion, "Tajo de espada",
+                Clip(clips, "1H_Melee_Attack_Slice_Horizontal"), "SwordAttack", 1.8f);
+            AddActionState(machine, locomotion, "Pulso runico",
+                Clip(clips, "Spellcast_Raise"), "RuneSpell", 1.5f);
+            AddActionState(machine, locomotion, "Onda de escarcha",
+                Clip(clips, "Spellcast_Shoot"), "FrostSpell", 1.65f);
+            AddActionState(machine, locomotion, "Parada precisa",
+                Clip(clips, "Block_Attack"), "Parry", 1.8f);
+            AddGuardState(machine, locomotion, "Bloqueo fisico",
+                Clip(clips, "Blocking"), 1);
+            AddGuardState(machine, locomotion, "Barrera arcana",
+                Clip(clips, "Spellcasting"), 2);
+
             EditorUtility.SetDirty(controller);
             AssetDatabase.SaveAssets();
             if (AssetDatabase.LoadAssetAtPath<AnimatorController>(ControllerPath) == null)
@@ -234,6 +256,41 @@ namespace Vhaldren.EditorTools
             System.IO.File.Copy(TempControllerPath, ControllerPath, true);
             AssetDatabase.DeleteAsset(TempControllerPath);
             AssetDatabase.ImportAsset(ControllerPath, ImportAssetOptions.ForceUpdate);
+        }
+
+        private static void AddActionState(AnimatorStateMachine machine,
+            AnimatorState locomotion, string name, AnimationClip clip,
+            string trigger, float speed)
+        {
+            AnimatorState state = machine.AddState(name);
+            state.motion = clip;
+            state.speed = speed;
+            AnimatorStateTransition enter = machine.AddAnyStateTransition(state);
+            enter.AddCondition(AnimatorConditionMode.If, 0f, trigger);
+            enter.hasExitTime = false;
+            enter.duration = 0.04f;
+            enter.canTransitionToSelf = false;
+            AnimatorStateTransition exit = state.AddTransition(locomotion);
+            exit.hasExitTime = true;
+            exit.exitTime = 0.85f;
+            exit.duration = 0.08f;
+        }
+
+        private static void AddGuardState(AnimatorStateMachine machine,
+            AnimatorState locomotion, string name, AnimationClip clip, int style)
+        {
+            AnimatorState state = machine.AddState(name);
+            state.motion = clip;
+            AnimatorStateTransition enter = machine.AddAnyStateTransition(state);
+            enter.AddCondition(AnimatorConditionMode.If, 0f, "Guarding");
+            enter.AddCondition(AnimatorConditionMode.Equals, style, "GuardStyle");
+            enter.hasExitTime = false;
+            enter.duration = 0.08f;
+            enter.canTransitionToSelf = false;
+            AnimatorStateTransition exit = state.AddTransition(locomotion);
+            exit.AddCondition(AnimatorConditionMode.IfNot, 0f, "Guarding");
+            exit.hasExitTime = false;
+            exit.duration = 0.09f;
         }
 
         private static Dictionary<string, AnimationClip> LoadClips()

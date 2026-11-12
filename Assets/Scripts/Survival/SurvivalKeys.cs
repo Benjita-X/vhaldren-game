@@ -10,6 +10,8 @@ namespace Vhaldren.Gameplay.Survival
     internal static class SurvivalKeys
     {
         public static bool ToggleBuild => Down(KeyCode.B);
+        // Solo en la demo individual: construir sin gastar recursos.
+        public static bool ToggleCreative => Down(KeyCode.F9);
         public static bool Rotate => Down(KeyCode.R);
         public static bool Dismantle => Down(KeyCode.G);
         public static bool GatherHeld => Held(KeyCode.E);
@@ -82,6 +84,7 @@ namespace Vhaldren.Gameplay.Survival
             switch (code)
             {
                 case KeyCode.B: return k.bKey;
+                case KeyCode.F9: return k.f9Key;
                 case KeyCode.R: return k.rKey;
                 case KeyCode.G: return k.gKey;
                 case KeyCode.E: return k.eKey;

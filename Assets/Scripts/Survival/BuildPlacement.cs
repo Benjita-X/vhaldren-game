@@ -50,7 +50,8 @@ namespace Vhaldren.Gameplay.Survival
         }
 
         public static PlacementResult Evaluate(BuildPieceDefinition piece, bool hasSurface, Vector3 basePosition,
-            int rotationSteps, Vector3 builderPosition, SurvivalInventory inventory)
+            int rotationSteps, Vector3 builderPosition, SurvivalInventory inventory,
+            bool creativeMode = false)
         {
             if (piece == null || !hasSurface)
                 return PlacementResult.NoSurface;
@@ -58,11 +59,14 @@ namespace Vhaldren.Gameplay.Survival
             planar.y = 0f;
             if (planar.sqrMagnitude > MaxDistance * MaxDistance)
                 return PlacementResult.TooFar;
-            if (piece.RequiresWorkbench &&
-                !BuiltPiece.AnyWithin(BuildFunction.Workbench, basePosition, BuildCatalog.WorkbenchRadius))
-                return PlacementResult.NeedsWorkbench;
-            if (inventory == null || !inventory.CanAfford(piece.Cost))
-                return PlacementResult.MissingResources;
+            if (!creativeMode)
+            {
+                if (piece.RequiresWorkbench &&
+                    !BuiltPiece.AnyWithin(BuildFunction.Workbench, basePosition, BuildCatalog.WorkbenchRadius))
+                    return PlacementResult.NeedsWorkbench;
+                if (inventory == null || !inventory.CanAfford(piece.Cost))
+                    return PlacementResult.MissingResources;
+            }
             if (IsBlocked(piece, basePosition, rotationSteps))
                 return PlacementResult.Blocked;
             return PlacementResult.Ok;
