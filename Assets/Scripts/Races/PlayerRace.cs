@@ -24,6 +24,8 @@ namespace Vhaldren.Gameplay.Races
         [SerializeField] private RaceId race = RaceId.Human;
 
         private readonly Collider[] nearby = new Collider[32];
+        private readonly System.Collections.Generic.HashSet<CombatDamageReceiver> burstHit =
+            new System.Collections.Generic.HashSet<CombatDamageReceiver>();
         private CombatHealth health;
         private CombatDefense defense;
         private PlayerActionModifiers modifiers;
@@ -238,11 +240,18 @@ namespace Vhaldren.Gameplay.Races
         {
             int count = Physics.OverlapSphereNonAlloc(transform.position, radius, nearby,
                 Physics.DefaultRaycastLayers, QueryTriggerInteraction.Ignore);
-            System.Collections.Generic.HashSet<CombatDamageReceiver> hit = new System.Collections.Generic.HashSet<CombatDamageReceiver>();
+            Collider[] scan = nearby;
+            if (count >= nearby.Length)
+            {
+                scan = Physics.OverlapSphere(transform.position, radius,
+                    Physics.DefaultRaycastLayers, QueryTriggerInteraction.Ignore);
+                count = scan.Length;
+            }
+            burstHit.Clear();
             for (int i = 0; i < count; i++)
             {
-                CombatDamageReceiver receiver = nearby[i] != null ? nearby[i].GetComponentInParent<CombatDamageReceiver>() : null;
-                if (receiver == null || receiver.transform.IsChildOf(transform) || !hit.Add(receiver))
+                CombatDamageReceiver receiver = scan[i] != null ? scan[i].GetComponentInParent<CombatDamageReceiver>() : null;
+                if (receiver == null || receiver.transform.IsChildOf(transform) || !burstHit.Add(receiver))
                     continue;
                 CombatDamageResult result = receiver.Receive(damage, CombatDamageKind.Magic, transform.position);
                 if (result.Applied > 0f)
