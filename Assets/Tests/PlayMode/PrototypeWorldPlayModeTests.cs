@@ -48,6 +48,9 @@ namespace Vhaldren.Tests
             enemyObject = new GameObject("PrototypeEnemyTest");
             enemyObject.SetActive(false); // Asegurar que Awake lea el target asignado.
             enemyObject.transform.position = new Vector3(0f, 1.08f, distance);
+            Vector3 initialFacing = player.transform.position - enemyObject.transform.position;
+            initialFacing.y = 0f;
+            enemyObject.transform.rotation = Quaternion.LookRotation(initialFacing, Vector3.up);
             CharacterController enemyCollider = enemyObject.AddComponent<CharacterController>();
             enemyCollider.height = 2f;
             enemyCollider.radius = 0.4f;
@@ -95,10 +98,70 @@ namespace Vhaldren.Tests
             Object.Destroy(wall);
             wall = null;
             yield return null; // Dejar que se actualice la escena de fisicas.
-            yield return new WaitForSeconds(0.2f);
+            yield return new WaitForSeconds(0.65f); // Aviso + ventana de preparacion del golpe.
 
             Assert.That(playerHealth.CurrentHealth, Is.LessThan(100f),
                 "El enemigo debe poder golpear si esta cerca y hay linea de vision.");
+        }
+
+        [UnityTest]
+        public IEnumerator EnemyNeedsSightOrHeardNoiseAndInvestigatesTheReportedPosition()
+        {
+            PrototypeEnemy enemy = CreateEnemy(8f, out _);
+            Vector3 playerPosition = player.transform.position;
+            float initialZ = enemy.transform.position.z;
+
+            wall = GameObject.CreatePrimitive(PrimitiveType.Cube);
+            wall.transform.position = new Vector3(0f, 1.2f, 4f);
+            wall.transform.localScale = new Vector3(5f, 2.4f, 0.3f);
+            Physics.SyncTransforms();
+            yield return new WaitForSeconds(0.2f);
+
+            Assert.That(enemy.transform.position.z, Is.EqualTo(initialZ).Within(0.05f),
+                "No debe seguir la posicion actual del jugador atravesando una pared.");
+            Assert.That(enemy.HasLastKnownTargetPosition, Is.False,
+                "Sin verlo ni oirlo el enemigo todavia no conoce la posicion del jugador.");
+
+            PrototypeEnemy.EmitNoise(playerPosition, 20f);
+            yield return new WaitForSeconds(0.3f);
+
+            Assert.That(enemy.IsInvestigating, Is.True,
+                "El ruido debe iniciar una investigacion de su punto de origen.");
+            Assert.That(enemy.HasLastKnownTargetPosition, Is.True);
+            Assert.That(Vector3.Distance(enemy.LastKnownTargetPosition, playerPosition), Is.LessThan(0.01f));
+            Assert.That(enemy.transform.position.z, Is.LessThan(initialZ - 0.2f),
+                "Debe avanzar hacia el ultimo lugar donde oyo al jugador.");
+
+            player.transform.position = new Vector3(0f, 1.08f, -4f);
+            Physics.SyncTransforms();
+            Vector3 remembered = enemy.LastKnownTargetPosition;
+            yield return new WaitForSeconds(0.2f);
+
+            Assert.That(Vector3.Distance(enemy.LastKnownTargetPosition, remembered), Is.LessThan(0.01f),
+                "Al perder la pista no debe leer la nueva posicion del jugador a traves del muro.");
+        }
+
+        [UnityTest]
+        public IEnumerator EnemyTelegraphsAndCannotTrackPlayerThroughALateralDodge()
+        {
+            PrototypeEnemy enemy = CreateEnemy(1.55f, out _);
+            CombatHealth playerHealth = player.GetComponent<CombatHealth>();
+            yield return new WaitForSeconds(0.1f);
+
+            Assert.That(enemy.IsTelegraphingAttack, Is.True,
+                "El enemigo debe avisar antes de aplicar el golpe.");
+            Assert.That(playerHealth.CurrentHealth, Is.EqualTo(100f),
+                "El windup no debe causar dano anticipado.");
+
+            // Sigue dentro del alcance radial y del cono visual; queda fuera del arco
+            // comprometido al comenzar el aviso. Debe poder evitar el golpe lateralmente.
+            player.transform.position = new Vector3(1.3f, 1.08f, 0.7f);
+            Physics.SyncTransforms();
+            yield return new WaitForSeconds(0.6f);
+
+            Assert.That(playerHealth.CurrentHealth, Is.EqualTo(100f),
+                "El ataque no debe girar ni ampliar su arco para seguir una esquiva lateral.");
+            Assert.That(enemy.IsTelegraphingAttack, Is.False);
         }
 
         [UnityTest]
@@ -115,9 +178,7 @@ namespace Vhaldren.Tests
             yield return new WaitForSeconds(0.75f);
             Assert.That(enemy.transform.position.z, Is.GreaterThan(5f),
                 "Debe seguir regresando a su territorio, incluso al cruzar la frontera.");
-            bool returning = (bool)typeof(PrototypeEnemy).GetField("returningHome",
-                BindingFlags.Instance | BindingFlags.NonPublic).GetValue(enemy);
-            Assert.That(returning, Is.True,
+            Assert.That(enemy.IsReturningHome, Is.True,
                 "No debe cambiar a persecucion antes de regresar realmente a casa.");
         }
 

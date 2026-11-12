@@ -70,6 +70,9 @@ namespace Vhaldren.EditorTools
                 playerHealth = player.AddComponent<CombatHealth>();
             SetFloat(playerHealth, "maximumHealth", 150f);
             playerHealth.ResetToFull();
+            // Habilidades 008: orbe arcano (clic derecho) y estallido de area (E).
+            if (player.GetComponent<PlayerSpellCaster>() == null)
+                player.AddComponent<PlayerSpellCaster>();
 
             Material ground = Mat("SueloBasico", new Color(0.19f, 0.17f, 0.18f));
             Material forest = Mat("Bosque", new Color(0.11f, 0.18f, 0.14f));
@@ -237,6 +240,7 @@ namespace Vhaldren.EditorTools
             CombatHealth health = player.GetComponent<CombatHealth>();
             bool valid = player.GetComponent<PlayerMotor>() != null &&
                 player.GetComponent<LocalPlayerShooter>() != null &&
+                player.GetComponent<PlayerSpellCaster>() != null &&
                 player.GetComponent<CharacterController>() != null &&
                 health != null && health.MaximumHealth >= 150f &&
                 camera.GetComponent<Camera>() != null &&
@@ -410,6 +414,10 @@ namespace Vhaldren.EditorTools
             root.transform.position = boss
                 ? new Vector3(position.x, 1.48f, position.z)
                 : position;
+            Vector3 initialFacing = player.position - root.transform.position;
+            initialFacing.y = 0f;
+            if (initialFacing.sqrMagnitude > 0.001f)
+                root.transform.rotation = Quaternion.LookRotation(initialFacing, Vector3.up);
             CharacterController body = root.AddComponent<CharacterController>();
             body.height = boss ? 2.8f : 2f;
             body.radius = boss ? 0.65f : 0.42f;
@@ -437,6 +445,8 @@ namespace Vhaldren.EditorTools
             serialized.FindProperty("attackDamage").floatValue = damage;
             serialized.FindProperty("aggroRange").floatValue = boss ? 19f : 15f;
             serialized.FindProperty("attackRange").floatValue = boss ? 2.2f : 1.75f;
+            serialized.FindProperty("attackWindupSeconds").floatValue = boss ? 0.9f : 0.5f;
+            serialized.FindProperty("attackRecoverySeconds").floatValue = boss ? 0.7f : 0.45f;
             serialized.FindProperty("respawnSeconds").floatValue = boss ? 45f : 18f;
             serialized.ApplyModifiedPropertiesWithoutUndo();
         }

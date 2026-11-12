@@ -202,6 +202,12 @@ namespace Vhaldren.Gameplay.Player
                 viewCamera = Camera.main;
 
             Vector2 axes = ReadMovement();
+            if (SurvivalInventory.BlocksInput(gameObject))
+            {
+                ReadDashPressed();
+                motor.Simulate(new PlayerMotionCommand(Vector3.zero, motor.CurrentFacing, false), Time.deltaTime);
+                return;
+            }
             // Sin camara se usa un marco mundial estable, pero se sigue simulando:
             // gravedad, contacto y frenado no deben depender de una referencia visual.
             Vector3 forward = Vector3.forward;

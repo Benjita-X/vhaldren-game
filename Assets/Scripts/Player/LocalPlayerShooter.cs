@@ -1,5 +1,6 @@
 using UnityEngine;
 using Vhaldren.Gameplay.Combat;
+using Vhaldren.Gameplay.World;
 #if ENABLE_INPUT_SYSTEM
 using UnityEngine.InputSystem;
 #endif
@@ -7,8 +8,8 @@ using UnityEngine.InputSystem;
 namespace Vhaldren.Gameplay.Player
 {
     /// <summary>
-    /// Prototipo local de disparo hitscan. Apunta al primer punto del mundo bajo el cursor;
-    /// el proyectil de prueba solo deja un trazador, sin sistema de dano.
+    /// Prototipo local de disparo hitscan. Apunta al primer punto del mundo bajo el cursor,
+    /// aplica dano de prueba y emite ruido; no valida impactos con un servidor.
     /// </summary>
     [DisallowMultipleComponent]
     public sealed class LocalPlayerShooter : MonoBehaviour
@@ -22,6 +23,8 @@ namespace Vhaldren.Gameplay.Player
         [SerializeField, Min(1f)] private float maxRange = 100f;
         [Tooltip("Dano de prueba. No es un ataque validado por servidor.")]
         [SerializeField, Min(0f)] private float testDamage = 25f;
+        [Tooltip("Radio al que los enemigos pueden oir este disparo de prueba.")]
+        [SerializeField, Min(0f)] private float shotNoiseRadius = 30f;
         [SerializeField] private LayerMask aimLayers = Physics.DefaultRaycastLayers;
 
         private RaycastHit[] aimHits = new RaycastHit[AimHitCapacity];
@@ -34,6 +37,10 @@ namespace Vhaldren.Gameplay.Player
         public Vector3 LastImpactPoint { get; private set; }
         public int ShotsFired { get; private set; }
         public int HitsLanded { get; private set; }
+        /// <summary>Punto de salida compartido con las habilidades (PlayerSpellCaster).</summary>
+        public Vector3 ShotOriginPosition => shotOrigin != null
+            ? shotOrigin.position
+            : transform.position + Vector3.up * 0.65f;
 
         private void Awake()
         {
@@ -98,7 +105,7 @@ namespace Vhaldren.Gameplay.Player
             if (TryGetAimPoint(pointer, out Vector3 aimPoint) && aimMarker != null)
                 aimMarker.position = aimPoint + Vector3.up * 0.025f;
 
-            if (WasFirePressed())
+            if (GetComponent<SurvivalInventory>() == null && WasFirePressed())
                 FireAtScreenPosition(pointer);
         }
 
@@ -128,7 +135,7 @@ namespace Vhaldren.Gameplay.Player
             return true;
         }
 
-        /// <summary>Dispara hacia el punto resuelto por la camara para esta posicion del mouse.</summary>
+        /// <summary>Dispara hacia el punto resuelto y alerta a enemigos dentro del radio de ruido.</summary>
         public bool FireAtScreenPosition(Vector2 screenPosition)
         {
             if (actionModifiers != null && !actionModifiers.AllowsAttack)
@@ -150,6 +157,7 @@ namespace Vhaldren.Gameplay.Player
 
             LastAimPoint = aimPoint;
             LastImpactPoint = aimPoint;
+            PrototypeEnemy.EmitNoise(origin, shotNoiseRadius);
             // Se ignora el propio cuerpo sin dejar de buscar: si el primer impacto era el
             // jugador (al apuntar hacia atras mientras el modelo aun gira), el tiro
             // atravesaba la pared que hubiera detras.

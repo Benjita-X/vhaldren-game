@@ -22,7 +22,8 @@ Prioridades del dueño del juego:
 - Esquiva con Espacio: 4,5 m en 0,18 s, con 1,2 s de espera, estela y un indicador a los pies que se apaga durante la espera.
 - Zoom de cámara con la rueda del mouse.
 - El modelo gira hacia el cursor sin girar la cápsula física.
-- Disparo de prueba (hitscan) al punto bajo el cursor, con trazo. Sin daño.
+- Disparo de prueba (hitscan) al punto bajo el cursor, con trazo. En el mundo 008 aplica daño de prueba.
+- Mundo 008: orbe arcano (clic derecho), estallido de área (E), cura (Q) y botín de esencia (ver sección de habilidades; sin probar).
 - Cámara elevada que sigue al personaje con ángulo fijo.
 - Escena `Movement001`: circuito con pared recta, pared diagonal, pilares, hueco estrecho, escalón y rampa, sobre un suelo cuadriculado de casillas de 2 m.
 - Personaje provisional hecho con formas básicas de Unity.
@@ -60,6 +61,28 @@ Defectos encontrados y corregidos. Cada uno tiene una prueba que fallaba antes d
 | 11 | El zoom dividía por 120 el delta del Input System | Con la normalización multiplataforma predeterminada de Unity, la rueda apenas acercaba la cámara | Se usa el delta normalizado; si Windows se configura para conservar unidades nativas, se convierte 120 a un paso. Dos pruebas cubren ambos modos |
 
 Nota sobre el defecto 2: el movimiento inmediato que se activó antes lo tapaba, no lo arreglaba. Ahora los dos modos funcionan a cualquier número de FPS.
+
+## Auditoría profunda del 11 de noviembre de 2026
+
+En `audit/claude-008`, el enemigo de prototipo se amplió con cono de visión, comprobación de obstáculos, memoria temporal de la última posición vista/escuchada, investigación, leash, y windup con dirección/arco fijos y revalidación de alcance y línea de visión. El disparo de prueba emite ruido; el generador orienta a los enemigos hacia el punto inicial del jugador y al jefe le da una ventana de aviso más larga.
+
+La revisión de core loop, percepción/tácticas, armas, UX, guardado y escala está en [009-AUDITORIA-CORE-AI-COMBATE-UX.md](009-AUDITORIA-CORE-AI-COMBATE-UX.md). La escena sigue siendo una prueba local de 92 × 92 m con seis enemigos; no se ha demostrado el comportamiento a gran escala ni existe guardado, progresión, navegación táctica o red.
+
+**Verificación de esta pasada:** Unity registró compilación satisfactoria después de los cambios y no aparecen errores C# en el log inspeccionado. EditMode, PlayMode, playtest y profiling quedan pendientes; no marcar la IA o el combate como validados hasta ejecutar esos pasos.
+
+## Habilidades, botín y HUD de la slice 008 (11 de noviembre de 2026, sin probar)
+
+Añadido en `audit/claude-008` **sin compilar, sin ejecutar pruebas y sin Play Mode** (el dueño lo probará). Todo es local y no autoritativo.
+
+- **Orbe arcano — clic derecho** (`PlayerSpellCaster` + `ArcaneProjectile`): proyectil real que viaja a 21 m/s hasta 32 m, con esfera brillante, halo pulsante, luz y estela (`TrailRenderer`). La colisión es un `SphereCast` por frame con el **mismo radio que la esfera visible** (0,22 m) y el cuerpo se coloca en el punto de contacto antes de aplicar el daño (34). Al impactar: destello que se expande, esquirlas y luz; más grande y con onda si hiere. Espera 0,6 s. Sale del `ShotOrigin` y, si el cursor está en el suelo, vuela horizontal hacia ese punto. Ruido bajo al lanzar (8 m) y mayor en el impacto (14 m): sirve de señuelo.
+- **Estallido de sangre — E**: aviso en el suelo (anillo que parpadea cada vez más rápido + disco que se llena) durante 0,6 s, a un máximo de 10 m del jugador y sin atravesar paredes. Detona con radio 4 m: 30 de daño a cada enemigo cuyo collider quede dentro del anillo y con línea despejada desde el centro, y los aturde 0,9 s (cancela un ataque en preparación). Espera 8 s, ruido 22 m. El jugador puede moverse y esquivar mientras carga; si muere, no detona.
+- **IA**: `PrototypeEnemy` gana `ReceiveAttackOrigin` (el enemigo herido investiga el punto de lanzamiento del orbe, o el centro del estallido si no ve al jugador; no lee su posición actual a través de paredes), `Stagger` (usa su propia máquina de estados, no lo mueve) y `EmitNoise(origen, radio, escalaOcluida)`: tras una pared el ruido de los hechizos solo llega al 45 % del radio. El disparo hitscan conserva el comportamiento anterior.
+- **Botín** (`PrototypeLootOrb`): cada enemigo derrotado suelta una esencia flotante (el jefe, una mayor de 5). Se recoge al pasar cerca: +8 PV por esencia y −1,5 s de espera del estallido por esencia. Caduca a los 45 s, parpadeando los últimos 6.
+- **HUD**: nueva línea con el estado de ambas habilidades, barras de espera y contador de esencia; aviso al recoger botín.
+- El generador añade `PlayerSpellCaster` al jugador y el validador lo exige; si una escena ya generada no lo tiene, `PrototypeGameSession` lo añade al entrar en Play.
+- Efectos con formas nativas de Unity y `Sprites/Default` compartido (`PrototypeVfx`), sin paquetes nuevos.
+
+Pendiente de probar en Unity: compilación, EditMode/PlayMode existentes, y la lista manual: el orbe se ve viajar y explota justo donde toca; no atraviesa paredes ni se dispara contra el propio jugador; el estallido golpea a varios enemigos dentro del anillo y a ninguno tras un muro; el aturdimiento corta el ataque naranja; enemigos tras una pared investigan el impacto/centro y no aparecen directamente sobre el jugador; el botín se recoge y reduce la espera; los efectos no salen rosas (shader). No hay pruebas automáticas nuevas para estas mecánicas.
 
 ## Qué está comprobado
 
@@ -111,3 +134,21 @@ La auditoría inicial de AnyRPG está en [docs/ANYRPG-EVALUACION.md](ANYRPG-EVAL
 - Todo arreglo de un defecto lleva una prueba que fallaba antes.
 - Las pruebas se ejecutan antes de publicar, y aquí se anota el resultado real, con fecha.
 - No se da por hecho lo que solo está planeado.
+
+
+## Inventario, supervivencia y construcción (11 noviembre 2026, compilado, sin jugar)
+
+Partiendo de la primera versión (SurvivalInventory/Builder/Resource), se completó el ciclo **recoger → fabricar → construir → refugio**. Unity compiló el proyecto **sin errores ni avisos** el 11/11/2026; **no se ejecutaron tests ni Play Mode**.
+
+- **Inventario** (`SurvivalInventory`): 36 casillas, las 9 primeras SON la barra rápida (sin duplicar cantidades). Herramientas no apilables; madera, piedra y bayas hasta 64. Nombres en español, franja de color por objeto, número de tecla, descripción del objeto equipado y mensajes (inventario lleno, herramienta incorrecta, fabricado…). **I** abre/cierra (también **Esc**); clic en origen y luego en destino mueve, combina o intercambia. **1–9** equipa.
+- **Kit inicial**: Hacha, Varita, 3 Bayas, 10 madera y 4 piedra (casilla `generousStartKit` para quitar los materiales). El pico y la espada se fabrican.
+- **Fabricar** (panel junto a la mochila): Pico (4 madera), Hacha (3 madera), Espada (2 madera + 4 piedra). Comprueba materiales Y espacio antes de gastar nada.
+- **Usar con clic izquierdo**: Hacha tala árboles, Pico pica rocas, manos/cualquiera recogen bayas, Espada golpea (28, avisa a la IA con el origen del golpe y hace poco ruido), Varita lanza el orbe arcano, Bayas se comen (+30 hambre, +8 vida). El golpe busca en un arco delante, hacia el cursor, así que alcanza también rocas y arbustos bajos. La herramienta en la mano gira al golpear.
+- **Recursos** (`SurvivalResource` + `SurvivalWorldSeeder`): al entrar en Play, los árboles del bosque ya generados pasan a ser talables (12 madera, desaparece el árbol entero al agotarse) y aparecen 10 rocas (10 piedra) y 8 arbustos con bayas rojas alrededor del cruce. No hace falta regenerar la escena. Si el inventario está lleno, el recurso no se pierde.
+- **Hambre** (`SurvivalNeeds`): barra sobre la barra rápida; se vacía en ~7 min. A 0 resta vida poco a poco. Tras reaparecer vuelve al 60 % como mínimo.
+- **Construcción** (`SurvivalBuilder` + `BuiltPiece`): **B** entra/sale (también Esc). **1–5** eligen pieza: Suelo (4 madera), Pared (6 m + 2 p), Puerta (5 m + 1 p), Rampa (6 m, sube la altura de una pared), Hoguera (3 m + 3 p). Rejilla de 3 m: suelos y rampas en celdas, paredes y puertas en los bordes de las celdas para encajar con los suelos; la hoguera es libre. **R** gira 90°. Vista previa verde/roja sin colisión, con el **motivo** cuando no se puede (lejos, pendiente, ocupado, estás dentro, sin línea directa, faltan materiales). **Clic izquierdo** coloca y descuenta en la misma transacción; **clic derecho** desmonta una pieza propia y devuelve todo. Se puede construir encima de lo construido (p. ej. un suelo sobre una pared). Construir hace ruido (10 m) y atrae enemigos cercanos.
+- **Valor del refugio**: las paredes bloquean el movimiento y la visión de los enemigos (usan física real). La **hoguera** cura 1,5 PV/s y reduce a la mitad el hambre dentro de 4,5 m.
+
+Pendiente de probar jugando: tala/picado/recogida y mensajes; fabricar con inventario casi lleno; mover/combinar/intercambiar; comer sin hambre; que el clic sobre la barra o la mochila no golpee el mundo; colocar suelos y paredes en rejilla, puertas transitables, subir la rampa, construir pegado a otra pieza y dentro del jugador; desmontar; hoguera curando; enemigos bloqueados por paredes; legibilidad de la UI en resoluciones pequeñas.
+
+Límites: sin guardado (todo se pierde al salir), sin durabilidad, sin planos con aportes parciales, sin grafo de soporte estructural (una pieza no se cae si quitas lo de debajo), los enemigos no atacan estructuras, sin arrastrar y soltar, iconos provisionales, sin red. No se descompiló ni se copió nada de Minecraft, TLauncher ni The Forest: es un diseño propio a partir de cómo se juega. Análisis: [010-SUPERVIVENCIA-INVENTARIO-CONSTRUCCION.md](010-SUPERVIVENCIA-INVENTARIO-CONSTRUCCION.md).
