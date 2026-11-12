@@ -177,11 +177,18 @@ namespace Vhaldren.Gameplay.Magic
         {
             int count = Physics.OverlapSphereNonAlloc(transform.position, Range, nearby,
                 Physics.DefaultRaycastLayers, QueryTriggerInteraction.Ignore);
+            Collider[] scan = nearby;
+            if (count >= nearby.Length)
+            {
+                scan = Physics.OverlapSphere(transform.position, Range,
+                    Physics.DefaultRaycastLayers, QueryTriggerInteraction.Ignore);
+                count = scan.Length;
+            }
             CombatHealth best = null;
             float bestDistance = float.PositiveInfinity;
             for (int i = 0; i < count; i++)
             {
-                CombatHealth candidate = nearby[i] != null ? nearby[i].GetComponentInParent<CombatHealth>() : null;
+                CombatHealth candidate = scan[i] != null ? scan[i].GetComponentInParent<CombatHealth>() : null;
                 if (candidate == null || !IsEligible(candidate))
                     continue;
                 float distance = HorizontalDistance(candidate.transform.position);
