@@ -67,18 +67,30 @@ namespace Vhaldren.Gameplay.Magic
             Vector3 start = transform.position;
             int count = Physics.SphereCastNonAlloc(start, spell.Radius, direction, hits, step,
                 Physics.DefaultRaycastLayers, QueryTriggerInteraction.Ignore);
+            RaycastHit[] completeHits = null;
+            // Unity no garantiza que un NonAlloc saturado conserve los impactos
+            // mas cercanos. En bosques/campamentos densos eso podia omitir una
+            // pared y dejar que el proyectil la atravesara.
+            if (count >= hits.Length)
+            {
+                completeHits = Physics.SphereCastAll(start, spell.Radius, direction, step,
+                    Physics.DefaultRaycastLayers, QueryTriggerInteraction.Ignore);
+                count = completeHits.Length;
+            }
+
             float nearest = float.PositiveInfinity;
             Collider nearestCollider = null;
             for (int i = 0; i < count; i++)
             {
-                Collider hit = hits[i].collider;
+                RaycastHit candidate = completeHits != null ? completeHits[i] : hits[i];
+                Collider hit = candidate.collider;
                 if (hit == null || hit.transform.IsChildOf(transform) ||
                     hit.transform.IsChildOf(caster.transform))
                     continue;
                 // distance 0 = ya solapado al empezar; cuenta como impacto inmediato.
-                if (hits[i].distance < nearest)
+                if (candidate.distance < nearest)
                 {
-                    nearest = hits[i].distance;
+                    nearest = candidate.distance;
                     nearestCollider = hit;
                 }
             }
