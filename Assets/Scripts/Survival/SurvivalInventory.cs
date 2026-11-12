@@ -117,16 +117,43 @@ namespace Vhaldren.Gameplay.Survival
 
         public void Refund(IReadOnlyList<ResourceIngredient> ingredients, float fraction = 1f)
         {
-            if (ingredients == null || float.IsNaN(fraction) || float.IsInfinity(fraction))
-                return;
-            if (!CollectCosts(ingredients))
-                return;
+            TryRefund(ingredients, fraction);
+        }
+
+        /// <summary>
+        /// Reembolso indivisible. Si desmontar un cofre reduciria la
+        /// capacidad por debajo del total final, no se devuelve nada y
+        /// el caller conserva la construccion. Notificar una sola vez
+        /// al finalizar evita colecciones modificadas desde eventos.
+        /// </summary>
+        public bool TryRefund(IReadOnlyList<ResourceIngredient> ingredients,
+            float fraction = 1f, int capacityReduction = 0)
+        {
+            if (ingredients == null || float.IsNaN(fraction) ||
+                float.IsInfinity(fraction) || capacityReduction < 0 ||
+                !CollectCosts(ingredients))
+                return false;
+
             float safe = Mathf.Clamp01(fraction);
-            foreach (KeyValuePair<ResourceKind, int> cost in pendingCosts)
+            long count = 0;
+            foreach (KeyValuePair<ResourceKind, int> ingredient in pendingCosts)
+                count += Mathf.FloorToInt(ingredient.Value * safe);
+
+            long futureCapacity = (long)Capacity - capacityReduction;
+            if (futureCapacity < 0 || (long)TotalItems + count > futureCapacity)
+                return false;
+
+            foreach (KeyValuePair<ResourceKind, int> ingredient in pendingCosts)
             {
-                int refund = Mathf.FloorToInt(cost.Value * safe);
-                Add(cost.Key, refund);
+                int amount = Mathf.FloorToInt(ingredient.Value * safe);
+                if (amount <= 0)
+                    continue;
+                counts[ingredient.Key] = Count(ingredient.Key) + amount;
+                TotalItems += amount;
             }
+            if (count > 0)
+                Changed?.Invoke();
+            return true;
         }
 
         private bool CollectCosts(IReadOnlyList<ResourceIngredient> ingredients)
