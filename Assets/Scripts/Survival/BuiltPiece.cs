@@ -13,10 +13,28 @@ namespace Vhaldren.Gameplay.Survival
 
         [SerializeField] private string pieceId;
         [SerializeField] private int rotationSteps;
+        [SerializeField] private bool materialsPaid;
+        private bool removalClaimed;
 
         public string PieceId => pieceId;
         public int RotationSteps => rotationSteps;
         public BuildPieceDefinition Definition => BuildCatalog.Find(pieceId);
+        public bool MaterialsPaid => materialsPaid;
+        public bool IsBeingRemoved => removalClaimed;
+
+        // Solo una pieza que realmente costo recursos puede devolverlos.
+        // La vista previa y los objetos de escenario no generan materiales.
+        public void MarkMaterialsPaid() => materialsPaid = true;
+
+        public bool TryClaimRemoval()
+        {
+            if (removalClaimed || !gameObject.activeInHierarchy)
+                return false;
+            removalClaimed = true;
+            return true;
+        }
+
+        public void CancelRemoval() => removalClaimed = false;
 
         public void Configure(BuildPieceDefinition definition, int rotation)
         {
