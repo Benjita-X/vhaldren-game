@@ -139,7 +139,7 @@ namespace Vhaldren.Gameplay.Player
         {
             Vector3 point = transform.position;
             MakeArc(point, direction, frostRange,
-                new Color(0.35f, 0.92f, 1f), 0.50f);
+                new Color(0.35f, 0.92f, 1f), 0.50f, false, frostConeDegrees);
             yield return new WaitForSeconds(0.25f);
 
             if (health == null || health.IsDefeated)
@@ -317,7 +317,8 @@ namespace Vhaldren.Gameplay.Player
         }
 
         private static void MakeArc(Vector3 position, Vector3 facing, float radius,
-            Color tint, float lifetime, bool wholeCircle = false)
+            Color tint, float lifetime, bool wholeCircle = false,
+            float arcDegrees = 120f)
         {
             if (effectMaterial == null)
             {
@@ -348,7 +349,8 @@ namespace Vhaldren.Gameplay.Player
                     (float)i / (segments - 1);
                 float angle = wholeCircle
                     ? ratio * Mathf.PI * 2f
-                    : forwardAngle + (ratio - 0.5f) * Mathf.PI * 2f / 3f;
+                    : forwardAngle + (ratio - 0.5f) *
+                        Mathf.Clamp(arcDegrees, 10f, 360f) * Mathf.Deg2Rad;
                 line.SetPosition(i, new Vector3(
                     Mathf.Sin(angle) * radius, 0f,
                     Mathf.Cos(angle) * radius));
