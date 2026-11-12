@@ -52,6 +52,7 @@ namespace Vhaldren.Gameplay.Magic
         private CombatDamageReceiver receiver;
         private PrototypeEnemy enemy;
         private Vector3 ignitionSource;
+        private Transform ignitionOwner;
         private int chillStacks;
         private float frozenUntil;
         private float nextIgnitionTick;
@@ -125,9 +126,18 @@ namespace Vhaldren.Gameplay.Magic
         /// mismo receptor central que armas y hechizos.
         /// </summary>
         public bool Apply(StatusKind kind, float seconds = -1f) =>
-            ApplyFrom(kind, transform.position, seconds);
+            ApplyInternal(kind, transform.position, null, seconds);
 
-        public bool ApplyFrom(StatusKind kind, Vector3 source, float seconds = -1f)
+        public bool ApplyFrom(StatusKind kind, Vector3 source, float seconds = -1f) =>
+            ApplyInternal(kind, source, null, seconds);
+
+        public bool ApplyFrom(StatusKind kind, Component source, float seconds = -1f) =>
+            ApplyInternal(kind,
+                source != null ? source.transform.position : transform.position,
+                source != null ? source.transform : null, seconds);
+
+        private bool ApplyInternal(StatusKind kind, Vector3 source,
+            Transform sourceOwner, float seconds)
         {
             if (health == null || health.IsDefeated)
                 return false;
@@ -144,6 +154,7 @@ namespace Vhaldren.Gameplay.Magic
             {
                 case StatusKind.Ignition:
                     ignitionSource = IsFinite(source) ? source : transform.position;
+                    ignitionOwner = sourceOwner;
                     if (!wasActive)
                         nextIgnitionTick = Time.time + 1f;
                     break;
@@ -200,6 +211,8 @@ namespace Vhaldren.Gameplay.Magic
             until[(int)kind] = 0f;
             if (kind == StatusKind.Chill)
                 chillStacks = 0;
+            if (kind == StatusKind.Ignition)
+                ignitionOwner = null;
         }
 
         public void ClearAll()
@@ -208,6 +221,7 @@ namespace Vhaldren.Gameplay.Magic
                 until[i] = 0f;
             chillStacks = 0;
             frozenUntil = 0f;
+            ignitionOwner = null;
         }
 
         /// <summary>Avanza la quemadura. Separado de Update para poder probarlo.</summary>
@@ -223,8 +237,13 @@ namespace Vhaldren.Gameplay.Magic
                     receiver = GetComponent<CombatDamageReceiver>();
                 if (receiver == null)
                     break;
-                dealt += receiver.Receive(IgnitionDps, CombatDamageKind.DamageOverTime,
+                float applied = receiver.Receive(IgnitionDps,
+                    CombatDamageKind.DamageOverTime,
                     IsFinite(ignitionSource) ? ignitionSource : transform.position).Applied;
+                dealt += applied;
+                if (applied > 0f && ignitionOwner != null)
+                    ignitionOwner.GetComponentInParent<PlayerDamageTracker>()?
+                        .Record(applied, CombatDamageKind.DamageOverTime);
                 if (health.IsDefeated)
                     break;
             }
