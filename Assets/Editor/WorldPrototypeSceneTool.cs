@@ -7,6 +7,7 @@ using UnityEngine.SceneManagement;
 using UnityEngine.Rendering;
 using Vhaldren.Gameplay.Combat;
 using Vhaldren.Gameplay.Player;
+using Vhaldren.Gameplay.Survival;
 using Vhaldren.Gameplay.World;
 
 namespace Vhaldren.EditorTools
@@ -74,6 +75,15 @@ namespace Vhaldren.EditorTools
             if (playerFeedback == null)
                 playerFeedback = player.AddComponent<CombatDamageFeedback>();
             playerFeedback.ConfigureForPlayer();
+            // Supervivencia 015: inventario, construccion (B), recoleccion (E) e interfaz.
+            if (player.GetComponent<SurvivalInventory>() == null)
+                player.AddComponent<SurvivalInventory>();
+            if (player.GetComponent<PlayerBuilder>() == null)
+                player.AddComponent<PlayerBuilder>();
+            if (player.GetComponent<PlayerGatherer>() == null)
+                player.AddComponent<PlayerGatherer>();
+            if (player.GetComponent<SurvivalHud>() == null)
+                player.AddComponent<SurvivalHud>();
 
             Material ground = Mat("SueloBasico", new Color(0.19f, 0.17f, 0.18f));
             Material forest = Mat("Bosque", new Color(0.11f, 0.18f, 0.14f));
@@ -136,6 +146,8 @@ namespace Vhaldren.EditorTools
                 float size = 0.75f + (float)rng.NextDouble() * 0.8f;
                 Tree(props, new Vector3(x, 0f, z), size, bark, leaves);
             }
+
+            ResourceDeposits(props, stone, leaves);
 
             // Ruinas a la derecha: posiciones predecibles, fuera del corredor principal.
             for (int i = 0; i < 16; i++)
@@ -241,6 +253,8 @@ namespace Vhaldren.EditorTools
             CombatHealth health = player.GetComponent<CombatHealth>();
             bool valid = player.GetComponent<PlayerMotor>() != null &&
                 player.GetComponent<LocalPlayerShooter>() != null &&
+                player.GetComponent<PlayerBuilder>() != null &&
+                player.GetComponent<PlayerGatherer>() != null &&
                 player.GetComponent<CharacterController>() != null &&
                 health != null && health.MaximumHealth >= 150f &&
                 camera.GetComponent<Camera>() != null &&
@@ -381,6 +395,37 @@ namespace Vhaldren.EditorTools
                 position + Vector3.up * (4.1f * size),
                 new Vector3(3.3f * size, 3.0f * size, 3.3f * size),
                 leaves, false);
+            root.gameObject.AddComponent<HarvestNode>().Configure(ResourceKind.Wood, 12, 3);
+        }
+
+        /// <summary>Rocas, fibra y mineral cerca de la entrada para la primera base.</summary>
+        private static void ResourceDeposits(Transform parent, Material stone, Material leaves)
+        {
+            Material ore = Mat("Mineral", new Color(0.36f, 0.22f, 0.16f));
+            Vector3[] rocks = { new Vector3(-8f, 0f, -6f), new Vector3(-11f, 0f, 5f), new Vector3(7f, 0f, -9f), new Vector3(10f, 0f, 7f) };
+            foreach (Vector3 p in rocks)
+            {
+                Transform root = ChildRoot(parent, "Roca");
+                root.position = p;
+                Primitive("Piedra", PrimitiveType.Sphere, root, p + Vector3.up * 0.55f, new Vector3(1.8f, 1.2f, 1.5f), stone, true);
+                root.gameObject.AddComponent<HarvestNode>().Configure(ResourceKind.Stone, 15, 3);
+            }
+            Vector3[] bushes = { new Vector3(-6f, 0f, 9f), new Vector3(5f, 0f, 11f), new Vector3(-13f, 0f, -11f) };
+            foreach (Vector3 p in bushes)
+            {
+                Transform root = ChildRoot(parent, "Arbusto de fibra");
+                root.position = p;
+                Primitive("Matorral", PrimitiveType.Sphere, root, p + Vector3.up * 0.4f, new Vector3(1.3f, 0.8f, 1.3f), leaves, false);
+                root.gameObject.AddComponent<HarvestNode>().Configure(ResourceKind.Fiber, 9, 3);
+            }
+            Vector3[] veins = { new Vector3(14f, 0f, -2f), new Vector3(15f, 0f, 4f) };
+            foreach (Vector3 p in veins)
+            {
+                Transform root = ChildRoot(parent, "Veta de mineral");
+                root.position = p;
+                Primitive("Mineral", PrimitiveType.Cube, root, p + Vector3.up * 0.6f, new Vector3(1.2f, 1.2f, 1.2f), ore, true);
+                root.gameObject.AddComponent<HarvestNode>().Configure(ResourceKind.Ore, 10, 2);
+            }
         }
 
         private static void KayKit(string name, string file, Transform parent,

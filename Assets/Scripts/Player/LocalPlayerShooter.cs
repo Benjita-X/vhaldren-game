@@ -24,6 +24,7 @@ namespace Vhaldren.Gameplay.Player
         [SerializeField, Min(0f)] private float testDamage = 25f;
         [SerializeField] private LayerMask aimLayers = Physics.DefaultRaycastLayers;
         [Header("Arma visible — modo mundo")]
+        private const float AimSurfaceMargin = 0.35f;
         [SerializeField] private bool usePhysicalArrows;
         [SerializeField, Min(1f)] private float arrowSpeed = 27f;
         [SerializeField, Min(0f)] private float arrowGravity = 0.16f;
@@ -192,7 +193,9 @@ namespace Vhaldren.Gameplay.Player
                 return false;
 
             direction.Normalize();
-            float range = Mathf.Min(SafeMaxRange(), Vector3.Distance(origin, aimPoint));
+            // El punto apuntado esta justo en la superficie del objetivo: sin un margen,
+            // el rayo puede quedarse a milimetros y no tocarlo (fallo por precision).
+            float range = Mathf.Min(SafeMaxRange(), Vector3.Distance(origin, aimPoint) + AimSurfaceMargin);
             if (range <= 0f)
                 return false;
 
