@@ -8,7 +8,8 @@ namespace Vhaldren.Gameplay.Combat
         Melee = 0,
         Arrow = 1,
         Magic = 2,
-        Explosion = 3
+        Explosion = 3,
+        DamageOverTime = 4
     }
 
     public readonly struct CombatDamageResult
