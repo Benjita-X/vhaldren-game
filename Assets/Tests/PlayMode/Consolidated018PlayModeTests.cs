@@ -41,12 +41,8 @@ namespace Vhaldren.Tests
 
             int stone = inventory.Count(ResourceKind.Stone);
             int wood = inventory.Count(ResourceKind.Wood);
-            // Explicitly toggle by assigning the testing-only backing field
-            // via the auto property's compiler-generated field. Only this
-            // test uses reflection; gameplay toggles creative mode with F9.
-            typeof(PlayerBuilder).GetField("<CreativeMode>k__BackingField",
-                System.Reflection.BindingFlags.Instance |
-                System.Reflection.BindingFlags.NonPublic).SetValue(builder, true);
+            // Misma API que usa F9, sin depender del nombre interno de C#.
+            builder.SetCreativeMode(true);
 
             BuiltPiece piece = builder.TryPlace(0,
                 new Vector3(1f, 0f, 1f), 0, out PlacementResult outcome);
