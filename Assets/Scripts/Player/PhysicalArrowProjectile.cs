@@ -13,6 +13,7 @@ namespace Vhaldren.Gameplay.Player
     {
         private const int HitCapacity = 24;
         private readonly RaycastHit[] hits = new RaycastHit[HitCapacity];
+        private readonly Collider[] overlaps = new Collider[HitCapacity];
 
         private Transform owner;
         private LocalPlayerShooter shooter;
@@ -66,11 +67,18 @@ namespace Vhaldren.Gameplay.Player
             if (!initialized || finished)
                 return;
 
-            float dt = Mathf.Min(Time.deltaTime, 0.06f);
-            if (dt <= 0f)
+            float dt = Time.deltaTime;
+            if (!Finite(dt) || dt <= 0f)
                 return;
 
             Vector3 previous = transform.position;
+            // SphereCast no detecta colliders que ya contienen al origen.
+            // Revisarlos tambien permite impactar de cerca sin disparar a traves.
+            if (TryStartingOverlap(previous, out Collider overlapping))
+            {
+                OnImpact(overlapping, previous);
+                return;
+            }
             velocity += Physics.gravity * gravityScale * dt;
             Vector3 step = velocity * dt;
             float length = step.magnitude;
@@ -83,7 +91,7 @@ namespace Vhaldren.Gameplay.Player
             {
                 transform.position = hit.point - direction * 0.06f;
                 transform.rotation = Quaternion.LookRotation(direction);
-                OnImpact(hit);
+                OnImpact(hit.collider, hit.point);
                 return;
             }
 
@@ -92,6 +100,30 @@ namespace Vhaldren.Gameplay.Player
             remainingRange -= scanLength;
             if (remainingRange <= 0f)
                 Destroy(gameObject);
+        }
+
+        private bool TryStartingOverlap(Vector3 origin, out Collider found)
+        {
+            found = null;
+            int count = Physics.OverlapSphereNonAlloc(origin, collisionRadius,
+                overlaps, Physics.DefaultRaycastLayers, QueryTriggerInteraction.Ignore);
+            Collider[] candidates = overlaps;
+            if (count == overlaps.Length)
+            {
+                candidates = Physics.OverlapSphere(origin, collisionRadius,
+                    Physics.DefaultRaycastLayers, QueryTriggerInteraction.Ignore);
+                count = candidates.Length;
+            }
+            for (int i = 0; i < count; i++)
+            {
+                Collider candidate = candidates[i];
+                if (candidate == null || (owner != null &&
+                    (candidate.transform == owner || candidate.transform.IsChildOf(owner))))
+                    continue;
+                found = candidate;
+                return true;
+            }
+            return false;
         }
 
         private bool TryFirstHit(Vector3 origin, Vector3 direction, float distance,
@@ -131,14 +163,13 @@ namespace Vhaldren.Gameplay.Player
             return found;
         }
 
-        private void OnImpact(RaycastHit hit)
+        private void OnImpact(Collider hitCollider, Vector3 impactPoint)
         {
             if (finished)
                 return;
             finished = true;
 
             float applied = 0f;
-            Collider hitCollider = hit.collider;
             if (hitCollider != null)
             {
                 CombatDamageReceiver receiver =
@@ -159,9 +190,9 @@ namespace Vhaldren.Gameplay.Player
             }
 
             if (shooter != null)
-                shooter.RegisterProjectileImpact(hit.point, applied);
+                shooter.RegisterProjectileImpact(impactPoint, applied);
 
-            ShowImpact(hit.point, applied > 0f);
+            ShowImpact(impactPoint, applied > 0f);
             Destroy(gameObject);
         }
 
