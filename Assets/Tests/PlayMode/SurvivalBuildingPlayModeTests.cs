@@ -98,6 +98,8 @@ namespace Vhaldren.Tests
             BuiltPiece wall = builder.TryPlace(Index("pared"), new Vector3(1f, 0f, 2f), 0, out _);
             Assert.That(inventory.Count(ResourceKind.Wood), Is.EqualTo(wood - 4));
             Assert.That(builder.Dismantle(wall), Is.True);
+            Assert.That(builder.Dismantle(wall), Is.False,
+                "No se puede obtener un segundo reembolso antes de que Unity destruya la pieza.");
             Assert.That(inventory.Count(ResourceKind.Wood), Is.EqualTo(wood));
 
             Assert.That(builder.TryPlace(Index("suelo"), new Vector3(3f, 0f, 1f), 0, out _), Is.Not.Null);
@@ -222,6 +224,33 @@ namespace Vhaldren.Tests
             builder.SetBuildMode(false);
             Assert.That(modifiers.AllowsAttack, Is.True);
             yield break;
+        }
+
+        [UnityTest]
+        public IEnumerator ChestCannotBeDismantledIfRemovingStorageWouldOverflowInventory()
+        {
+            BuiltPiece chest = builder.TryPlace(Index("cofre"),
+                new Vector3(1f, 0f, 1f), 0, out PlacementResult result);
+            Assert.That(result, Is.EqualTo(PlacementResult.Ok));
+            Assert.That(chest, Is.Not.Null);
+
+            int total = inventory.TotalItems;
+            Assert.That(inventory.Add(ResourceKind.Wood, 220), Is.EqualTo(220));
+            Assert.That(inventory.TotalItems, Is.GreaterThan(240));
+            int beforeRejected = inventory.TotalItems;
+            Assert.That(builder.Dismantle(chest), Is.False,
+                "No destruir cofre si los recursos desbordarian el inventario.");
+            Assert.That(inventory.TotalItems, Is.EqualTo(beforeRejected));
+            Assert.That(chest.IsBeingRemoved, Is.False);
+
+            Assert.That(inventory.TrySpend(new[] {
+                new ResourceIngredient(ResourceKind.Wood, 90) }), Is.True);
+            int beforeRefund = inventory.TotalItems;
+            Assert.That(builder.Dismantle(chest), Is.True);
+            Assert.That(inventory.TotalItems, Is.EqualTo(beforeRefund + 10),
+                "El reembolso incluye exactamente los 10 recursos pagados por el cofre.");
+            Assert.That(builder.Dismantle(chest), Is.False);
+            yield return null;
         }
 
         [UnityTest]
