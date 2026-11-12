@@ -19,14 +19,20 @@ namespace Vhaldren.Gameplay.Survival
         public static bool FreePlacementHeld => Held(KeyCode.LeftShift);
         public static bool Undo => Held(KeyCode.LeftControl) && Down(KeyCode.Z);
 
-        /// <summary>1..9 y 0 eligen pieza. Devuelve -1 si no se pulso ninguna.</summary>
+        private static readonly GameAction[] PieceSlots =
+        {
+            GameAction.BuildSlot1, GameAction.BuildSlot2, GameAction.BuildSlot3,
+            GameAction.BuildSlot4, GameAction.BuildSlot5, GameAction.BuildSlot6,
+            GameAction.BuildSlot7, GameAction.BuildSlot8, GameAction.BuildSlot9,
+            GameAction.BuildSlot10
+        };
+
+        /// <summary>Ranuras de pieza reasignables. Devuelve -1 si no se pulso ninguna.</summary>
         public static int PieceSlotPressed()
         {
-            for (int i = 0; i < 9; i++)
-                if (Down(KeyCode.Alpha1 + i))
+            for (int i = 0; i < PieceSlots.Length; i++)
+                if (GameInput.Down(PieceSlots[i]))
                     return i;
-            if (Down(KeyCode.Alpha0))
-                return 9;
             return -1;
         }
 
