@@ -50,6 +50,18 @@ namespace Vhaldren.Gameplay.Player
         public void SetPhysicalArrows(bool enabled)
         {
             usePhysicalArrows = enabled;
+            if (!Application.isPlaying || shotOrigin == null)
+                return;
+
+            CrossbowVisual model = GetComponent<CrossbowVisual>();
+            if (enabled)
+            {
+                if (model == null)
+                    model = gameObject.AddComponent<CrossbowVisual>();
+                model.Attach(shotOrigin);
+            }
+            else if (model != null)
+                model.Hide();
         }
 
         /// <summary>Respuesta diferida cuando la flecha impacta de verdad.</summary>
