@@ -28,6 +28,18 @@ namespace Vhaldren.Gameplay.Combat
                 return;
             bool playerHurt = victim.GetComponent<Vhaldren.Gameplay.Player.PlayerMotor>() != null;
             Vector3 center = Center(victim);
+
+            // Daño periódico (fuego/venenos futuros) conserva números y vida real,
+            // pero no debe congelar el juego ni empujar al objetivo cada segundo.
+            if (kind == CombatDamageKind.DamageOverTime)
+            {
+                if (playerHurt)
+                    Host().FlashHurt(Mathf.Clamp01(applied / 50f) * 0.45f);
+                Host().Burst(center, Vector3.up, new Color(1f, 0.34f, 0.08f, 0.75f),
+                    4, 1.8f, 0.22f, 0.07f);
+                return;
+            }
+
             Vector3 away = center - source;
             away.y = 0f;
             away = away.sqrMagnitude > 0.001f ? away.normalized : -victim.transform.forward;
