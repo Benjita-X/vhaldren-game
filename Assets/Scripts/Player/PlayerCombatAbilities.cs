@@ -41,6 +41,7 @@ namespace Vhaldren.Gameplay.Player
         private static Material effectMaterial;
 
         public int SwordTargetsHit { get; private set; }
+        public int CounterStrikes { get; private set; }
         public int RuneTargetsHit { get; private set; }
         public float SwordCooldownRemaining => Mathf.Max(0f, swordReadyAt - Time.time);
         public float RuneCooldownRemaining => Mathf.Max(0f, runeReadyAt - Time.time);
@@ -81,7 +82,10 @@ namespace Vhaldren.Gameplay.Player
                 return false;
 
             swordReadyAt = Time.time + Mathf.Max(0.1f, swordCooldown);
-            StartCoroutine(SwordSequence());
+            bool counter = defense.TryConsumeCounter();
+            if (counter)
+                CounterStrikes++;
+            StartCoroutine(SwordSequence(counter));
             return true;
         }
 
@@ -97,7 +101,7 @@ namespace Vhaldren.Gameplay.Player
             return true;
         }
 
-        private IEnumerator SwordSequence()
+        private IEnumerator SwordSequence(bool counter)
         {
             Vector3 forward = motor != null ? motor.CurrentFacing : transform.forward;
             forward.y = 0f;
@@ -106,7 +110,8 @@ namespace Vhaldren.Gameplay.Player
             forward.Normalize();
 
             MakeArc(transform.position, forward, swordRange,
-                new Color(1f, 0.68f, 0.20f), 0.34f);
+                counter ? new Color(1f, 0.25f, 0.27f) :
+                    new Color(1f, 0.68f, 0.20f), 0.34f);
             yield return new WaitForSeconds(0.12f);
 
             if (health == null || health.IsDefeated)
@@ -131,7 +136,8 @@ namespace Vhaldren.Gameplay.Player
                     continue;
 
                 CombatDamageResult result =
-                    receiver.Receive(swordDamage, CombatDamageKind.Melee, origin);
+                    receiver.Receive(swordDamage * (counter ? 1.5f : 1f),
+                        CombatDamageKind.Melee, origin);
                 if (result.Applied > 0f)
                 {
                     SwordTargetsHit++;
