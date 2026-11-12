@@ -11,8 +11,10 @@ namespace Vhaldren.Gameplay.Combat
     [DisallowMultipleComponent]
     public sealed class PlayerDamageTracker : MonoBehaviour
     {
-        private readonly float[] totalByKind = new float[4];
-        private readonly int[] hitsByKind = new int[4];
+        private readonly float[] totalByKind =
+            new float[(int)CombatDamageKind.DamageOverTime + 1];
+        private readonly int[] hitsByKind =
+            new int[(int)CombatDamageKind.DamageOverTime + 1];
 
         public float TotalDamage { get; private set; }
         public float LastDamage { get; private set; }
