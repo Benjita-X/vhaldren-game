@@ -85,6 +85,44 @@ namespace Vhaldren.Gameplay.Survival
             return accepted;
         }
 
+        /// <summary>
+        /// Una sola transaccion para el comercio: consume y entrega con
+        /// una notificacion. Evita gastar materiales si el inventario no
+        /// puede aceptar la recompensa. Tambien maneja cost/reward iguales.
+        /// </summary>
+        public bool TryExchange(ResourceKind priceKind, int price,
+            ResourceKind rewardKind, int reward)
+        {
+            if (!Enum.IsDefined(typeof(ResourceKind), priceKind) ||
+                !Enum.IsDefined(typeof(ResourceKind), rewardKind) ||
+                price < 0 || reward <= 0 || Count(priceKind) < price)
+                return false;
+
+            long future = (long)TotalItems - price + reward;
+            if (future < 0 || future > Capacity)
+                return false;
+
+            long priceLeft = (long)Count(priceKind) - price;
+            long rewardTotal = (long)Count(rewardKind) + reward;
+            if (priceKind == rewardKind)
+            {
+                long combined = (long)Count(priceKind) - price + reward;
+                if (combined < 0 || combined > int.MaxValue)
+                    return false;
+                counts[priceKind] = (int)combined;
+            }
+            else
+            {
+                if (priceLeft < 0 || rewardTotal > int.MaxValue)
+                    return false;
+                counts[priceKind] = (int)priceLeft;
+                counts[rewardKind] = (int)rewardTotal;
+            }
+            TotalItems = (int)future;
+            Changed?.Invoke();
+            return true;
+        }
+
         public bool CanAfford(IReadOnlyList<ResourceIngredient> ingredients)
         {
             if (!CollectCosts(ingredients))
