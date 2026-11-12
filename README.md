@@ -1,3 +1,15 @@
+# Vhaldren — rama unificada 017
+
+**Rama recomendada para continuar:** `feature/017-integracion-jugable-pueblos-combate`, basada en 016→015→014→013→012. Incluye mapa, combate, supervivencia, construccion, progresion inicial, curacion precisa, defensa y primer tablon de misiones/comercio.
+
+**Inicia aqui:** en Unity 6000.2.12f1 abre `Assets/Scenes/WorldPrototype001.unity`, pulsa Play y comprueba los sistemas. Las nuevas pruebas 017 siguen pendientes de ejecutar. El controlador KayKit se revisa y amplía sin destruir estados al cargar Unity; tambien puedes ejecutar `Vhaldren > Personaje > Revisar y completar animaciones`.
+
+**F1:** ayuda con todos los controles. **Q:** muestra curacion real (hasta 35 PV, nunca mas que la vida faltante). **V/T/F:** habilidades con motivo si fallan por recarga/resistencia. **Z/C/X:** escudo, barrera y parry con VFX y clips KayKit. **N:** tablón del Cruce; **Y:** mision; **O/P:** comercio. **B:** construccion y **E:** recoleccion; **J/K:** fabricar picos.
+
+La rama experimental `wip/codex-009-010` guarda otros sistemas de inventario y construccion **no integrados**. Solo se recuperaron sus VFX no duplicados. No borres esa carpeta local hasta verificar que no contiene trabajo pendiente. Ver [integracion, pruebas y limites 017](docs/017-INTEGRACION-UNIFICADA-COMBATE-PUEBLOS.md).
+
+---
+
 ## Combate 012 — ballesta con flecha, defensas diferenciadas, habilidades y enemigos 3D
 
 La rama `feature/012-armas-defensas-enemigos` incorpora un prototipo jugable sin regenerar la escena guardada. **Clic izquierdo:** ballesta y flecha viajera con colision real. **Espacio:** esquiva. **Z mantener:** escudo contra espadas/flechas. **C mantener:** barrera contra magia. **X:** parada de precision. **V:** tajo frontal de espada. **T:** pulso runico de area. Q sigue curando. El HUD muestra stamina; cada enemigo tiene modelo 3D procedural texturizado y el jefe alterna golpe fisico/runico.
@@ -8,7 +20,7 @@ Abre `Assets/Scenes/WorldPrototype001.unity` y prueba todo. La nueva version **n
 
 Juego de acción de fantasía oscura con cámara elevada: te mueves con WASD y apuntas con el mouse. Proyecto de Unity 6 (`6000.2.12f1`, pipeline de render integrado).
 
-Esta rama contiene la **base de control**: movimiento, esquiva, apuntado, zoom de cámara, un disparo de prueba y una escena-gimnasio para probarlos. Todavía no hay daño, habilidades, animación ni red.
+El primer prototipo era solo una base de movimiento; la linea 017 ya integra combate, animaciones KayKit, supervivencia y construccion locales. **No incluye aun cooperativo/red, guardado persistente ni tres reinos 3D terminados.**
 
 El proyecto usa el paquete Unity Input System 1.18.0 con `Active Input Handling` en Both. Al abrirlo, deja que Unity resuelva el paquete y acepta reiniciar el Editor si lo solicita. Las pulsaciones de WASD se guardan en orden hasta la siguiente lectura para que los taps rápidos no desaparezcan.
 
