@@ -407,9 +407,9 @@ namespace Vhaldren.Gameplay.Magic
             if (status != null)
             {
                 hadBleed = status.Has(StatusKind.Bleed);
-                total += status.ConsumeStatic();
+                total += status.ConsumeStatic(transform.position);
                 for (int i = 0; i < spell.StatusStacks; i++)
-                    status.Apply(spell.Status);
+                    status.ApplyFrom(spell.Status, transform.position);
             }
 
             float steal = spell.LifeSteal + (essence != null ? essence.LifeSteal : 0f) +
@@ -458,12 +458,19 @@ namespace Vhaldren.Gameplay.Magic
             {
                 int count = Physics.OverlapSphereNonAlloc(searchCenter, searchRadius, candidates,
                     Physics.DefaultRaycastLayers, QueryTriggerInteraction.Ignore);
+                Collider[] chainCandidates = candidates;
+                if (count >= candidates.Length)
+                {
+                    chainCandidates = Physics.OverlapSphere(searchCenter, searchRadius,
+                        Physics.DefaultRaycastLayers, QueryTriggerInteraction.Ignore);
+                    count = chainCandidates.Length;
+                }
                 CombatDamageReceiver best = null;
                 float bestScore = float.PositiveInfinity;
                 for (int i = 0; i < count; i++)
                 {
-                    CombatDamageReceiver receiver = candidates[i] != null
-                        ? candidates[i].GetComponentInParent<CombatDamageReceiver>() : null;
+                    CombatDamageReceiver receiver = chainCandidates[i] != null
+                        ? chainCandidates[i].GetComponentInParent<CombatDamageReceiver>() : null;
                     if (receiver == null || receiver.transform.IsChildOf(transform) || struck.Contains(receiver))
                         continue;
                     CombatHealth targetHealth = receiver.GetComponent<CombatHealth>();
@@ -522,9 +529,19 @@ namespace Vhaldren.Gameplay.Magic
                 return true;
             int count = Physics.RaycastNonAlloc(start, ray / range, rayHits, range,
                 Physics.DefaultRaycastLayers, QueryTriggerInteraction.Ignore);
+            RaycastHit[] completeHits = null;
+            if (count >= rayHits.Length)
+            {
+                completeHits = Physics.RaycastAll(start, ray / range, range,
+                    Physics.DefaultRaycastLayers, QueryTriggerInteraction.Ignore);
+                count = completeHits.Length;
+            }
             for (int i = 0; i < count; i++)
             {
-                Transform obstacle = rayHits[i].collider.transform;
+                RaycastHit candidate = completeHits != null ? completeHits[i] : rayHits[i];
+                if (candidate.collider == null)
+                    continue;
+                Transform obstacle = candidate.collider.transform;
                 if (obstacle.IsChildOf(transform) || obstacle.IsChildOf(target.transform))
                     continue;
                 // Otros enemigos no tapan el area: solo paredes y escenario.
@@ -585,14 +602,24 @@ namespace Vhaldren.Gameplay.Magic
             Ray ray = viewCamera.ScreenPointToRay(MagicKeys.Pointer);
             int count = Physics.RaycastNonAlloc(ray, rayHits, 200f, Physics.DefaultRaycastLayers,
                 QueryTriggerInteraction.Ignore);
+            RaycastHit[] completeHits = null;
+            if (count >= rayHits.Length)
+            {
+                completeHits = Physics.RaycastAll(ray, 200f, Physics.DefaultRaycastLayers,
+                    QueryTriggerInteraction.Ignore);
+                count = completeHits.Length;
+            }
             float best = float.PositiveInfinity;
             Vector3 point = Vector3.zero;
             for (int i = 0; i < count; i++)
             {
-                if (rayHits[i].collider.transform.IsChildOf(transform) || rayHits[i].distance >= best)
+                RaycastHit candidate = completeHits != null ? completeHits[i] : rayHits[i];
+                if (candidate.collider == null ||
+                    candidate.collider.transform.IsChildOf(transform) ||
+                    candidate.distance >= best)
                     continue;
-                best = rayHits[i].distance;
-                point = rayHits[i].point;
+                best = candidate.distance;
+                point = candidate.point;
             }
             if (best < float.PositiveInfinity)
                 return point;
