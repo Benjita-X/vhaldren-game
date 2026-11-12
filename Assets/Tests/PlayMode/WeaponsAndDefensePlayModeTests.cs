@@ -14,6 +14,7 @@ namespace Vhaldren.Tests
         private GameObject blocker;
         private GameObject secondEnemy;
         private GameObject floor;
+        private GameObject cameraObject;
 
         [UnityTearDown]
         public IEnumerator Cleanup()
@@ -23,6 +24,7 @@ namespace Vhaldren.Tests
             if (blocker != null) Object.Destroy(blocker);
             if (secondEnemy != null) Object.Destroy(secondEnemy);
             if (floor != null) Object.Destroy(floor);
+            if (cameraObject != null) Object.Destroy(cameraObject);
             yield return null;
         }
 
@@ -129,6 +131,77 @@ namespace Vhaldren.Tests
             target.AddComponent<CombatDamageReceiver>();
             Physics.SyncTransforms();
             return health;
+        }
+
+        [UnityTest]
+        public IEnumerator TwoRapidCrossbowRequestsCreateTwoSeparateArrows()
+        {
+            cameraObject = new GameObject("ShotBufferCamera");
+            Camera camera = cameraObject.AddComponent<Camera>();
+            cameraObject.tag = "MainCamera";
+            cameraObject.transform.position = new Vector3(0f, 5f, -8f);
+
+            owner = new GameObject("PlayerRoot");
+            owner.transform.position = new Vector3(0f, 1.08f, 0f);
+            LocalPlayerShooter shooter = owner.AddComponent<LocalPlayerShooter>();
+            typeof(LocalPlayerShooter).GetField("viewCamera",
+                System.Reflection.BindingFlags.Instance |
+                System.Reflection.BindingFlags.NonPublic).SetValue(shooter, camera);
+            shooter.SetPhysicalArrows(true);
+
+            target = GameObject.CreatePrimitive(PrimitiveType.Cube);
+            target.transform.position = new Vector3(0f, 1f, 6f);
+            target.transform.localScale = new Vector3(1.2f, 2f, 1f);
+            target.AddComponent<CombatHealth>();
+            cameraObject.transform.LookAt(target.transform.position);
+            Physics.SyncTransforms();
+            yield return null;
+
+            Vector2 pointer = new Vector2(Screen.width * 0.5f, Screen.height * 0.5f);
+            Assert.That(shooter.RequestShot(pointer), Is.True);
+            Assert.That(shooter.RequestShot(pointer), Is.True);
+            Assert.That(shooter.ShotsFired, Is.EqualTo(1),
+                "El segundo clic queda almacenado, sin saltarse la recarga.");
+            Assert.That(shooter.BufferedShots, Is.EqualTo(1));
+
+            yield return new WaitForSeconds(0.55f);
+            Assert.That(shooter.ShotsFired, Is.EqualTo(2),
+                "Dos pulsaciones rapidas generan dos flechas, no una.");
+            Assert.That(shooter.BufferedShots, Is.Zero);
+        }
+
+        [UnityTest]
+        public IEnumerator PendingCrossbowShotIsDiscardedWhenWeaponIsDisabled()
+        {
+            cameraObject = new GameObject("ShotBufferCamera");
+            Camera camera = cameraObject.AddComponent<Camera>();
+            cameraObject.tag = "MainCamera";
+            cameraObject.transform.position = new Vector3(0f, 5f, -8f);
+            owner = new GameObject("PlayerRoot");
+            owner.transform.position = new Vector3(0f, 1.08f, 0f);
+            LocalPlayerShooter shooter = owner.AddComponent<LocalPlayerShooter>();
+            typeof(LocalPlayerShooter).GetField("viewCamera",
+                System.Reflection.BindingFlags.Instance |
+                System.Reflection.BindingFlags.NonPublic).SetValue(shooter, camera);
+            shooter.SetPhysicalArrows(true);
+            target = GameObject.CreatePrimitive(PrimitiveType.Cube);
+            target.transform.position = new Vector3(0f, 1f, 6f);
+            cameraObject.transform.LookAt(target.transform.position);
+            Physics.SyncTransforms();
+            yield return null;
+
+            Vector2 pointer = new Vector2(Screen.width * 0.5f, Screen.height * 0.5f);
+            Assert.That(shooter.RequestShot(pointer), Is.True);
+            Assert.That(shooter.RequestShot(pointer), Is.True);
+            Assert.That(shooter.BufferedShots, Is.EqualTo(1));
+
+            shooter.enabled = false;
+            Assert.That(shooter.BufferedShots, Is.Zero,
+                "Ningun disparo pendiente sobrevive a muerte/cambio de arma.");
+            yield return new WaitForSeconds(0.5f);
+            shooter.enabled = true;
+            yield return null;
+            Assert.That(shooter.ShotsFired, Is.EqualTo(1));
         }
 
         [UnityTest]
