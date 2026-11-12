@@ -154,6 +154,13 @@ namespace Vhaldren.EditorTools
             controller.AddParameter("Shoot", AnimatorControllerParameterType.Trigger);
             controller.AddParameter("Harvest", AnimatorControllerParameterType.Trigger);
             controller.AddParameter("HarvestStyle", AnimatorControllerParameterType.Int);
+            string[] combatParameters =
+            {
+                "SwordAction", "SpellAction", "FrostAction",
+                "ShieldAction", "WardAction", "ParryAction"
+            };
+            foreach (string parameter in combatParameters)
+                controller.AddParameter(parameter, AnimatorControllerParameterType.Trigger);
 
             AnimatorStateMachine machine = controller.layers[0].stateMachine;
 
@@ -222,6 +229,41 @@ namespace Vhaldren.EditorTools
                 gatherExit.hasExitTime = true;
                 gatherExit.exitTime = 0.75f;
                 gatherExit.duration = 0.08f;
+            }
+
+            // Clips oficiales del modelo KayKit ya importado.
+            // Acciones breves: siempre vuelven al blend tree de locomocion.
+            string[] actionNames =
+            {
+                "Espada", "Magia", "Escarcha", "Escudo", "Barrera", "Parada precisa"
+            };
+            string[] actionParams =
+            {
+                "SwordAction", "SpellAction", "FrostAction",
+                "ShieldAction", "WardAction", "ParryAction"
+            };
+            string[] actionClips =
+            {
+                "1H_Melee_Attack_Slice_Diagonal", "Spellcast_Shoot",
+                "Spellcast_Raise", "Block", "Spellcast_Raise", "Block_Hit"
+            };
+            for (int i = 0; i < actionNames.Length; i++)
+            {
+                AnimatorState actionState = machine.AddState(actionNames[i]);
+                actionState.motion = Clip(clips, actionClips[i]);
+                actionState.speed = i == 0 ? 1.8f : i == 5 ? 2.6f : 1.9f;
+
+                AnimatorStateTransition startAction =
+                    machine.AddAnyStateTransition(actionState);
+                startAction.AddCondition(AnimatorConditionMode.If, 0f, actionParams[i]);
+                startAction.duration = 0.05f;
+                startAction.canTransitionToSelf = false;
+
+                AnimatorStateTransition endAction =
+                    actionState.AddTransition(locomotion);
+                endAction.hasExitTime = true;
+                endAction.exitTime = i == 5 ? 0.78f : 0.72f;
+                endAction.duration = 0.07f;
             }
 
             EditorUtility.SetDirty(controller);

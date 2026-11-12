@@ -56,6 +56,26 @@ namespace Vhaldren.Gameplay.Combat
         public GuardMode Guard => guard;
         public float Stamina => stamina;
         public float MaximumStamina => Mathf.Max(1f, maximumStamina);
+        public float RegenerationPerSecond => Mathf.Max(0f, regenerationPerSecond);
+
+        /// <summary>Resistencia maxima y recuperacion (razas). Conserva la proporcion actual.</summary>
+        public void ConfigureStamina(float maximum, float regenPerSecond)
+        {
+            if (float.IsNaN(maximum) || maximum < 1f || float.IsNaN(regenPerSecond) || regenPerSecond < 0f)
+                return;
+            float ratio = stamina / MaximumStamina;
+            maximumStamina = maximum;
+            regenerationPerSecond = regenPerSecond;
+            stamina = Mathf.Clamp(ratio * maximumStamina, 0f, maximumStamina);
+        }
+
+        /// <summary>Recupera resistencia al instante (poderes de raza).</summary>
+        public float RestoreStamina(float amount)
+        {
+            float before = stamina;
+            stamina = Mathf.Min(MaximumStamina, stamina + Mathf.Max(0f, amount));
+            return stamina - before;
+        }
         public bool ParryWindowActive => Time.time < parryUntil;
         public bool CounterReady => counterPending && Time.time < counterReadyUntil;
         public bool GuardBroken => guardBroken;

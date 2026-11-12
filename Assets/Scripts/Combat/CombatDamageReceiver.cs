@@ -27,6 +27,24 @@ namespace Vhaldren.Gameplay.Combat
         }
     }
 
+    /// <summary>Componentes que alteran el daño recibido (maldicion, esencia, vulnerabilidad).</summary>
+    public interface IDamageTakenModifier
+    {
+        float IncomingMultiplier { get; }
+    }
+
+    /// <summary>Modificadores que dependen del tipo de daño (poder fisico o magico del atacante).</summary>
+    public interface IDamageKindModifier
+    {
+        float Multiplier(CombatDamageKind kind);
+    }
+
+    /// <summary>Escudos que absorben daño antes de restar PV. Devuelven el daño que sobra.</summary>
+    public interface IDamageAbsorber
+    {
+        float Absorb(float amount);
+    }
+
     /// <summary>
     /// Unica puerta opcional para ataques nuevos. Las armas eligen su clase de daño;
     /// la salud existente sigue enviando eventos del daño REAL aplicado.
@@ -43,6 +61,12 @@ namespace Vhaldren.Gameplay.Combat
         private CombatHealth health;
         private CombatDefense defense;
 
+        private readonly System.Collections.Generic.List<IDamageTakenModifier> modifiers =
+            new System.Collections.Generic.List<IDamageTakenModifier>();
+        private readonly System.Collections.Generic.List<IDamageKindModifier> kindModifiers =
+            new System.Collections.Generic.List<IDamageKindModifier>();
+        private readonly System.Collections.Generic.List<IDamageAbsorber> absorbers =
+            new System.Collections.Generic.List<IDamageAbsorber>();
         public event Action<CombatDamageResult> Resolved;
         public float LastAppliedDamage { get; private set; }
 
@@ -90,6 +114,27 @@ namespace Vhaldren.Gameplay.Combat
                 evaded = protection.Evaded;
             }
 
+            if (amount > 0f)
+            {
+                GetComponents(modifiers);
+                for (int i = 0; i < modifiers.Count; i++)
+                {
+                    float factor = modifiers[i].IncomingMultiplier;
+                    if (!float.IsNaN(factor) && !float.IsInfinity(factor))
+                        amount *= Mathf.Clamp(factor, 0.1f, 3f);
+                }
+                GetComponents(kindModifiers);
+                for (int i = 0; i < kindModifiers.Count; i++)
+                {
+                    float factor = kindModifiers[i].Multiplier(kind);
+                    if (!float.IsNaN(factor) && !float.IsInfinity(factor))
+                        amount *= Mathf.Clamp(factor, 0.1f, 3f);
+                }
+                GetComponents(absorbers);
+                for (int i = 0; i < absorbers.Count && amount > 0f; i++)
+                    amount = Mathf.Clamp(absorbers[i].Absorb(amount), 0f, amount);
+            }
+
             amount = Mathf.Max(0f, amount);
             float applied = amount > 0f ? health.ApplyDamage(amount) : 0f;
             LastAppliedDamage = applied;
@@ -101,6 +146,10 @@ namespace Vhaldren.Gameplay.Combat
                 if (feedback != null)
                     feedback.ShowDefenseResult(prevented, parried, evaded);
             }
+            if (applied > 0f)
+                GameFeel.OnHit(this, applied, kind, attackSource);
+            else if (prevented > 0f && !evaded)
+                GameFeel.OnBlocked(this, parried);
             if (prevented > 0f || applied > 0f)
                 Resolved?.Invoke(result);
             return result;

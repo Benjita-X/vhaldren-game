@@ -332,6 +332,8 @@ namespace Vhaldren.Gameplay.Player
                     Mathf.Max(0f, arrowGravity));
                 if (arrow == null)
                     return false;
+                if (GameFeel.Enabled)
+                    GameAudio.Play(GameSound.BowString, origin, 0.7f);
 
                 nextArrowAt = Time.time + Mathf.Max(0.05f, arrowCooldown);
                 LastAimPoint = aimPoint;

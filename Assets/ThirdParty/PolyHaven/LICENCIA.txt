@@ -1,0 +1,2 @@
+Texturas de Poly Haven (https://polyhaven.com), licencia CC0 1.0 (dominio publico).
+Autores: Rob Tuytel y Amal Kumar. Resolucion 1K, mapas color, normal (OpenGL) y rugosidad.

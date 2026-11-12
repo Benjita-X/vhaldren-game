@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using Vhaldren.Gameplay.Combat;
 using Vhaldren.Gameplay.Player;
+using Vhaldren.Gameplay.World;
 
 namespace Vhaldren.Gameplay.Survival
 {
@@ -116,6 +117,13 @@ namespace Vhaldren.Gameplay.Survival
             IsBuilding = building;
             if (building)
             {
+                // Algunos sistemas de combate se instalan en runtime desde
+                // PrototypeGameSession.OnEnable, despues de PlayerBuilder.Awake.
+                // Resolver los componentes al entrar, no antes de crearlos.
+                combatBehaviours[0] = GetComponent<PlayerCombatAbilities>();
+                combatBehaviours[1] = GetComponent<PlayerDefensiveInput>();
+                if (modifiers == null)
+                    modifiers = GetComponent<PlayerActionModifiers>();
                 if (modifiers != null)
                     attackLock = modifiers.AddModifier(PlayerActionModifiers.LockedAction.Attack);
                 for (int i = 0; i < combatBehaviours.Length; i++)
@@ -163,6 +171,8 @@ namespace Vhaldren.Gameplay.Survival
                 if (builtPiece == null)
                     throw new System.InvalidOperationException("La pieza no tiene BuiltPiece.");
                 builtPiece.MarkMaterialsPaid();
+                if (piece.Function == BuildFunction.Campfire)
+                    GetComponent<VillageQuestJournal>()?.RecordAction(VillageObjective.BuildCampfire);
                 undoStack.Add(builtPiece);
                 if (undoStack.Count > UndoLimit)
                     undoStack.RemoveAt(0);

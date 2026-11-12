@@ -97,14 +97,18 @@ namespace Vhaldren.EditorTools
             if (player.GetComponent<SurvivalHud>() == null)
                 player.AddComponent<SurvivalHud>();
 
-            Material ground = Mat("SueloBasico", new Color(0.19f, 0.17f, 0.18f));
-            Material forest = Mat("Bosque", new Color(0.11f, 0.18f, 0.14f));
-            Material ruins = Mat("Ruinas", new Color(0.23f, 0.22f, 0.26f));
-            Material crimson = Mat("Altar", new Color(0.28f, 0.075f, 0.11f));
-            Material path = Mat("Sendero", new Color(0.33f, 0.26f, 0.23f));
-            Material stone = Mat("Piedra", new Color(0.3f, 0.32f, 0.36f));
-            Material bark = Mat("Tronco", new Color(0.2f, 0.13f, 0.12f));
-            Material leaves = Mat("Hojas", new Color(0.13f, 0.24f, 0.17f));
+            // Texturas CC0 de Poly Haven con proyeccion triplanar (Assets/ThirdParty/PolyHaven).
+            Material ground = TexMat("SueloBasico", "brown_mud_rocks_01", new Color(0.72f, 0.68f, 0.66f), 5f);
+            Material forest = TexMat("Bosque", "forest_leaves_02", new Color(0.62f, 0.7f, 0.58f), 4f);
+            Material ruins = TexMat("Ruinas", "aerial_rocks_02", new Color(0.68f, 0.68f, 0.74f), 6f);
+            Material crimson = TexMat("Altar", "cobblestone_floor_13", new Color(0.78f, 0.42f, 0.45f), 3f);
+            Material path = TexMat("Sendero", "cobblestone_floor_08", new Color(0.85f, 0.8f, 0.76f), 3f);
+            Material stone = TexMat("Piedra", "castle_brick_07", new Color(0.8f, 0.8f, 0.84f), 2.5f);
+            Material bark = TexMat("Tronco", "bark_brown_02", new Color(0.8f, 0.72f, 0.68f), 1.5f);
+            Material leaves = TexMat("Hojas", "forest_leaves_02", new Color(0.45f, 0.65f, 0.42f), 2f);
+            Material castleWall = TexMat("MuroCastillo", "castle_brick_broken_06", new Color(0.75f, 0.75f, 0.78f), 3f);
+            Material obelisk = TexMat("Obelisco", "castle_brick_02_red", new Color(0.85f, 0.6f, 0.62f), 1.5f);
+            Material wildRock = TexMat("RocaNatural", "dark_rock", new Color(0.85f, 0.85f, 0.88f), 2f);
             Material red = Mat("Enemigo", new Color(0.47f, 0.13f, 0.2f));
             Material purple = Mat("Jefe", new Color(0.42f, 0.16f, 0.52f));
             Material atlas = AssetDatabase.LoadAssetAtPath<Material>(AtlasPath);
@@ -115,31 +119,25 @@ namespace Vhaldren.EditorTools
             Transform props = ChildRoot(root, "Naturaleza y ruinas");
             Transform enemies = ChildRoot(root, "Enemigos");
 
-            // Piso fisico continuo: sin saltos entre regiones ni numerosos colliders por baldosa.
-            Primitive("Suelo fisico", PrimitiveType.Cube, environment,
-                new Vector3(0f, -0.55f, 0f), new Vector3(92f, 1.1f, 92f), ground, true);
-
-            // Capas visuales ultrafinas SIN colision: terreno continuo y zonas diferenciadas.
-            Surface("Region forestal", environment, new Vector3(-29f, 0.005f, -1f),
-                new Vector3(32f, 0.01f, 88f), forest);
-            Surface("Region de ruinas", environment, new Vector3(29f, 0.006f, -1f),
-                new Vector3(32f, 0.012f, 88f), ruins);
-            Surface("Camino central", environment, new Vector3(0f, 0.008f, -2f),
-                new Vector3(13f, 0.014f, 74f), path);
-            Surface("Cruce de caminos", environment, new Vector3(0f, 0.01f, 0f),
-                new Vector3(38f, 0.014f, 7f), path);
-            Surface("Patio del altar", environment, new Vector3(0f, 0.012f, 30f),
-                new Vector3(25f, 0.014f, 25f), crimson);
+            // Terreno de Unity (como en el video de LuisCanary, pero generado por codigo):
+            // zona de juego plana dentro de los muros, montanas fuera y texturas pintadas
+            // por region. Se llama "Suelo fisico" para que el validador lo reconozca.
+            BuildTerrain(environment);
+            BackdropForest(props, bark, leaves);
+            RenderSettings.fog = true;
+            RenderSettings.fogMode = FogMode.ExponentialSquared;
+            RenderSettings.fogColor = new Color(0.16f, 0.15f, 0.19f);
+            RenderSettings.fogDensity = 0.011f;
 
             // Limites fisicos: el usuario no puede caer al vacio durante esta prueba.
             Primitive("Muro norte", PrimitiveType.Cube, props,
-                new Vector3(0f, 3f, 46f), new Vector3(92f, 6f, 1.5f), stone, true);
+                new Vector3(0f, 3f, 46f), new Vector3(92f, 6f, 1.5f), castleWall, true);
             Primitive("Muro sur", PrimitiveType.Cube, props,
-                new Vector3(0f, 3f, -46f), new Vector3(92f, 6f, 1.5f), stone, true);
+                new Vector3(0f, 3f, -46f), new Vector3(92f, 6f, 1.5f), castleWall, true);
             Primitive("Muro este", PrimitiveType.Cube, props,
-                new Vector3(46f, 3f, 0f), new Vector3(1.5f, 6f, 92f), stone, true);
+                new Vector3(46f, 3f, 0f), new Vector3(1.5f, 6f, 92f), castleWall, true);
             Primitive("Muro oeste", PrimitiveType.Cube, props,
-                new Vector3(-46f, 3f, 0f), new Vector3(1.5f, 6f, 92f), stone, true);
+                new Vector3(-46f, 3f, 0f), new Vector3(1.5f, 6f, 92f), castleWall, true);
 
             // Bosque de la zona oeste. Se deja un corredor central transitable.
             System.Random rng = new System.Random(20261111);
@@ -155,11 +153,15 @@ namespace Vhaldren.EditorTools
                 if ((new Vector2(x + 21f, z + 7f)).sqrMagnitude < 25f ||
                     (new Vector2(x + 34f, z - 12f)).sqrMagnitude < 25f)
                     continue;
+                // Claros de los campamentos 019 (manada de lobos y cripta).
+                if ((new Vector2(x + 34f, z + 30f)).sqrMagnitude < 64f ||
+                    (new Vector2(x + 32f, z - 34f)).sqrMagnitude < 64f)
+                    continue;
                 float size = 0.75f + (float)rng.NextDouble() * 0.8f;
                 Tree(props, new Vector3(x, 0f, z), size, bark, leaves);
             }
 
-            ResourceDeposits(props, stone, leaves);
+            ResourceDeposits(props, wildRock, leaves);
 
             // Ruinas a la derecha: posiciones predecibles, fuera del corredor principal.
             for (int i = 0; i < 16; i++)
@@ -189,8 +191,10 @@ namespace Vhaldren.EditorTools
                         pos + Vector3.up * 1.6f, new Vector3(1.1f, 3.2f, 1.1f), stone, true);
             }
 
-            Primitive("Obelisco de sangre", PrimitiveType.Cube, props,
-                new Vector3(0f, 1.7f, 41f), new Vector3(2.8f, 3.4f, 2.8f), crimson, true);
+            if (!GeneratedModel("Obelisco de sangre", ObeliskModelPath, props, new Vector3(0f, 0f, 41f),
+                    obelisk, RuneGlow(), new Vector3(2.6f, 5.2f, 2.6f)))
+                Primitive("Obelisco de sangre", PrimitiveType.Cube, props,
+                    new Vector3(0f, 1.7f, 41f), new Vector3(2.8f, 3.4f, 2.8f), obelisk, true);
             if (atlas != null)
             {
                 KayKit("Cofre del bosque", "chest.obj", props,
@@ -207,6 +211,17 @@ namespace Vhaldren.EditorTools
             Enemy("Guardian del altar", enemies, player.transform, new Vector3(-9f, 1.08f, 24f), red, 90f, 12f, 3.0f, false);
             Enemy("JEFE - Caballero de sangre", enemies, player.transform, new Vector3(0f, 1.08f, 32f),
                 purple, 320f, 18f, 2.5f, true);
+            // Modelos KayKit animados (CC0) en lugar de capsulas.
+            AttachModel(enemies, "Acechador del bosque A", "Rogue", KayKitEnemySetup.AttackStyle.Melee);
+            AttachModel(enemies, "Acechador del bosque B", "Rogue", KayKitEnemySetup.AttackStyle.Melee);
+            AttachModel(enemies, "Centinela de ruinas A", "Knight", KayKitEnemySetup.AttackStyle.Melee);
+            AttachModel(enemies, "Centinela de ruinas B", "Knight", KayKitEnemySetup.AttackStyle.Melee);
+            AttachModel(enemies, "Guardian del altar", "Knight", KayKitEnemySetup.AttackStyle.Heavy);
+            AttachModel(enemies, "JEFE - Caballero de sangre", "Knight", KayKitEnemySetup.AttackStyle.Heavy);
+
+            // Campamentos del bestiario 019: cada uno enseña un rol y lleva su esencia.
+            foreach (Camp camp in Camps)
+                ArchetypeEnemy(camp, enemies, player.transform, red);
 
             PrototypeGameSession session = world.AddComponent<PrototypeGameSession>();
             // Guardar la referencia real en la escena. No depender de una
@@ -232,7 +247,7 @@ namespace Vhaldren.EditorTools
             if (!ValidateWorldScene(false))
                 throw new InvalidOperationException("El mundo generado no supero la validacion estructural.");
             Debug.Log("[Vhaldren] Mundo 008 generado: abre WorldPrototype001. " +
-                "Recorre bosque, ruinas y altar, combate 6 enemigos y usa Q para curarte.");
+                "Recorre bosque, ruinas y altar, combate 6 enemigos y 5 campamentos del bestiario, y usa Q para curarte.");
         }
 
         [MenuItem("Vhaldren/Validar mundo jugable 008")]
@@ -272,7 +287,7 @@ namespace Vhaldren.EditorTools
                 camera.GetComponent<Camera>() != null &&
                 session != null &&
                 ground != null && ground.GetComponent<Collider>() != null &&
-                enemies.Length == 6;
+                enemies.Length == 6 + Camps.Length;
 
             int bosses = 0;
             foreach (PrototypeEnemy enemy in enemies)
@@ -327,6 +342,73 @@ namespace Vhaldren.EditorTools
                 AssetDatabase.CreateFolder("Assets", "WorldPrototype");
             if (!AssetDatabase.IsValidFolder(MaterialFolder))
                 AssetDatabase.CreateFolder("Assets/WorldPrototype", "Materials");
+        }
+
+        private const string PolyHavenFolder = "Assets/ThirdParty/PolyHaven";
+        private const string ObeliskModelPath = "Assets/Models/Generados/obelisco_runico.fbx";
+
+        /// <summary>Material emisivo para runas de modelos propios hechos en Blender.</summary>
+        private static Material RuneGlow()
+        {
+            Material glow = Mat("RunasBrillo", new Color(0.35f, 0.02f, 0.05f));
+            glow.EnableKeyword("_EMISSION");
+            glow.SetColor("_EmissionColor", new Color(1.6f, 0.12f, 0.18f));
+            glow.globalIlluminationFlags = MaterialGlobalIlluminationFlags.RealtimeEmissive;
+            EditorUtility.SetDirty(glow);
+            return glow;
+        }
+
+        /// <summary>
+        /// Coloca un modelo propio exportado desde Blender (Tools/Blender). La piedra usa
+        /// el material triplanar y los objetos llamados "Runas" el material emisivo.
+        /// Devuelve false si el FBX no existe, para caer a la primitiva de siempre.
+        /// </summary>
+        private static bool GeneratedModel(string name, string path, Transform parent, Vector3 position,
+            Material stoneMaterial, Material glowMaterial, Vector3 colliderSize)
+        {
+            GameObject asset = AssetDatabase.LoadAssetAtPath<GameObject>(path);
+            if (asset == null)
+                return false;
+            GameObject instance = (GameObject)PrefabUtility.InstantiatePrefab(asset, parent);
+            instance.name = name;
+            instance.transform.position = position;
+            foreach (Renderer renderer in instance.GetComponentsInChildren<Renderer>(true))
+                renderer.sharedMaterial = renderer.name.Contains("Runas") ? glowMaterial : stoneMaterial;
+            BoxCollider box = instance.AddComponent<BoxCollider>();
+            box.size = colliderSize;
+            box.center = new Vector3(0f, colliderSize.y * 0.5f, 0f);
+            return true;
+        }
+
+        /// <summary>
+        /// Material triplanar con textura de Poly Haven. Reutiliza el asset existente
+        /// (mismo GUID, la escena no pierde referencias) y solo cambia shader y mapas.
+        /// Si faltan las texturas, cae al color plano de siempre.
+        /// </summary>
+        private static Material TexMat(string name, string textureId, Color tint, float metersPerTile)
+        {
+            Material material = Mat(name, tint);
+            Shader triplanar = Shader.Find("Vhaldren/Triplanar");
+            string colorPath = PolyHavenFolder + "/" + textureId + "/color.jpg";
+            string normalPath = PolyHavenFolder + "/" + textureId + "/normal.jpg";
+            Texture2D color = AssetDatabase.LoadAssetAtPath<Texture2D>(colorPath);
+            if (triplanar == null || color == null)
+                return material;
+            TextureImporter normalImporter = AssetImporter.GetAtPath(normalPath) as TextureImporter;
+            if (normalImporter != null && normalImporter.textureType != TextureImporterType.NormalMap)
+            {
+                normalImporter.textureType = TextureImporterType.NormalMap;
+                normalImporter.SaveAndReimport();
+            }
+            Texture2D normal = AssetDatabase.LoadAssetAtPath<Texture2D>(normalPath);
+            material.shader = triplanar;
+            material.SetTexture("_MainTex", color);
+            if (normal != null)
+                material.SetTexture("_BumpMap", normal);
+            material.SetColor("_Color", tint);
+            material.SetFloat("_Tile", metersPerTile);
+            EditorUtility.SetDirty(material);
+            return material;
         }
 
         private static Material Mat(string name, Color color)
@@ -386,6 +468,153 @@ namespace Vhaldren.EditorTools
             return item;
         }
 
+        // -- Terreno ------------------------------------------------------
+        private const string TerrainFolder = "Assets/WorldPrototype/Terrain";
+        private const float TerrainSize = 192f;
+        private const float TerrainHeight = 26f;
+        private const float TerrainBase = 1f;      // metros bajo el suelo jugable
+        private const float PlayableHalf = 46f;    // dentro de los muros: plano
+
+        /// <summary>Altura del terreno en coordenadas del mundo (0 = suelo jugable).</summary>
+        public static float TerrainHeightAt(float x, float z)
+        {
+            float edge = Mathf.Max(Mathf.Abs(x), Mathf.Abs(z));
+            if (edge <= PlayableHalf + 0.5f)
+                return 0f;
+            float t = Mathf.Clamp01((edge - PlayableHalf - 0.5f) / 16f);
+            t = t * t * (3f - 2f * t);
+            float ridges = Mathf.PerlinNoise(x * 0.028f + 13.1f, z * 0.028f + 7.7f);
+            float detail = Mathf.PerlinNoise(x * 0.09f + 3.3f, z * 0.09f + 9.1f);
+            return t * (5f + 15f * ridges + 2.5f * detail);
+        }
+
+        private static TerrainLayer Layer(string name, string textureId, float tile, Color tint)
+        {
+            string path = TerrainFolder + "/" + name + ".terrainlayer";
+            TerrainLayer layer = AssetDatabase.LoadAssetAtPath<TerrainLayer>(path);
+            if (layer == null)
+            {
+                layer = new TerrainLayer();
+                AssetDatabase.CreateAsset(layer, path);
+            }
+            string folder = PolyHavenFolder + "/" + textureId;
+            layer.diffuseTexture = AssetDatabase.LoadAssetAtPath<Texture2D>(folder + "/color.jpg");
+            TextureImporter normalImporter = AssetImporter.GetAtPath(folder + "/normal.jpg") as TextureImporter;
+            if (normalImporter != null && normalImporter.textureType != TextureImporterType.NormalMap)
+            {
+                normalImporter.textureType = TextureImporterType.NormalMap;
+                normalImporter.SaveAndReimport();
+            }
+            layer.normalMapTexture = AssetDatabase.LoadAssetAtPath<Texture2D>(folder + "/normal.jpg");
+            layer.tileSize = new Vector2(tile, tile);
+            layer.diffuseRemapMax = new Vector4(tint.r, tint.g, tint.b, 1f);
+            layer.smoothness = 0.08f;
+            EditorUtility.SetDirty(layer);
+            return layer;
+        }
+
+        private static void BuildTerrain(Transform parent)
+        {
+            if (!AssetDatabase.IsValidFolder(TerrainFolder))
+                AssetDatabase.CreateFolder("Assets/WorldPrototype", "Terrain");
+            string dataPath = TerrainFolder + "/TerrenoMundo.asset";
+            AssetDatabase.DeleteAsset(dataPath);
+            TerrainData data = new TerrainData { heightmapResolution = 257, alphamapResolution = 256 };
+            data.size = new Vector3(TerrainSize, TerrainHeight, TerrainSize);
+            AssetDatabase.CreateAsset(data, dataPath);
+
+            int hr = data.heightmapResolution;
+            float[,] heights = new float[hr, hr];
+            for (int zi = 0; zi < hr; zi++)
+                for (int xi = 0; xi < hr; xi++)
+                {
+                    float x = -TerrainSize * 0.5f + TerrainSize * xi / (hr - 1);
+                    float z = -TerrainSize * 0.5f + TerrainSize * zi / (hr - 1);
+                    heights[zi, xi] = (TerrainHeightAt(x, z) + TerrainBase) / TerrainHeight;
+                }
+            data.SetHeights(0, 0, heights);
+
+            data.terrainLayers = new[]
+            {
+                Layer("Tierra", "brown_mud_rocks_01", 5f, new Color(0.78f, 0.74f, 0.72f)),
+                Layer("Hojarasca", "forest_leaves_02", 4f, new Color(0.7f, 0.78f, 0.64f)),
+                Layer("RocaRuinas", "aerial_rocks_02", 6f, new Color(0.75f, 0.75f, 0.8f)),
+                Layer("Adoquin", "cobblestone_floor_08", 3f, new Color(0.9f, 0.85f, 0.8f)),
+                Layer("AdoquinAltar", "cobblestone_floor_13", 3f, new Color(0.85f, 0.45f, 0.48f)),
+                Layer("Montana", "dark_rock", 7f, new Color(0.7f, 0.7f, 0.75f)),
+            };
+
+            int ar = data.alphamapResolution;
+            float[,,] alpha = new float[ar, ar, 6];
+            for (int zi = 0; zi < ar; zi++)
+                for (int xi = 0; xi < ar; xi++)
+                {
+                    float x = -TerrainSize * 0.5f + TerrainSize * (xi + 0.5f) / ar;
+                    float z = -TerrainSize * 0.5f + TerrainSize * (zi + 0.5f) / ar;
+                    // Bordes irregulares: el ruido desplaza los limites unos metros.
+                    float wobble = (Mathf.PerlinNoise(x * 0.12f + 5f, z * 0.12f + 2f) - 0.5f) * 5f;
+                    float[] w = new float[6];
+                    float edge = Mathf.Max(Mathf.Abs(x), Mathf.Abs(z));
+                    if (edge > PlayableHalf + 1f)
+                    {
+                        float slope = Mathf.Clamp01(TerrainHeightAt(x, z) / 6f);
+                        w[5] = slope;
+                        w[1] = 1f - slope;
+                    }
+                    else
+                    {
+                        w[0] = 1f;
+                        w[1] = Band(-x - 13f + wobble, 4f);
+                        w[2] = Band(x - 13f + wobble, 4f);
+                        bool road = Mathf.Abs(x) < 6.5f + wobble * 0.25f && z > -39f && z < 35f;
+                        bool cross = Mathf.Abs(z) < 3.5f + wobble * 0.2f && Mathf.Abs(x) < 19f;
+                        bool patio = Mathf.Abs(x) < 12.5f + wobble * 0.3f && z > 17.5f && z < 43f;
+                        if (patio) w[4] = 1.4f;
+                        else if (road || cross) w[3] = 1.2f;
+                    }
+                    float sum = 0f;
+                    for (int l = 0; l < 6; l++) sum += w[l];
+                    for (int l = 0; l < 6; l++) alpha[zi, xi, l] = sum > 0f ? w[l] / sum : (l == 0 ? 1f : 0f);
+                }
+            data.SetAlphamaps(0, 0, alpha);
+            EditorUtility.SetDirty(data);
+
+            GameObject terrainObject = Terrain.CreateTerrainGameObject(data);
+            terrainObject.name = "Suelo fisico";
+            terrainObject.transform.SetParent(parent, false);
+            terrainObject.transform.position = new Vector3(-TerrainSize * 0.5f, -TerrainBase, -TerrainSize * 0.5f);
+            Terrain terrain = terrainObject.GetComponent<Terrain>();
+            terrain.heightmapPixelError = 4f;
+            terrain.basemapDistance = 120f;
+            terrain.drawInstanced = true;
+        }
+
+        private static float Band(float distanceInside, float blend) => Mathf.Clamp01(distanceInside / blend + 0.5f);
+
+        /// <summary>Bosque decorativo fuera de los muros (sin colision ni recoleccion).</summary>
+        private static void BackdropForest(Transform parent, Material bark, Material leaves)
+        {
+            Transform root = ChildRoot(parent, "Bosque de fondo");
+            System.Random rng = new System.Random(42);
+            for (int i = 0; i < 140; i++)
+            {
+                float x = -88f + (float)rng.NextDouble() * 176f;
+                float z = -88f + (float)rng.NextDouble() * 176f;
+                if (Mathf.Max(Mathf.Abs(x), Mathf.Abs(z)) < PlayableHalf + 4f)
+                    continue;
+                float y = TerrainHeightAt(x, z);
+                if (y > 14f)
+                    continue;
+                float size = 0.9f + (float)rng.NextDouble() * 0.9f;
+                Transform tree = ChildRoot(root, "Arbol lejano");
+                Vector3 p = new Vector3(x, y, z);
+                Primitive("Tronco", PrimitiveType.Cylinder, tree, p + Vector3.up * (1.75f * size),
+                    new Vector3(0.7f * size, 1.75f * size, 0.7f * size), bark, false);
+                Primitive("Copa", PrimitiveType.Sphere, tree, p + Vector3.up * (4.1f * size),
+                    new Vector3(3.3f * size, 3.0f * size, 3.3f * size), leaves, false);
+            }
+        }
+
         private static void Surface(string name, Transform parent,
             Vector3 position, Vector3 scale, Material material)
         {
@@ -413,7 +642,7 @@ namespace Vhaldren.EditorTools
         /// <summary>Rocas, fibra y mineral cerca de la entrada para la primera base.</summary>
         private static void ResourceDeposits(Transform parent, Material stone, Material leaves)
         {
-            Material ore = Mat("Mineral", new Color(0.36f, 0.22f, 0.16f));
+            Material ore = TexMat("Mineral", "dark_rock", new Color(0.95f, 0.55f, 0.3f), 1.5f);
             Vector3[] rocks = { new Vector3(-8f, 0f, -6f), new Vector3(-11f, 0f, 5f), new Vector3(7f, 0f, -9f), new Vector3(10f, 0f, 7f) };
             foreach (Vector3 p in rocks)
             {
@@ -460,6 +689,106 @@ namespace Vhaldren.EditorTools
             BoxCollider box = wrapper.gameObject.AddComponent<BoxCollider>();
             box.size = colliderSize;
             box.center = Vector3.up * (colliderSize.y * 0.5f);
+        }
+
+        private readonly struct Camp
+        {
+            public readonly string Name;
+            public readonly string Archetype;
+            public readonly Vector3 Position;
+
+            public Camp(string name, string archetype, Vector3 position)
+            {
+                Name = name;
+                Archetype = archetype;
+                Position = position;
+            }
+        }
+
+        // Sur del camino: bandidos. Oeste: lobos y cripta. Este: culto y cantera.
+        private static readonly Camp[] Camps =
+        {
+            new Camp("Saqueador del camino A", "saqueador", new Vector3(-3f, 1.08f, -30f)),
+            new Camp("Saqueador del camino B", "saqueador", new Vector3(3f, 1.08f, -31f)),
+            new Camp("Ballestero renegado", "ballestero", new Vector3(0f, 1.08f, -37f)),
+            new Camp("Lobo de bruma bosque A", "lobo", new Vector3(-36f, 1.08f, -29f)),
+            new Camp("Lobo de bruma bosque B", "lobo", new Vector3(-32f, 1.08f, -32f)),
+            new Camp("Lobo de bruma bosque C", "lobo", new Vector3(-34f, 1.08f, -26f)),
+            new Camp("Esqueleto de la cripta bosque A", "esqueleto", new Vector3(-34f, 1.08f, 34f)),
+            new Camp("Esqueleto de la cripta bosque B", "esqueleto", new Vector3(-30f, 1.08f, 36f)),
+            new Camp("Acolito ceniciento", "acolito", new Vector3(40f, 1.08f, -24f)),
+            new Camp("Sanadora del culto", "sanadora", new Vector3(42f, 1.08f, -30f)),
+            new Camp("Esqueleto del culto", "esqueleto", new Vector3(37f, 1.08f, -28f)),
+            new Camp("Bruto de las canteras", "bruto", new Vector3(40f, 1.08f, 30f)),
+            new Camp("Centinela runico", "centinela_runico", new Vector3(36f, 1.08f, 36f)),
+        };
+
+        private static void ArchetypeEnemy(Camp camp, Transform parent, Transform player, Material material)
+        {
+            EnemyArchetype data = EnemyArchetypes.Find(camp.Archetype);
+            if (data == null)
+                throw new InvalidOperationException("Tipo de enemigo desconocido: " + camp.Archetype);
+            Enemy(camp.Name, parent, player, camp.Position, material, data.Health, data.Damage, data.Speed, false);
+            Transform created = parent.Find(camp.Name);
+            PrototypeEnemy enemy = created.GetComponent<PrototypeEnemy>();
+            SerializedObject serialized = new SerializedObject(enemy);
+            serialized.FindProperty("archetypeId").stringValue = camp.Archetype;
+            serialized.FindProperty("attackRange").floatValue = data.AttackRange;
+            serialized.FindProperty("aggroRange").floatValue = data.Aggro;
+            serialized.ApplyModifiedPropertiesWithoutUndo();
+
+            switch (camp.Archetype)
+            {
+                case "saqueador": AttachModel(parent, camp.Name, "Barbarian", KayKitEnemySetup.AttackStyle.Melee); break;
+                case "ballestero": AttachModel(parent, camp.Name, "Rogue", KayKitEnemySetup.AttackStyle.Ranged); break;
+                case "acolito":
+                case "sanadora": AttachModel(parent, camp.Name, "Mage", KayKitEnemySetup.AttackStyle.Spell); break;
+                case "bruto": AttachModel(parent, camp.Name, "Barbarian", KayKitEnemySetup.AttackStyle.Heavy); break;
+                case "centinela_runico": AttachModel(parent, camp.Name, "Knight", KayKitEnemySetup.AttackStyle.Heavy); break;
+                case "esqueleto":
+                    AttachModel(parent, camp.Name, camp.Name.EndsWith("B") ? "Skeleton_Minion" : "Skeleton_Warrior",
+                        KayKitEnemySetup.AttackStyle.Melee);
+                    break;
+            }
+        }
+
+        /// <summary>
+        /// Coloca un personaje KayKit animado bajo "Visual enemigo" con los pies en el
+        /// suelo y escala uniforme, oculta la capsula provisional y asigna los clips
+        /// del estilo de ataque. Si los modelos no estan preparados, deja la capsula.
+        /// </summary>
+        private static void AttachModel(Transform parent, string enemyName, string modelId,
+            KayKitEnemySetup.AttackStyle style)
+        {
+            Transform root = parent.Find(enemyName);
+            Transform anchor = root != null ? root.Find("Visual enemigo") : null;
+            GameObject prefab = AssetDatabase.LoadAssetAtPath<GameObject>(KayKitEnemySetup.PrefabPath(modelId));
+            RuntimeAnimatorController overrides = AssetDatabase.LoadAssetAtPath<RuntimeAnimatorController>(
+                KayKitEnemySetup.OverridePath(modelId, style));
+            if (anchor == null || prefab == null)
+                return;
+            CharacterController body = root.GetComponent<CharacterController>();
+            float halfHeight = body != null ? body.height * 0.5f : 1f;
+            bool boss = body != null && body.height > 2.4f;
+            float worldScale = boss ? 1.12f : 0.82f;
+
+            GameObject model = (GameObject)PrefabUtility.InstantiatePrefab(prefab, anchor);
+            model.name = "Modelo texturizado";
+            Vector3 anchorScale = anchor.localScale;
+            model.transform.localPosition = new Vector3(0f, -halfHeight / Mathf.Max(0.01f, anchorScale.y), 0f);
+            model.transform.localRotation = Quaternion.identity;
+            model.transform.localScale = new Vector3(worldScale / anchorScale.x, worldScale / anchorScale.y,
+                worldScale / anchorScale.z);
+            Animator animator = model.GetComponent<Animator>();
+            if (animator != null && overrides != null)
+                animator.runtimeAnimatorController = overrides;
+
+            MeshRenderer placeholder = anchor.GetComponent<MeshRenderer>();
+            if (placeholder != null)
+                placeholder.enabled = false;
+            Transform eyes = anchor.Find("Ojos");
+            if (eyes != null)
+                eyes.gameObject.SetActive(false);
         }
 
         private static void Enemy(string name, Transform parent, Transform player,

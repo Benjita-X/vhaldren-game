@@ -89,14 +89,19 @@ namespace Vhaldren.Gameplay.CameraSystem
             float blend = safeSharpness <= 0f
                 ? 1f
                 : 1f - Mathf.Exp(-safeSharpness * Time.deltaTime);
-            Vector3 currentPosition = IsFinite(transform.position) ? transform.position : desiredPosition;
+            Vector3 currentPosition = IsFinite(transform.position) ? transform.position - shakeApplied : desiredPosition;
             // Al aparecer una pared, evitar atravesarla incluso durante el suavizado.
             // Cuando desaparece, recuperar el zoom con el seguimiento habitual.
             transform.position = obstructed
                 ? desiredPosition
                 : Vector3.Lerp(currentPosition, desiredPosition, blend);
             KeepFixedAngle(safeOffset, safeLookOffset);
+            // Temblor de impactos (game feel): se suma y se retira cada frame sin desplazar el seguimiento.
+            shakeApplied = Vhaldren.Gameplay.Combat.GameFeel.CameraOffset;
+            transform.position += shakeApplied;
         }
+
+        private Vector3 shakeApplied;
 
         /// <summary>
         /// El zoom acerca la camara al punto que mira, sobre la misma linea: cambia la

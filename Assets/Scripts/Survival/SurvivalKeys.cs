@@ -1,4 +1,5 @@
 using UnityEngine;
+using Vhaldren.Gameplay.Settings;
 #if ENABLE_INPUT_SYSTEM
 using UnityEngine.InputSystem;
 using UnityEngine.InputSystem.Controls;
@@ -9,12 +10,12 @@ namespace Vhaldren.Gameplay.Survival
     /// <summary>Teclas de supervivencia, compatibles con el Input System y el sistema clasico.</summary>
     internal static class SurvivalKeys
     {
-        public static bool ToggleBuild => Down(KeyCode.B);
-        public static bool Rotate => Down(KeyCode.R);
-        public static bool Dismantle => Down(KeyCode.G);
-        public static bool GatherHeld => Held(KeyCode.E);
-        public static bool CraftImprovisedPick => Down(KeyCode.J);
-        public static bool CraftStonePick => Down(KeyCode.K);
+        public static bool ToggleBuild => GameInput.Down(GameAction.Build);
+        public static bool Rotate => GameInput.Down(GameAction.Rotate);
+        public static bool Dismantle => GameInput.Down(GameAction.Dismantle);
+        public static bool GatherHeld => GameInput.Held(GameAction.Gather);
+        public static bool CraftImprovisedPick => GameInput.Down(GameAction.CraftPick1);
+        public static bool CraftStonePick => GameInput.Down(GameAction.CraftPick2);
         public static bool FreePlacementHeld => Held(KeyCode.LeftShift);
         public static bool Undo => Held(KeyCode.LeftControl) && Down(KeyCode.Z);
 
