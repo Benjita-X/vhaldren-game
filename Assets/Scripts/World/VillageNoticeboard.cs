@@ -25,6 +25,12 @@ namespace Vhaldren.Gameplay.World
 
         public bool MenuOpen => open;
 
+        public void BindPlayer(Transform target)
+        {
+            player = target;
+            journal = target != null ? target.GetComponent<VillageQuestJournal>() : null;
+        }
+
         private void Awake()
         {
             if (player == null)
