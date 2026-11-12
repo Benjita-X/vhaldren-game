@@ -62,6 +62,11 @@ namespace Vhaldren.Gameplay.World
             attackWarning = GetComponent<EnemyAttackTelegraph>();
             if (attackWarning == null)
                 attackWarning = gameObject.AddComponent<EnemyAttackTelegraph>();
+            EnemyHitReaction reaction = GetComponent<EnemyHitReaction>();
+            if (reaction == null)
+                reaction = gameObject.AddComponent<EnemyHitReaction>();
+            reaction.BindVisual(modelRoot != null ? modelRoot.transform :
+                transform.Find("Visual enemigo"));
             spawnPosition = transform.position;
             if (target == null)
             {
