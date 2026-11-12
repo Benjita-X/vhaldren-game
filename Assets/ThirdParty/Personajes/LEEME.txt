@@ -1,0 +1,43 @@
+PERSONAJES DEL JUGADOR (uno por raza) — Tripo o Meshy + Mixamo
+
+1) GENERAR (Tripo o Meshy). Usa SIEMPRE la misma base de estilo para que todos casen:
+   "stylized low poly, dark fantasy, full body, T-pose, empty hands, front view,
+    hand-painted texture, game-ready character"
+   y añade la descripción de la raza:
+   - Humano:          human adventurer, leather armor, hooded travel cloak
+   - Nacido de magia: arcane mage, long robes with glowing blue runes, crystal circlet
+   - Vampiro:         pale vampire noble, crimson high-collar coat, silver details, red eyes
+   - Licántropo:      wolf-blooded warrior, fur mantle, scars, tribal leather armor
+   - No muerto:       undead knight, cracked grey skin, tattered dark armor, faint green eyes
+   - Semidemonio:     half-demon, small curved horns, ember cracks on skin, black and red armor
+   - Semicelestial:   half-celestial, white and gold armor, faint halo, small feathered pauldrons
+   - Híbrido:         wanderer mixing fur, bone and rune details, asymmetrical armor
+   Manos vacías (las armas se ponen aparte). Descargar en FBX con texturas.
+
+2) MIXAMO (mixamo.com):
+   - Upload Character -> marcar barbilla, muñecas, codos, rodillas, ingle.
+   - Descargar el personaje: Format "FBX for Unity", Skin "With Skin", nombre: personaje.fbx
+   - Descargar animaciones: "FBX for Unity", Skin "Without Skin", 30 fps,
+     marcar "In Place" en caminar/correr. Nombres de archivo (busca en Mixamo):
+       reposo.fbx      (Idle / Breathing Idle)
+       caminar.fbx     (Walking)
+       correr.fbx      (Running)
+       esquiva.fbx     (Dodge / Stand To Roll)
+       espada.fbx      (Sword Slash / Great Sword Slash)
+       hechizo.fbx     (Magic Attack / Standing 1H Magic Attack)
+       disparo.fbx     (Standing Aim Recoil / Shooting Arrow)
+       bloqueo.fbx     (Sword And Shield Block)
+       golpe.fbx       (Hit Reaction)
+       muerte.fbx      (Dying / Death)
+       recolectar.fbx  (Picking Up / Gathering)
+     Como todos los personajes de Mixamo comparten esqueleto, estas animaciones sirven
+     para todas las razas: basta con descargarlas una vez.
+
+3) GUARDAR cada uno en su carpeta aquí dentro:
+     Personajes/Vampiro/personaje.fbx (+ texturas)
+     Personajes/Animaciones/reposo.fbx, caminar.fbx, ...
+   y avisar a Claude: lo configura como Humanoide, crea el controlador, lo conecta a la
+   raza elegida en el menú y lo prueba en el ejecutable.
+
+LICENCIA: en planes gratis de Tripo/Meshy los modelos suelen ser públicos y piden crédito.
+Para un juego privado no hay problema; antes de publicar, revisar la licencia o el plan.
