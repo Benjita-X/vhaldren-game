@@ -4,6 +4,7 @@ using System.Linq;
 using UnityEditor;
 using UnityEditor.Animations;
 using UnityEngine;
+using Vhaldren.Gameplay.World;
 
 namespace Vhaldren.EditorTools
 {
@@ -228,6 +229,8 @@ namespace Vhaldren.EditorTools
             GameObject source = AssetDatabase.LoadAssetAtPath<GameObject>(model.FbxPath);
             GameObject instance = (GameObject)PrefabUtility.InstantiatePrefab(source);
             instance.name = "Modelo texturizado";
+            if (instance.GetComponent<AuthoredVisual>() == null)
+                instance.AddComponent<AuthoredVisual>();
             Animator animator = instance.GetComponent<Animator>();
             if (animator == null)
                 animator = instance.AddComponent<Animator>();
