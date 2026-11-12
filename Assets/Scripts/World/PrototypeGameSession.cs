@@ -206,16 +206,24 @@ namespace Vhaldren.Gameplay.World
 
         private void OnEnemyDefeated(PrototypeEnemy enemy)
         {
-            if (enemy == null || !defeated.Add(enemy))
+            if (enemy == null)
                 return;
+
+            // El HUD/victoria cuentan cada enemigo unico una sola vez, pero una
+            // mision activa debe recibir TODA derrota posterior al aceptarla,
+            // incluso si ese mismo enemigo ya murio antes y luego reaparecio.
+            bool firstUniqueDefeat = defeated.Add(enemy);
             if (enemy.IsBoss)
             {
-                bossDefeated = true;
+                if (firstUniqueDefeat)
+                    bossDefeated = true;
                 villageJournal?.RecordAction(VillageObjective.DefeatBoss);
             }
             else
                 villageJournal?.RecordAction(VillageObjective.DefeatGuardians);
-            nextHudRefresh = 0f;
+
+            if (firstUniqueDefeat)
+                nextHudRefresh = 0f;
         }
 
         private void OnPlayerDefeated()
