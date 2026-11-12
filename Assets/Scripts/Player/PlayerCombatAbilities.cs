@@ -123,6 +123,7 @@ namespace Vhaldren.Gameplay.Player
 
             animations?.PlayCombatAction(PlayerAnimationDriver.CombatAction.Spell);
             Announce("Pulso rúnico: canalizando");
+            GetComponent<VillageQuestJournal>()?.RecordAction(VillageObjective.CastMagic);
             runeReadyAt = Time.time + Mathf.Max(0.1f, runeCooldown);
             Vector3 center = transform.position;
             StartCoroutine(RuneSequence(center));
@@ -136,6 +137,7 @@ namespace Vhaldren.Gameplay.Player
 
             animations?.PlayCombatAction(PlayerAnimationDriver.CombatAction.Frost);
             Announce("Onda de escarcha: canalizando");
+            GetComponent<VillageQuestJournal>()?.RecordAction(VillageObjective.CastMagic);
             frostReadyAt = Time.time + Mathf.Max(0.1f, frostCooldown);
             Vector3 facing = motor != null ? motor.CurrentFacing : transform.forward;
             facing.y = 0f;
