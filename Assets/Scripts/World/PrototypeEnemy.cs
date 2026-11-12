@@ -140,33 +140,12 @@ namespace Vhaldren.Gameplay.World
             // se aleja, se esconde tras una pared o muere, el ataque se cancela.
             // En el instante del golpe se valida de nuevo todo: no hay daño gratis.
             bool holdPosition = windingUp || Time.time < staggerUntil;
-            if (windingUp)
-            {
-                Vector3 toTarget = target != null ? target.position - transform.position : Vector3.zero;
-                toTarget.y = 0f;
-                Vector3 fromHomeNow = transform.position - spawnPosition;
-                fromHomeNow.y = 0f;
-                bool valid = target != null && targetHealth != null &&
-                    !targetHealth.IsDefeated &&
-                    toTarget.sqrMagnitude <= attackRange * attackRange &&
-                    fromHomeNow.sqrMagnitude <= leashRange * leashRange &&
-                    HasLineOfSight();
+            if (windingUp && !CanReachTarget())
+                CancelAttack();
 
-                if (!valid)
-                    CancelAttack();
-                else if (Time.time >= attackReleaseAt)
-                {
-                    windingUp = false;
-                    if (attackWarning != null)
-                        attackWarning.Strike();
-                    // La esquiva ofrece una ventana de invulnerabilidad corta.
-                    // El jugador puede evitar el impacto sin bloquear su movimiento.
-                    if (targetMotor == null ||
-                        (!targetMotor.IsDashing && !targetMotor.DashMovedThisStep))
-                        targetHealth.ApplyDamage(Mathf.Max(0f, attackDamage));
-                }
-            }
-
+            // El golpe se resuelve en LateUpdate, después de LocalPlayerInput.Update.
+            // Así una esquiva pulsada justo en este frame no depende del orden
+            // arbitrario de Update entre enemigos y jugador.
             Vector3 move = Vector3.zero;
             if (holdPosition)
             {
@@ -235,6 +214,43 @@ namespace Vhaldren.Gameplay.World
             Vector3 velocity = move * Mathf.Max(0f, moveSpeed) +
                 Vector3.up * fallingSpeed;
             controller.Move(velocity * Time.deltaTime);
+        }
+
+        private void LateUpdate()
+        {
+            if (!windingUp || defeated || Time.time < attackReleaseAt)
+                return;
+
+            // Revalidar tras mover al jugador en Update: posicion, vida,
+            // linea de vision y radio deben seguir siendo correctos.
+            if (!CanReachTarget())
+            {
+                CancelAttack();
+                return;
+            }
+
+            windingUp = false;
+            if (attackWarning != null)
+                attackWarning.Strike();
+
+            // I-frames del dash. Nunca registrar un golpe si el jugador
+            // esquivo correctamente en este mismo fotograma.
+            if (targetMotor == null ||
+                (!targetMotor.IsDashing && !targetMotor.DashMovedThisStep))
+                targetHealth.ApplyDamage(Mathf.Max(0f, attackDamage));
+        }
+
+        private bool CanReachTarget()
+        {
+            if (target == null || targetHealth == null || targetHealth.IsDefeated)
+                return false;
+            Vector3 delta = target.position - transform.position;
+            delta.y = 0f;
+            Vector3 fromHomeNow = transform.position - spawnPosition;
+            fromHomeNow.y = 0f;
+            return delta.sqrMagnitude <= attackRange * attackRange &&
+                fromHomeNow.sqrMagnitude <= leashRange * leashRange &&
+                HasLineOfSight();
         }
 
         /// <summary>
