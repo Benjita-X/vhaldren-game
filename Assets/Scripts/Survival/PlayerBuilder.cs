@@ -46,6 +46,11 @@ namespace Vhaldren.Gameplay.Survival
         public CombatHealth Health => health;
         public int UndoCount => undoStack.Count;
 
+        public void SetCreativeMode(bool enabled)
+        {
+            CreativeMode = enabled;
+        }
+
         private void Awake()
         {
             inventory = GetComponent<SurvivalInventory>();
@@ -75,7 +80,7 @@ namespace Vhaldren.Gameplay.Survival
         private void Update()
         {
             if (SurvivalKeys.ToggleCreative)
-                CreativeMode = !CreativeMode;
+                SetCreativeMode(!CreativeMode);
             if (SurvivalKeys.ToggleBuild)
                 SetBuildMode(!IsBuilding);
             if (!IsBuilding)
