@@ -47,6 +47,7 @@ namespace Vhaldren.Gameplay.Player
         private PlayerDamageTracker damageTracker;
         private PlayerActionModifiers actionModifiers;
         private PlayerAnimationDriver animations;
+        private LocalPlayerInput playerInput;
         private string lastActionMessage = "";
         private float lastActionMessageUntil;
         public string LastActionMessage => lastActionMessage;
@@ -107,6 +108,7 @@ namespace Vhaldren.Gameplay.Player
             if (!CanStartAbility("Tajo de espada", swordReadyAt, swordStaminaCost))
                 return false;
 
+            FaceCursorForAction();
             animations?.PlayCombatAction(PlayerAnimationDriver.CombatAction.Sword);
             if (GameFeel.Enabled)
                 GameAudio.Play(GameSound.Slash, transform.position, 0.8f);
@@ -124,6 +126,7 @@ namespace Vhaldren.Gameplay.Player
             if (!CanStartAbility("Pulso rúnico", runeReadyAt, runeStaminaCost))
                 return false;
 
+            FaceCursorForAction();
             animations?.PlayCombatAction(PlayerAnimationDriver.CombatAction.Spell);
             if (GameFeel.Enabled)
                 GameAudio.Play(GameSound.SpellCast, transform.position, 0.8f);
@@ -140,6 +143,7 @@ namespace Vhaldren.Gameplay.Player
             if (!CanStartAbility("Escarcha", frostReadyAt, frostStaminaCost))
                 return false;
 
+            FaceCursorForAction();
             animations?.PlayCombatAction(PlayerAnimationDriver.CombatAction.Frost);
             if (GameFeel.Enabled)
                 GameAudio.Play(GameSound.Frost, transform.position, 0.8f);
@@ -192,6 +196,18 @@ namespace Vhaldren.Gameplay.Player
         {
             lastActionMessage = message;
             lastActionMessageUntil = Time.time + 1.6f;
+        }
+
+        /// <summary>
+        /// Explorando, el personaje mira hacia donde camina: antes de leer la orientacion,
+        /// el ataque la dirige al cursor y activa el modo combate (si hay jugador local).
+        /// </summary>
+        private void FaceCursorForAction()
+        {
+            if (playerInput == null)
+                playerInput = GetComponent<LocalPlayerInput>();
+            if (playerInput != null && playerInput.isActiveAndEnabled)
+                playerInput.NotifyCombatAction();
         }
 
         private IEnumerator FrostSequence(Vector3 direction)

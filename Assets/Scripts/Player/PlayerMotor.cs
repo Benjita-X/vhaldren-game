@@ -212,6 +212,25 @@ namespace Vhaldren.Gameplay.Player
             );
         }
 
+        /// <summary>
+        /// Cambia al instante la orientacion logica (la que usan los golpes y el bloqueo);
+        /// el modelo gira con su velocidad habitual en el siguiente paso. Sirve para que un
+        /// ataque iniciado mientras se mira hacia donde se camina salga hacia el cursor.
+        /// Respeta los bloqueos de orientacion (aturdido).
+        /// </summary>
+        public bool SetFacing(Vector3 direction)
+        {
+            if (!isActiveAndEnabled || (actionModifiers != null && !actionModifiers.AllowsFacing) ||
+                !IsFinite(direction))
+                return false;
+            direction.y = 0f;
+            Vector3 planar = NormalizePlanar(direction);
+            if (planar == Vector3.zero)
+                return false;
+            CurrentFacing = planar;
+            return true;
+        }
+
         private float SafeDashSpeed()
         {
             if (!IsFinite(dashDistance) || !IsFinite(dashDuration) || dashDuration <= 0f)

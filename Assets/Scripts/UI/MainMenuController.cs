@@ -160,6 +160,10 @@ namespace Vhaldren.Gameplay.UI
             screen = Screen.Options;
             yield return new WaitForSeconds(0.4f);
             yield return Shot("0c-opciones.png");
+            options.SelectTab(3);
+            yield return new WaitForSeconds(0.4f);
+            yield return Shot("0c2-opciones-juego-camara.png");
+            options.SelectTab(0);
             screen = Screen.Codex;
             yield return new WaitForSeconds(0.4f);
             yield return Shot("0d-informacion.png");
