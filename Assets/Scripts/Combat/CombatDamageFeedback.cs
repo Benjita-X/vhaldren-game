@@ -20,6 +20,7 @@ namespace Vhaldren.Gameplay.Combat
             public string Text;
             public float Time;
             public int Lane;
+            public bool Healing;
         }
 
         [SerializeField, Min(2f)] private float maximumDisplayDistance = 42f;
@@ -44,6 +45,8 @@ namespace Vhaldren.Gameplay.Combat
         public int DamageEventsReceived { get; private set; }
         public float LastDamageReceived { get; private set; }
         public float TotalDamageReceived { get; private set; }
+        public int HealingEventsReceived { get; private set; }
+        public float LastHealingReceived { get; private set; }
         public float HealthFraction
         {
             get
@@ -68,6 +71,7 @@ namespace Vhaldren.Gameplay.Combat
             if (health != null)
             {
                 health.Damaged += OnDamaged;
+                health.Healed += OnHealed;
                 health.Defeated += OnDefeated;
             }
         }
@@ -77,6 +81,7 @@ namespace Vhaldren.Gameplay.Combat
             if (health != null)
             {
                 health.Damaged -= OnDamaged;
+                health.Healed -= OnHealed;
                 health.Defeated -= OnDefeated;
             }
         }
@@ -117,7 +122,27 @@ namespace Vhaldren.Gameplay.Combat
             {
                 Text = "-" + actualAmount.ToString("0.##"),
                 Time = Time.time,
-                Lane = index
+                Lane = index,
+                Healing = false
+            };
+            cachedHealth = float.NaN;
+        }
+
+        private void OnHealed(float actualAmount)
+        {
+            if (float.IsNaN(actualAmount) || float.IsInfinity(actualAmount) || actualAmount <= 0f)
+                return;
+            LastHealingReceived = actualAmount;
+            HealingEventsReceived++;
+
+            int index = nextPopup % PopupCapacity;
+            nextPopup++;
+            popups[index] = new DamagePopup
+            {
+                Text = "+" + actualAmount.ToString("0.##"),
+                Time = Time.time,
+                Lane = index,
+                Healing = true
             };
             cachedHealth = float.NaN;
         }
@@ -214,9 +239,11 @@ namespace Vhaldren.Gameplay.Combat
 
                 float fade = 1f - Mathf.Clamp01(age / PopupLifetime);
                 float spread = (popup.Lane - 2.5f) * 16f;
-                GUI.color = playerTarget
-                    ? new Color(1f, 0.3f, 0.35f, fade)
-                    : new Color(1f, 0.87f, 0.35f, fade);
+                GUI.color = popup.Healing
+                    ? new Color(0.35f, 1f, 0.54f, fade)
+                    : playerTarget
+                        ? new Color(1f, 0.3f, 0.35f, fade)
+                        : new Color(1f, 0.87f, 0.35f, fade);
                 GUI.Label(new Rect(x - 40f + spread,
                     y - 56f - age * 55f, 80f, 36f), popup.Text, numberStyle);
             }
