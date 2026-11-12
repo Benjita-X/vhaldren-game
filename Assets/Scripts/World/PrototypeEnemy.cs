@@ -244,19 +244,21 @@ namespace Vhaldren.Gameplay.World
 
             // I-frames del dash. Nunca registrar un golpe si el jugador
             // esquivo correctamente en este mismo fotograma.
-            if (targetMotor == null ||
+            CombatDamageReceiver defender = target.GetComponent<CombatDamageReceiver>();
+            if (defender != null)
+            {
+                // El receptor central resuelve dash/parry/bloqueos y puede
+                // mostrar ESQUIVA sin fingir que se descontaron PV.
+                CombatDamageResult response = defender.Receive(
+                    Mathf.Max(0f, attackDamage), activeAttackKind, transform.position);
+                if (response.Parried)
+                    InterruptAttack(0.70f);
+            }
+            else if (targetMotor == null ||
                 (!targetMotor.IsDashing && !targetMotor.DashMovedThisStep))
             {
-                CombatDamageReceiver defender = target.GetComponent<CombatDamageReceiver>();
-                if (defender != null)
-                {
-                    CombatDamageResult response = defender.Receive(
-                        Mathf.Max(0f, attackDamage), activeAttackKind, transform.position);
-                    if (response.Parried)
-                        InterruptAttack(0.70f);
-                }
-                else
-                    targetHealth.ApplyDamage(Mathf.Max(0f, attackDamage));
+                // Compatibilidad con las salas de prueba antiguas.
+                targetHealth.ApplyDamage(Mathf.Max(0f, attackDamage));
             }
         }
 
