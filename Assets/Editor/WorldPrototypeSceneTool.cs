@@ -155,6 +155,10 @@ namespace Vhaldren.EditorTools
                 if ((new Vector2(x + 21f, z + 7f)).sqrMagnitude < 25f ||
                     (new Vector2(x + 34f, z - 12f)).sqrMagnitude < 25f)
                     continue;
+                // Claros de los campamentos 019 (manada de lobos y cripta).
+                if ((new Vector2(x + 34f, z + 30f)).sqrMagnitude < 64f ||
+                    (new Vector2(x + 32f, z - 34f)).sqrMagnitude < 64f)
+                    continue;
                 float size = 0.75f + (float)rng.NextDouble() * 0.8f;
                 Tree(props, new Vector3(x, 0f, z), size, bark, leaves);
             }
@@ -208,6 +212,10 @@ namespace Vhaldren.EditorTools
             Enemy("JEFE - Caballero de sangre", enemies, player.transform, new Vector3(0f, 1.08f, 32f),
                 purple, 320f, 18f, 2.5f, true);
 
+            // Campamentos del bestiario 019: cada uno enseña un rol y lleva su esencia.
+            foreach (Camp camp in Camps)
+                ArchetypeEnemy(camp, enemies, player.transform, red);
+
             PrototypeGameSession session = world.AddComponent<PrototypeGameSession>();
             // Guardar la referencia real en la escena. No depender de una
             // busqueda global por nombre cuando se cargan varias escenas.
@@ -232,7 +240,7 @@ namespace Vhaldren.EditorTools
             if (!ValidateWorldScene(false))
                 throw new InvalidOperationException("El mundo generado no supero la validacion estructural.");
             Debug.Log("[Vhaldren] Mundo 008 generado: abre WorldPrototype001. " +
-                "Recorre bosque, ruinas y altar, combate 6 enemigos y usa Q para curarte.");
+                "Recorre bosque, ruinas y altar, combate 6 enemigos y 5 campamentos del bestiario, y usa Q para curarte.");
         }
 
         [MenuItem("Vhaldren/Validar mundo jugable 008")]
@@ -272,7 +280,7 @@ namespace Vhaldren.EditorTools
                 camera.GetComponent<Camera>() != null &&
                 session != null &&
                 ground != null && ground.GetComponent<Collider>() != null &&
-                enemies.Length == 6;
+                enemies.Length == 6 + Camps.Length;
 
             int bosses = 0;
             foreach (PrototypeEnemy enemy in enemies)
@@ -460,6 +468,53 @@ namespace Vhaldren.EditorTools
             BoxCollider box = wrapper.gameObject.AddComponent<BoxCollider>();
             box.size = colliderSize;
             box.center = Vector3.up * (colliderSize.y * 0.5f);
+        }
+
+        private readonly struct Camp
+        {
+            public readonly string Name;
+            public readonly string Archetype;
+            public readonly Vector3 Position;
+
+            public Camp(string name, string archetype, Vector3 position)
+            {
+                Name = name;
+                Archetype = archetype;
+                Position = position;
+            }
+        }
+
+        // Sur del camino: bandidos. Oeste: lobos y cripta. Este: culto y cantera.
+        private static readonly Camp[] Camps =
+        {
+            new Camp("Saqueador del camino A", "saqueador", new Vector3(-3f, 1.08f, -30f)),
+            new Camp("Saqueador del camino B", "saqueador", new Vector3(3f, 1.08f, -31f)),
+            new Camp("Ballestero renegado", "ballestero", new Vector3(0f, 1.08f, -37f)),
+            new Camp("Lobo de bruma bosque A", "lobo", new Vector3(-36f, 1.08f, -29f)),
+            new Camp("Lobo de bruma bosque B", "lobo", new Vector3(-32f, 1.08f, -32f)),
+            new Camp("Lobo de bruma bosque C", "lobo", new Vector3(-34f, 1.08f, -26f)),
+            new Camp("Esqueleto de la cripta bosque A", "esqueleto", new Vector3(-34f, 1.08f, 34f)),
+            new Camp("Esqueleto de la cripta bosque B", "esqueleto", new Vector3(-30f, 1.08f, 36f)),
+            new Camp("Acolito ceniciento", "acolito", new Vector3(40f, 1.08f, -24f)),
+            new Camp("Sanadora del culto", "sanadora", new Vector3(42f, 1.08f, -30f)),
+            new Camp("Esqueleto del culto", "esqueleto", new Vector3(37f, 1.08f, -28f)),
+            new Camp("Bruto de las canteras", "bruto", new Vector3(40f, 1.08f, 30f)),
+            new Camp("Centinela runico", "centinela_runico", new Vector3(36f, 1.08f, 36f)),
+        };
+
+        private static void ArchetypeEnemy(Camp camp, Transform parent, Transform player, Material material)
+        {
+            EnemyArchetype data = EnemyArchetypes.Find(camp.Archetype);
+            if (data == null)
+                throw new InvalidOperationException("Tipo de enemigo desconocido: " + camp.Archetype);
+            Enemy(camp.Name, parent, player, camp.Position, material, data.Health, data.Damage, data.Speed, false);
+            Transform created = parent.Find(camp.Name);
+            PrototypeEnemy enemy = created.GetComponent<PrototypeEnemy>();
+            SerializedObject serialized = new SerializedObject(enemy);
+            serialized.FindProperty("archetypeId").stringValue = camp.Archetype;
+            serialized.FindProperty("attackRange").floatValue = data.AttackRange;
+            serialized.FindProperty("aggroRange").floatValue = data.Aggro;
+            serialized.ApplyModifiedPropertiesWithoutUndo();
         }
 
         private static void Enemy(string name, Transform parent, Transform player,

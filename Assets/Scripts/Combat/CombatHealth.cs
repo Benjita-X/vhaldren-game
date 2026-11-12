@@ -67,6 +67,15 @@ namespace Vhaldren.Gameplay.Combat
             return applied;
         }
 
+        /// <summary>Cambia la vida maxima (tipos de enemigo) y rellena la vida.</summary>
+        public void SetMaximumHealth(float value)
+        {
+            if (!IsFinite(value) || value < 1f)
+                return;
+            maximumHealth = value;
+            ResetToFull();
+        }
+
         public void ResetToFull()
         {
             currentHealth = MaximumHealth;

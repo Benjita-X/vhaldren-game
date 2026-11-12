@@ -73,6 +73,10 @@ namespace Vhaldren.Gameplay.Magic
             PrototypeEnemy enemy = GetComponent<PrototypeEnemy>();
             bool boss = enemy != null && enemy.IsBoss;
             kind = EssenceCatalog.RollKind(random, boss);
+            // Cada tipo de enemigo suele llevar su esencia: cazar al tipo correcto
+            // es la forma fiable de aprender una escuela.
+            if (!boss && enemy != null && enemy.Archetype != null && random.NextDouble() < 0.75)
+                kind = enemy.Archetype.Essence;
             quality = EssenceCatalog.RollQuality(random, boss);
         }
     }
