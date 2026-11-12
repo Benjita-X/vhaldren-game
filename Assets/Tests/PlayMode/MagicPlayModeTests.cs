@@ -68,6 +68,21 @@ namespace Vhaldren.Tests
             return health;
         }
 
+        private void AddOwnColliderClutter(int count, float maxZ)
+        {
+            for (int i = 0; i < count; i++)
+            {
+                GameObject clutter = new GameObject("Collider propio " + i);
+                clutter.transform.SetParent(player.transform, false);
+                clutter.transform.localPosition = new Vector3(
+                    (i % 3 - 1) * 0.04f, 0f,
+                    Mathf.Lerp(0.18f, maxZ, (i + 1f) / count));
+                BoxCollider box = clutter.AddComponent<BoxCollider>();
+                box.size = new Vector3(0.28f, 0.7f, 0.12f);
+            }
+            Physics.SyncTransforms();
+        }
+
         [UnityTest]
         public IEnumerator FireBoltTravelsHitsOnceAndIgnites()
         {
@@ -124,15 +139,70 @@ namespace Vhaldren.Tests
         }
 
         [UnityTest]
-        public IEnumerator StaticDischargesOnNextSpellHit()
+        public IEnumerator StaticDischargesThroughReceiverAndRespectsMagicResistance()
         {
             CombatHealth victim = MakeTarget(new Vector3(0f, 1.08f, 3f));
+            CombatDamageReceiver receiver = target.GetComponent<CombatDamageReceiver>();
+            receiver.ConfigureResistances(0f, 0f, 0.5f);
             yield return null;
             StatusEffects.For(victim).Apply(StatusKind.Static);
             SpellDefinition frost = SpellCatalog.Find("lanza_hielo");
-            float dealt = book.ApplySpellHit(target.GetComponent<CombatDamageReceiver>(), frost, 1f, player.transform.position);
-            Assert.That(dealt, Is.EqualTo(frost.Damage + StatusEffects.StaticBonusDamage).Within(0.01f));
+            float dealt = book.ApplySpellHit(receiver, frost, 1f, player.transform.position);
+            float expected = (frost.Damage + StatusEffects.StaticBonusDamage) * 0.5f;
+            Assert.That(dealt, Is.EqualTo(expected).Within(0.01f),
+                "La descarga extra debe respetar la misma resistencia mágica que el hechizo.");
             Assert.That(StatusEffects.For(victim).Has(StatusKind.Static), Is.False);
+        }
+
+        [UnityTest]
+        public IEnumerator IgnitionTicksThroughReceiverAndRespectsMagicResistance()
+        {
+            CombatHealth victim = MakeTarget(new Vector3(0f, 1.08f, 3f));
+            CombatDamageReceiver receiver = target.GetComponent<CombatDamageReceiver>();
+            receiver.ConfigureResistances(0f, 0f, 0.5f);
+            StatusEffects status = StatusEffects.For(victim);
+            Assert.That(status.ApplyFrom(StatusKind.Ignition, player.transform.position), Is.True);
+
+            float dealt = status.TickIgnition(Time.time + 1.01f);
+            Assert.That(dealt, Is.EqualTo(StatusEffects.IgnitionDps * 0.5f).Within(0.01f));
+            Assert.That(victim.CurrentHealth, Is.EqualTo(100f - dealt).Within(0.01f));
+            yield break;
+        }
+
+        [UnityTest]
+        public IEnumerator SaturatedProjectileQueryStillStopsAtNearestWall()
+        {
+            AddOwnColliderClutter(28, 1.4f);
+            wall = GameObject.CreatePrimitive(PrimitiveType.Cube);
+            wall.transform.position = new Vector3(0f, 1.08f, 2.5f);
+            wall.transform.localScale = new Vector3(5f, 3f, 0.35f);
+            Physics.SyncTransforms();
+
+            SpellDefinition fire = SpellCatalog.Find("saeta_ignea");
+            SpellProjectile projectile = SpellProjectile.Launch(book, fire, 1f,
+                player.transform.position + Vector3.up * 0.15f, Vector3.forward);
+            projectile.Step(1f);
+
+            Assert.That(projectile.IsDone, Is.True);
+            Assert.That(projectile.LastImpactPoint.z, Is.LessThan(2.5f),
+                "Aunque el buffer se llene con colliders propios, la pared real sigue siendo el primer impacto.");
+            yield return null;
+        }
+
+        [UnityTest]
+        public IEnumerator SaturatedAreaLineOfSightCannotDamageThroughWall()
+        {
+            CombatHealth victim = MakeTarget(new Vector3(0f, 1.08f, 3.1f));
+            AddOwnColliderClutter(28, 1.1f);
+            wall = GameObject.CreatePrimitive(PrimitiveType.Cube);
+            wall.transform.position = new Vector3(0f, 1.08f, 1.8f);
+            wall.transform.localScale = new Vector3(5f, 3f, 0.3f);
+            Physics.SyncTransforms();
+
+            Assert.That(book.TryCast(1, victim.transform.position), Is.True);
+            yield return new WaitForSeconds(0.5f);
+            Assert.That(victim.CurrentHealth, Is.EqualTo(100f).Within(0.01f),
+                "Un Nova no puede atravesar una pared aunque RaycastNonAlloc se sature.");
         }
 
         [UnityTest]
