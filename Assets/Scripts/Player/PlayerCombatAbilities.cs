@@ -197,6 +197,9 @@ namespace Vhaldren.Gameplay.Player
             if (health == null || health.IsDefeated)
                 yield break;
             Vector3 origin = transform.position;
+            SpellImpactFlash.Spawn(
+                new Vector3(origin.x, 0.36f, origin.z) + direction * (frostRange * 0.52f),
+                new Color(0.31f, 0.80f, 1f), 0.9f, 0.37f);
             int count = QueryEnemies(origin, frostRange);
             float halfConeCos = Mathf.Cos(Mathf.Clamp(frostConeDegrees, 10f, 170f) *
                 Mathf.Deg2Rad * 0.5f);
@@ -225,6 +228,8 @@ namespace Vhaldren.Gameplay.Player
                     continue;
 
                 FrostTargetsHit++;
+                SpellImpactFlash.Spawn(receiver.transform.position + Vector3.up * 0.85f,
+                    new Color(0.44f, 0.90f, 1f), 0.55f, 0.22f);
                 if (damageTracker == null)
                     damageTracker = GetComponent<PlayerDamageTracker>();
                 if (damageTracker != null)
@@ -279,6 +284,8 @@ namespace Vhaldren.Gameplay.Player
                     if (damageTracker != null)
                         damageTracker.Record(result.Applied, CombatDamageKind.Melee);
                     SwordTargetsHit++;
+                    SpellImpactFlash.Spawn(receiver.transform.position + Vector3.up * 0.85f,
+                        new Color(1f, 0.65f, 0.22f), 0.46f, 0.20f);
                     PrototypeEnemy enemy = receiver.GetComponent<PrototypeEnemy>();
                     if (enemy != null)
                         enemy.InterruptAttack(0.24f);
@@ -294,6 +301,8 @@ namespace Vhaldren.Gameplay.Player
 
             if (health == null || health.IsDefeated)
                 yield break;
+            SpellImpactFlash.Spawn(new Vector3(center.x, 0.20f, center.z),
+                new Color(0.20f, 0.77f, 1f), 1.1f, 0.42f, runeRadius);
             int count = QueryEnemies(center, runeRadius);
             for (int i = 0; i < count; i++)
             {
