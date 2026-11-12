@@ -108,3 +108,22 @@ Cada NPC requiere ID único, identidad/cultura, arquetipo, necesidades, trabajo,
 
 ## No promesas falsas
 Se hizo una fusión **selectiva de lógica en GitHub** y revisión estática. No se ejecutó Unity, no se editaron las carpetas locales y no se construyeron NPC/ciudades 3D completos. El siguiente paso para una experiencia realmente jugable es importar arte bajo licencia, cerrar regresiones y crear una región terrestre con aldea + cueva + jefe + recompensas + guardado.
+
+
+## 9. Auditoría adicional: AnimatorController obsoleto CONFIRMADO
+
+Se comparó el archivo versionado `Assets/ThirdParty/KayKitAdventurers/RogueHooded.controller` contra `KayKitCharacterSetup.cs`. El script declaraba **Harvest, HarvestStyle, SwordAction, SpellAction, FrostAction, ShieldAction, WardAction y ParryAction**, pero los ocho parámetros **faltaban en el controlador guardado**. `PlayerAnimationDriver` comprueba su presencia antes de disparar el trigger: por eso podían funcionar daño/cooldown y no verse animaciones.
+
+**Corrección en 018:** `Assets/Editor/KayKitAnimationIntegrity.cs` compara parámetros al abrir el Editor y, si faltan, ejecuta `KayKitCharacterSetup.Prepare()` de forma controlada, solo fuera de Play/compilación/batchmode. Informa éxito o error en Console. También ofrece el menú manual `Vhaldren > Personaje > Validar y reparar animaciones del juego`. No modifica el movimiento, hitboxes ni prefabs al ejecutar el juego.
+
+**Limitación:** el `.controller` viejo seguirá versionado hasta que se abra Unity, se regenere y se haga commit del asset reparado; esta rama aún no ha ejecutado Unity.
+
+## 10. Integración con el trabajo paralelo del agente
+
+Mientras se desarrollaba 018, la rama `feature/017-integracion-jugable-pueblos-combate` recibió actualizaciones concurrentes: `PrototypeVfx`, `SpellImpactFlash`, mejoras de curación, defensas, inventario, `VillageTradeCatalog`, stock/precios del mercado y nuevas pruebas. Se copiaron los archivos nuevos y las actualizaciones no conflictivas; en `PlayerCombatAbilities` se preservaron esos VFX y el HUD legible de 018; en `VillageNoticeboard` se conservaron el mercado nuevo y el estado social del Cruce.
+
+El PR 018 se basa en **016**, no en 017, para presentar una propuesta consolidada sin conflictos textuales de ramas paralelas. La rama de desarrollo que debe abrirse para probar es exclusivamente `feature/018-consolidacion-pueblos-y-combate`. Las anteriores quedan como respaldo hasta validar.
+
+## 11. Qué significa «pueblo vivo» en el estado actual
+
+Implementado: objetivos encadenados, reputación, eventos narrativos, comercio limitado, consecuencias en seguridad/provisiones/ánimo/tensión arcana y tablón interactivo. **No implementado todavía:** NPC desplazándose por el pueblo, casas terminadas, caravanas físicas, animaciones de interacción con cada NPC, caminos que cambian físicamente, guardado de decisiones o regiones completas de Cielo/Infierno. Estos sistemas necesitan prefabs, escenas, comportamiento, navegación y persistencia antes de considerarse terminados.
