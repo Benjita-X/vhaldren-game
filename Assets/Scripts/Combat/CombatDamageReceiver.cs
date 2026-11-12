@@ -46,6 +46,13 @@ namespace Vhaldren.Gameplay.Combat
         public event Action<CombatDamageResult> Resolved;
         public float LastAppliedDamage { get; private set; }
 
+        public void ConfigureResistances(float melee, float arrow, float magic)
+        {
+            meleeResistance = Mathf.Clamp(melee, 0f, 0.95f);
+            arrowResistance = Mathf.Clamp(arrow, 0f, 0.95f);
+            magicResistance = Mathf.Clamp(magic, 0f, 0.95f);
+        }
+
         private void Awake()
         {
             health = GetComponent<CombatHealth>();
