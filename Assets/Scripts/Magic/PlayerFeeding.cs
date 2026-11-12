@@ -72,7 +72,11 @@ namespace Vhaldren.Gameplay.Magic
             deferredLock = 0;
         }
 
-        private void Update() => Tick(MagicKeys.AbsorbHeld, MagicKeys.PrimaryPressed, Time.deltaTime);
+        private void Update()
+        {
+            if (Time.timeScale > 0f)
+                Tick(MagicKeys.AbsorbHeld, MagicKeys.PrimaryPressed, Time.deltaTime);
+        }
 
         /// <summary>Avanza la absorcion. Separado de Update para poder probarlo.</summary>
         public void Tick(bool held, bool executePressed, float deltaTime)
@@ -193,7 +197,9 @@ namespace Vhaldren.Gameplay.Magic
         private void Complete()
         {
             EssenceKind kind = source != null ? source.Kind : EssenceKind.None;
-            int quality = source != null ? source.Quality : 0;
+            // De noche (y mas con la Luna carmesi) la esencia sale mas pura.
+            int quality = source != null
+                ? Mathf.Min(100, source.Quality + DayNightCycle.EssenceQualityBonus) : 0;
             CombatHealth victim = target;
             End();
             waitForRelease = true;

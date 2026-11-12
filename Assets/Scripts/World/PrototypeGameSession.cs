@@ -85,6 +85,12 @@ namespace Vhaldren.Gameplay.World
                     player.gameObject.AddComponent<Vhaldren.Gameplay.Magic.PlayerSpellbook>();
                 if (player.GetComponent<Vhaldren.Gameplay.Magic.PlayerFeeding>() == null)
                     player.gameObject.AddComponent<Vhaldren.Gameplay.Magic.PlayerFeeding>();
+                if (GetComponent<GamePauseMenu>() == null)
+                    gameObject.AddComponent<GamePauseMenu>();
+                if (GetComponent<DayNightCycle>() == null)
+                    gameObject.AddComponent<DayNightCycle>();
+                if (GameAutoCapture.RequestedFolder() != null && GetComponent<GameAutoCapture>() == null)
+                    gameObject.AddComponent<GameAutoCapture>();
 
                 // Solo el mundo usa flechas fisicas; las pruebas y la sala
                 // de entrenamiento conservan el disparo legacy configurable.

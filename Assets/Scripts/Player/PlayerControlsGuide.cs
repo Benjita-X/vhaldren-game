@@ -81,7 +81,7 @@ namespace Vhaldren.Gameplay.Player
                 "G: desmontar | Ctrl+Z: deshacer\n\n" +
                 "<b>PUEBLOS</b>\nN: abrir tablón | Y: aceptar/reclamar\n" +
                 "O: cambiar oferta | P: comerciar\n\n" +
-                "F1: ocultar o mostrar esta ayuda";
+                "Esc: pausa y salir | F1: ocultar esta ayuda";
             GUI.Label(new Rect(x + 10f, 50f, width - 20f, 382f), guide, textStyle);
         }
 

@@ -227,7 +227,7 @@ namespace Vhaldren.Gameplay.Magic
         private void Update()
         {
             RefreshCharges();
-            if (health == null || health.IsDefeated)
+            if (health == null || health.IsDefeated || Time.timeScale <= 0f)
                 return;
             PlayerBuilder builder = GetComponent<PlayerBuilder>();
             if (builder != null && builder.IsBuilding)
@@ -701,8 +701,10 @@ namespace Vhaldren.Gameplay.Magic
             if (builder != null && builder.IsBuilding)
                 return;
 
-            float width = Mathf.Min(600f, Screen.width - 24f);
-            float x = (Screen.width - width) * 0.5f;
+            // Centrada, pero sin invadir la columna derecha (tablón del pueblo, F1).
+            float rightLimit = Screen.width - 395f;
+            float width = Mathf.Clamp(rightLimit - 12f, 300f, 600f);
+            float x = Mathf.Max(12f, Mathf.Min((Screen.width - width) * 0.5f, rightLimit - width));
             float y = Screen.height - 196f;
             Color tint = SpellCatalog.SchoolColor(school);
             string hex = ColorUtility.ToHtmlStringRGB(tint);
@@ -712,6 +714,9 @@ namespace Vhaldren.Gameplay.Magic
                 .Append("</color></b>   Tab: escuela (").Append(UnlockedCount).Append("/6)");
             if (combat != null && combat.InCombat)
                 text.Append("   <color=#f88>EN COMBATE ").Append(combat.SecondsLeft.ToString("0")).Append("s</color>");
+            if (DayNightCycle.Active != null)
+                text.Append("   ").Append(DayNightCycle.Active.IsCrimsonMoon ? "<color=#f55>" : "<color=#ccc>")
+                    .Append(DayNightCycle.Active.Clock).Append("</color>");
             ArcaneBarrier barrier = GetComponent<ArcaneBarrier>();
             if (barrier != null && barrier.Active)
                 text.Append("   Égida ").Append(barrier.Remaining.ToString("0"));

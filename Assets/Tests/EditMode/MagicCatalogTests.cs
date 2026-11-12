@@ -120,5 +120,23 @@ namespace Vhaldren.Tests
             Assert.That(EssenceCatalog.TeachesSchool(EssenceKind.Sanguine, out SpellSchool c) && c == SpellSchool.Hemomancy);
             Assert.That(EssenceCatalog.TeachesSchool(EssenceKind.Titanic, out _), Is.False);
         }
+    
+
+        [Test]
+        public void DayNightClockNightsAndCrimsonMoon()
+        {
+            const float hour = Vhaldren.Gameplay.World.DayNightCycle.DaySeconds / 24f;
+            Assert.That(Vhaldren.Gameplay.World.DayNightCycle.HourAt(0f), Is.EqualTo(8f).Within(0.001f));
+            Assert.That(Vhaldren.Gameplay.World.DayNightCycle.IsNightHour(12f), Is.False);
+            Assert.That(Vhaldren.Gameplay.World.DayNightCycle.IsNightHour(22f), Is.True);
+            Assert.That(Vhaldren.Gameplay.World.DayNightCycle.IsNightHour(3f), Is.True);
+            Assert.That(Vhaldren.Gameplay.World.DayNightCycle.DayAt(hour * 15f), Is.EqualTo(1), "23:00 del primer dia.");
+            Assert.That(Vhaldren.Gameplay.World.DayNightCycle.DayAt(hour * 17f), Is.EqualTo(2), "01:00 ya es el dia 2.");
+            // Noche del dia 4 (22:00) y su madrugada (02:00 del dia 5): Luna carmesi.
+            float day4Night = (3f * 24f + 14f) * hour;
+            Assert.That(Vhaldren.Gameplay.World.DayNightCycle.IsCrimsonNight(day4Night), Is.True);
+            Assert.That(Vhaldren.Gameplay.World.DayNightCycle.IsCrimsonNight(day4Night + 4f * hour), Is.True);
+            Assert.That(Vhaldren.Gameplay.World.DayNightCycle.IsCrimsonNight(day4Night - 24f * hour), Is.False);
+        }
     }
 }

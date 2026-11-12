@@ -310,7 +310,8 @@ namespace Vhaldren.Gameplay.World
                 // mostrar ESQUIVA sin fingir que se descontaron PV.
                 // Deslumbrado (Lumancia) reduce el daño que causa este enemigo.
                 float outgoing = Mathf.Max(0f, attackDamage) *
-                    Vhaldren.Gameplay.Magic.StatusEffects.OutgoingFor(this);
+                    Vhaldren.Gameplay.Magic.StatusEffects.OutgoingFor(this) *
+                    DayNightCycle.EnemyDamageMultiplier;
                 CombatDamageResult response = defender.Receive(
                     outgoing, activeAttackKind, transform.position);
                 ShowAimLine(false);
