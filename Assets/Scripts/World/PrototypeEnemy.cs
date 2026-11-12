@@ -41,12 +41,15 @@ namespace Vhaldren.Gameplay.World
         private float provokedUntil;
         private bool defeated;
         private bool returningHome;
+        private float slowUntil;
+        private float slowMultiplier = 1f;
         private bool windingUp;
         private float attackReleaseAt;
         private float staggerUntil;
 
         public bool IsBoss => isBoss;
         public bool IsDefeated => defeated;
+        public bool IsSlowed => !defeated && Time.time < slowUntil;
         public bool IsAttackTelegraphed => windingUp;
         public event Action<PrototypeEnemy> Defeated;
 
@@ -220,7 +223,9 @@ namespace Vhaldren.Gameplay.World
 
             fallingSpeed = controller.isGrounded ? -2f :
                 Mathf.Max(-40f, fallingSpeed - 25f * Time.deltaTime);
-            Vector3 velocity = move * Mathf.Max(0f, moveSpeed) +
+            float currentSpeed = Mathf.Max(0f, moveSpeed) *
+                (Time.time < slowUntil ? slowMultiplier : 1f);
+            Vector3 velocity = move * currentSpeed +
                 Vector3.up * fallingSpeed;
             controller.Move(velocity * Time.deltaTime);
         }
@@ -279,6 +284,23 @@ namespace Vhaldren.Gameplay.World
         /// Interrumpe un ataque anunciado sin desplazar al enemigo. Util para
         /// habilidades futuras que apliquen aturdimiento o rompimiento de postura.
         /// </summary>
+        /// <summary>
+        /// Ralentizacion temporal por magia sin tocar las estadisticas base.
+        /// Reaplicar no reduce el multiplicador de forma acumulativa.
+        /// </summary>
+        public void ApplySlow(float multiplier, float seconds)
+        {
+            if (defeated || float.IsNaN(multiplier) || float.IsInfinity(multiplier) ||
+                float.IsNaN(seconds) || float.IsInfinity(seconds) || seconds <= 0f)
+                return;
+            float safeMultiplier = Mathf.Clamp(multiplier, 0.25f, 1f);
+            if (Time.time < slowUntil)
+                slowMultiplier = Mathf.Min(slowMultiplier, safeMultiplier);
+            else
+                slowMultiplier = safeMultiplier;
+            slowUntil = Mathf.Max(slowUntil, Time.time + seconds);
+        }
+
         public void InterruptAttack(float recoverySeconds = 0.18f)
         {
             CancelAttack();
@@ -381,6 +403,8 @@ namespace Vhaldren.Gameplay.World
             transform.position = spawnPosition;
             fallingSpeed = 0f;
             nextAttackTime = Time.time + 1f;
+            slowUntil = 0f;
+            slowMultiplier = 1f;
             staggerUntil = 0f;
             CancelAttack();
             provokedUntil = 0f;

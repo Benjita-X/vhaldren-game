@@ -25,6 +25,7 @@ namespace Vhaldren.Gameplay.World
         private CombatHealth playerHealth;
         private PlayerMotor playerMotor;
         private LocalPlayerShooter playerShooter;
+        private PlayerDamageTracker playerDamage;
         private bool playerShooterWasEnabled;
         private Vector3 spawnPosition;
         private float healReadyAt;
@@ -51,6 +52,11 @@ namespace Vhaldren.Gameplay.World
             playerHealth = player.GetComponent<CombatHealth>();
             playerMotor = player.GetComponent<PlayerMotor>();
             playerShooter = player.GetComponent<LocalPlayerShooter>();
+            // Crear antes de activar controles de arma o habilidad: todas las
+            // fuentes notifican este contador con el daño REAL aplicado.
+            playerDamage = player.GetComponent<PlayerDamageTracker>();
+            if (Application.isPlaying && playerDamage == null)
+                playerDamage = player.gameObject.AddComponent<PlayerDamageTracker>();
             if (Application.isPlaying && playerHealth != null)
             {
                 CombatDamageReceiver receiver = player.GetComponent<CombatDamageReceiver>();
@@ -170,11 +176,13 @@ namespace Vhaldren.Gameplay.World
                     (bossDefeated ? "DERROTADO" : "PENDIENTE");
                 healText = Time.time >= healReadyAt ? "Q: curar +35 PV" :
                     "Q: pocion en " + Mathf.CeilToInt(healReadyAt - Time.time) + " s";
-                combatText = playerShooter != null
-                    ? "IMPACTOS: " + playerShooter.HitsLanded +
-                      "  |  DANO TOTAL: " + playerShooter.TotalDamageDealt.ToString("0.#") +
-                      " PV  |  ULTIMO GOLPE: " + playerShooter.LastDamageDealt.ToString("0.#")
-                    : "Sin arma equipada";
+                combatText = playerDamage != null
+                    ? "GOLPES: " + playerDamage.TotalHits +
+                      "  |  DANO TOTAL: " + playerDamage.TotalDamage.ToString("0.#") +
+                      " PV  |  FLECHA " + playerDamage.DamageFor(CombatDamageKind.Arrow).ToString("0") +
+                      " / ESPADA " + playerDamage.DamageFor(CombatDamageKind.Melee).ToString("0") +
+                      " / MAGIA " + playerDamage.DamageFor(CombatDamageKind.Magic).ToString("0")
+                    : "Estadisticas no disponibles";
             }
         }
 

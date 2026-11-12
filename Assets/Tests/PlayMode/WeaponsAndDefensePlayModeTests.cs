@@ -237,6 +237,55 @@ namespace Vhaldren.Tests
         }
 
         [UnityTest]
+        public IEnumerator FrostWaveOnlyHitsFrontalTargetsAndSlowsThem()
+        {
+            floor = GameObject.CreatePrimitive(PrimitiveType.Cube);
+            floor.transform.position = new Vector3(0f, -0.55f, 0f);
+            floor.transform.localScale = new Vector3(30f, 1f, 30f);
+
+            owner = new GameObject("PlayerRoot");
+            owner.transform.position = new Vector3(0f, 1.08f, 0f);
+            CharacterController body = owner.AddComponent<CharacterController>();
+            body.height = 2f;
+            owner.AddComponent<CombatHealth>();
+            owner.AddComponent<PlayerMotor>();
+            owner.AddComponent<CombatDefense>();
+            PlayerDamageTracker tracker = owner.AddComponent<PlayerDamageTracker>();
+            PlayerCombatAbilities abilities = owner.AddComponent<PlayerCombatAbilities>();
+
+            target = new GameObject("EnemyAhead");
+            target.SetActive(false);
+            target.transform.position = new Vector3(0f, 1.08f, 3f);
+            CharacterController enemyCollider = target.AddComponent<CharacterController>();
+            enemyCollider.height = 2f;
+            CombatHealth enemyHealth = target.AddComponent<CombatHealth>();
+            target.AddComponent<CombatDamageReceiver>();
+            target.AddComponent<Vhaldren.Gameplay.World.PrototypeEnemy>();
+            target.SetActive(true);
+
+            secondEnemy = GameObject.CreatePrimitive(PrimitiveType.Cube);
+            secondEnemy.transform.position = new Vector3(0f, 1f, -3f);
+            CombatHealth behindHealth = secondEnemy.AddComponent<CombatHealth>();
+            secondEnemy.AddComponent<CombatDamageReceiver>();
+            Physics.SyncTransforms();
+            yield return null;
+
+            Assert.That(abilities.TryFrostWave(), Is.True);
+            Assert.That(enemyHealth.CurrentHealth, Is.EqualTo(100f),
+                "La escarcha avisa antes de hacer daño.");
+            Assert.That(abilities.TryFrostWave(), Is.False, "La recarga evita spam.");
+            yield return new WaitForSeconds(0.36f);
+
+            Assert.That(enemyHealth.CurrentHealth, Is.LessThan(100f));
+            Assert.That(behindHealth.CurrentHealth, Is.EqualTo(100f),
+                "La onda frontal no debe golpear objetivos detrás.");
+            Assert.That(abilities.FrostTargetsHit, Is.EqualTo(1));
+            Assert.That(tracker.DamageFor(CombatDamageKind.Magic), Is.GreaterThan(0f));
+            Assert.That(target.GetComponent<Vhaldren.Gameplay.World.PrototypeEnemy>().IsSlowed,
+                Is.True);
+        }
+
+        [UnityTest]
         public IEnumerator HeavySwordAbilityUsesMeleeDamageAndSingleTargetHit()
         {
             floor = GameObject.CreatePrimitive(PrimitiveType.Cube);
