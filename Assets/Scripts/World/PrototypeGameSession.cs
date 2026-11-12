@@ -28,6 +28,8 @@ namespace Vhaldren.Gameplay.World
         private PlayerDamageTracker playerDamage;
         private bool playerShooterWasEnabled;
         private Vector3 spawnPosition;
+        private Vector3 originalSpawnPosition;
+        private bool hasCustomSpawn;
         private float healReadyAt;
         private float respawnAt = float.PositiveInfinity;
         private string statusText = "";
@@ -49,6 +51,8 @@ namespace Vhaldren.Gameplay.World
                 return;
 
             spawnPosition = player.position;
+            originalSpawnPosition = spawnPosition;
+            hasCustomSpawn = false;
             playerHealth = player.GetComponent<CombatHealth>();
             playerMotor = player.GetComponent<PlayerMotor>();
             playerShooter = player.GetComponent<LocalPlayerShooter>();
@@ -185,6 +189,28 @@ namespace Vhaldren.Gameplay.World
                     : "Estadisticas no disponibles";
             }
         }
+
+        /// <summary>Una cama construida cambia el punto de reaparicion.</summary>
+        public void SetRespawnPoint(Vector3 position)
+        {
+            if (float.IsNaN(position.x) || float.IsNaN(position.y) || float.IsNaN(position.z))
+                return;
+            if (!hasCustomSpawn)
+                originalSpawnPosition = spawnPosition;
+            spawnPosition = position;
+            hasCustomSpawn = true;
+        }
+
+        /// <summary>Al desmontar la cama activa se vuelve al punto inicial.</summary>
+        public void ClearRespawnPoint(Vector3 position)
+        {
+            if (!hasCustomSpawn || (spawnPosition - position).sqrMagnitude > 0.01f)
+                return;
+            spawnPosition = originalSpawnPosition;
+            hasCustomSpawn = false;
+        }
+
+        public Vector3 RespawnPoint => spawnPosition;
 
         private void RespawnPlayer()
         {

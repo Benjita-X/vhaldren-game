@@ -46,7 +46,9 @@ namespace Vhaldren.Gameplay.Survival
 
         public event Action Changed;
         public int TotalItems { get; private set; }
-        public int Capacity => Mathf.Max(1, maxItems);
+        public const int ChestCapacity = 120;
+        /// <summary>Cada cofre construido amplia el almacen compartido de la base.</summary>
+        public int Capacity => Mathf.Max(1, maxItems) + ChestCapacity * BuiltPiece.CountWithFunction(BuildFunction.Chest);
 
         private void Awake() => Initialize();
 
