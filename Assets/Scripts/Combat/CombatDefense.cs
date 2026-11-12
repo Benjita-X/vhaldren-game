@@ -50,11 +50,14 @@ namespace Vhaldren.Gameplay.Combat
         private GuardMode guard;
         private bool initialized;
         private bool guardBroken;
+        private float counterReadyUntil;
+        private bool counterPending;
 
         public GuardMode Guard => guard;
         public float Stamina => stamina;
         public float MaximumStamina => Mathf.Max(1f, maximumStamina);
         public bool ParryWindowActive => Time.time < parryUntil;
+        public bool CounterReady => counterPending && Time.time < counterReadyUntil;
         public bool GuardBroken => guardBroken;
         public bool CanParry => !guardBroken &&
             (health == null || !health.IsDefeated) &&
@@ -125,6 +128,15 @@ namespace Vhaldren.Gameplay.Combat
         }
 
         /// <summary>Las habilidades gastan la misma resistencia que la defensa.</summary>
+        /// <summary>Una parada bien hecha habilita un solo tajo de respuesta.</summary>
+        public bool TryConsumeCounter()
+        {
+            if (!CounterReady)
+                return false;
+            counterPending = false;
+            return true;
+        }
+
         public bool TrySpend(float amount)
         {
             Initialize();
@@ -169,6 +181,8 @@ namespace Vhaldren.Gameplay.Combat
                 (kind == CombatDamageKind.Melee || kind == CombatDamageKind.Arrow))
             {
                 parryUntil = 0f; // Una parada efectiva por pulsacion.
+                counterPending = true;
+                counterReadyUntil = Time.time + 0.85f;
                 return new DefenseResult(0f, true, false);
             }
 
@@ -211,6 +225,7 @@ namespace Vhaldren.Gameplay.Combat
         {
             guard = GuardMode.None;
             parryUntil = 0f;
+            counterPending = false;
         }
     }
 }
