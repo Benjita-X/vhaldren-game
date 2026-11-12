@@ -356,12 +356,16 @@ namespace Vhaldren.Gameplay.Player
                 // En cooperativo el servidor debera validar este impacto.
                 if (hitCollider != null)
                 {
-                    CombatHealth health = hitCollider.GetComponentInParent<CombatHealth>();
                     float safeDamage = float.IsNaN(testDamage) || float.IsInfinity(testDamage)
                         ? 0f : Mathf.Max(0f, testDamage);
+                    CombatDamageReceiver receiver =
+                        hitCollider.GetComponentInParent<CombatDamageReceiver>();
+                    CombatHealth health = hitCollider.GetComponentInParent<CombatHealth>();
                     if (health != null && !health.transform.IsChildOf(transform))
                     {
-                        float applied = health.ApplyDamage(safeDamage);
+                        float applied = receiver != null
+                            ? receiver.Receive(safeDamage, CombatDamageKind.Arrow, origin).Applied
+                            : health.ApplyDamage(safeDamage); // compatibilidad de salas legacy.
                         if (applied > 0f)
                         {
                             HitsLanded++;
