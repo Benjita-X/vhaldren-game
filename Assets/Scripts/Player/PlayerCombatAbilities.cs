@@ -34,6 +34,7 @@ namespace Vhaldren.Gameplay.Player
         private CombatHealth health;
         private CombatDefense defense;
         private PlayerMotor motor;
+        private PlayerDamageTracker damageTracker;
         private float swordReadyAt;
         private float runeReadyAt;
         private float nextLabel;
@@ -51,6 +52,7 @@ namespace Vhaldren.Gameplay.Player
             health = GetComponent<CombatHealth>();
             defense = GetComponent<CombatDefense>();
             motor = GetComponent<PlayerMotor>();
+            damageTracker = GetComponent<PlayerDamageTracker>();
         }
 
         private void Update()
@@ -140,6 +142,10 @@ namespace Vhaldren.Gameplay.Player
                         CombatDamageKind.Melee, origin);
                 if (result.Applied > 0f)
                 {
+                    if (damageTracker == null)
+                        damageTracker = GetComponent<PlayerDamageTracker>();
+                    if (damageTracker != null)
+                        damageTracker.Record(result.Applied, CombatDamageKind.Melee);
                     SwordTargetsHit++;
                     PrototypeEnemy enemy = receiver.GetComponent<PrototypeEnemy>();
                     if (enemy != null)
@@ -173,6 +179,10 @@ namespace Vhaldren.Gameplay.Player
                     runeDamage, CombatDamageKind.Magic, center);
                 if (result.Applied > 0f)
                 {
+                    if (damageTracker == null)
+                        damageTracker = GetComponent<PlayerDamageTracker>();
+                    if (damageTracker != null)
+                        damageTracker.Record(result.Applied, CombatDamageKind.Magic);
                     RuneTargetsHit++;
                     PrototypeEnemy enemy = receiver.GetComponent<PrototypeEnemy>();
                     if (enemy != null)
