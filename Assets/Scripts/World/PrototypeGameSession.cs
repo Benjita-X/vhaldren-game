@@ -51,6 +51,22 @@ namespace Vhaldren.Gameplay.World
             playerHealth = player.GetComponent<CombatHealth>();
             playerMotor = player.GetComponent<PlayerMotor>();
             playerShooter = player.GetComponent<LocalPlayerShooter>();
+            if (Application.isPlaying && playerHealth != null)
+            {
+                CombatDamageReceiver receiver = player.GetComponent<CombatDamageReceiver>();
+                if (receiver == null)
+                    receiver = player.gameObject.AddComponent<CombatDamageReceiver>();
+                CombatDefense protection = player.GetComponent<CombatDefense>();
+                if (protection == null)
+                    protection = player.gameObject.AddComponent<CombatDefense>();
+                if (player.GetComponent<PlayerDefensiveInput>() == null)
+                    player.gameObject.AddComponent<PlayerDefensiveInput>();
+
+                // Solo el mundo usa flechas fisicas; las pruebas y la sala
+                // de entrenamiento conservan el disparo legacy configurable.
+                if (playerShooter != null)
+                    playerShooter.SetPhysicalArrows(true);
+            }
             if (playerHealth != null)
             {
                 CombatDamageFeedback incoming = player.GetComponent<CombatDamageFeedback>();
