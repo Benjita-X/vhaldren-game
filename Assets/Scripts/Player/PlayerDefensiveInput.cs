@@ -95,7 +95,7 @@ namespace Vhaldren.Gameplay.Player
         {
             if (Event.current.type != EventType.Repaint || defense == null)
                 return;
-            Rect rect = new Rect(12f, 118f, Mathf.Min(650f, Screen.width - 24f), 46f);
+            Rect rect = new Rect(12f, 132f, Mathf.Min(650f, Screen.width - 24f), 46f);
             GUI.Box(rect, "");
             GUI.Label(new Rect(rect.x + 8f, rect.y + 3f, rect.width - 16f, 20f), status);
             GUI.Label(new Rect(rect.x + 8f, rect.y + 23f, rect.width - 16f, 18f),
