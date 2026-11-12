@@ -28,6 +28,7 @@ namespace Vhaldren.Gameplay.World
         private LocalPlayerShooter playerShooter;
         private PlayerDamageTracker playerDamage;
         private VillageQuestJournal villageJournal;
+        private GameObject ownedNoticeboard;
         private bool playerShooterWasEnabled;
         private Vector3 spawnPosition;
         private Vector3 originalSpawnPosition;
@@ -98,11 +99,24 @@ namespace Vhaldren.Gameplay.World
 
                 // Un primer punto de interacción y misiones conectado al mundo
                 // existente. No genera otro inventario ni altera la escena 015.
-                if (FindAnyObjectByType<VillageNoticeboard>() == null)
+                bool alreadyHasBoard = false;
+                foreach (VillageNoticeboard candidate in
+                    FindObjectsByType<VillageNoticeboard>(FindObjectsSortMode.None))
                 {
-                    GameObject board = new GameObject("Puesto del Cruce - tablon de misiones");
-                    board.transform.position = new Vector3(-4f, 0f, -6f);
-                    board.AddComponent<VillageNoticeboard>();
+                    if (candidate != null && candidate.gameObject.scene == gameObject.scene)
+                    {
+                        alreadyHasBoard = true;
+                        break;
+                    }
+                }
+                if (!alreadyHasBoard)
+                {
+                    ownedNoticeboard = new GameObject("Puesto del Cruce - tablon de misiones");
+                    ownedNoticeboard.SetActive(false);
+                    ownedNoticeboard.transform.position = new Vector3(-4f, 0f, -6f);
+                    VillageNoticeboard board = ownedNoticeboard.AddComponent<VillageNoticeboard>();
+                    board.BindPlayer(player);
+                    ownedNoticeboard.SetActive(true);
                 }
             }
             if (playerHealth != null)
@@ -142,6 +156,11 @@ namespace Vhaldren.Gameplay.World
             }
             defeated.Clear();
             enemies = null;
+            if (ownedNoticeboard != null)
+            {
+                Destroy(ownedNoticeboard);
+                ownedNoticeboard = null;
+            }
         }
 
         private void OnEnemyDefeated(PrototypeEnemy enemy)
