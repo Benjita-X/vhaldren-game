@@ -259,7 +259,7 @@ namespace Vhaldren.Gameplay.Races
                 CombatDamageResult result = receiver.Receive(damage, CombatDamageKind.Magic, transform.position);
                 if (result.Applied > 0f)
                 {
-                    StatusEffects.For(receiver)?.ApplyFrom(StatusKind.Ignition, transform.position);
+                    StatusEffects.For(receiver)?.ApplyFrom(StatusKind.Ignition, this);
                     GetComponent<PlayerDamageTracker>()?.Record(result.Applied, CombatDamageKind.Magic);
                 }
             }
