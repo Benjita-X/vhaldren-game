@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using Vhaldren.Gameplay.Combat;
 using Vhaldren.Gameplay.Player;
+using Vhaldren.Gameplay.Survival;
 #if ENABLE_INPUT_SYSTEM
 using UnityEngine.InputSystem;
 #endif
@@ -26,6 +27,7 @@ namespace Vhaldren.Gameplay.World
         private PlayerMotor playerMotor;
         private LocalPlayerShooter playerShooter;
         private PlayerDamageTracker playerDamage;
+        private VillageQuestJournal villageJournal;
         private bool playerShooterWasEnabled;
         private Vector3 spawnPosition;
         private Vector3 originalSpawnPosition;
@@ -88,6 +90,21 @@ namespace Vhaldren.Gameplay.World
                     incoming = player.gameObject.AddComponent<CombatDamageFeedback>();
                 incoming.ConfigureForPlayer();
             }
+            if (Application.isPlaying && player.GetComponent<SurvivalInventory>() != null)
+            {
+                villageJournal = player.GetComponent<VillageQuestJournal>();
+                if (villageJournal == null)
+                    villageJournal = player.gameObject.AddComponent<VillageQuestJournal>();
+
+                // Un primer punto de interacción y misiones conectado al mundo
+                // existente. No genera otro inventario ni altera la escena 015.
+                if (FindAnyObjectByType<VillageNoticeboard>() == null)
+                {
+                    GameObject board = new GameObject("Puesto del Cruce - tablon de misiones");
+                    board.transform.position = new Vector3(-4f, 0f, -6f);
+                    board.AddComponent<VillageNoticeboard>();
+                }
+            }
             if (playerHealth != null)
                 playerHealth.Defeated += OnPlayerDefeated;
 
@@ -132,7 +149,12 @@ namespace Vhaldren.Gameplay.World
             if (enemy == null || !defeated.Add(enemy))
                 return;
             if (enemy.IsBoss)
+            {
                 bossDefeated = true;
+                villageJournal?.RecordAction(VillageObjective.DefeatBoss);
+            }
+            else
+                villageJournal?.RecordAction(VillageObjective.DefeatGuardians);
             nextHudRefresh = 0f;
         }
 
