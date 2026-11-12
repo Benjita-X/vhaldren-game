@@ -56,7 +56,9 @@ namespace Vhaldren.Gameplay.Combat
         public float MaximumStamina => Mathf.Max(1f, maximumStamina);
         public bool ParryWindowActive => Time.time < parryUntil;
         public bool GuardBroken => guardBroken;
-        public bool CanParry => Time.time >= nextParryAt && stamina >= parryCost;
+        public bool CanParry => !guardBroken &&
+            (health == null || !health.IsDefeated) &&
+            Time.time >= nextParryAt && stamina >= parryCost;
 
         private void Awake()
         {
