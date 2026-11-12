@@ -16,6 +16,7 @@ namespace Vhaldren.Gameplay.Player
         private readonly Collider[] overlaps = new Collider[HitCapacity];
 
         private Transform owner;
+        private Vector3 launchOrigin;
         private LocalPlayerShooter shooter;
         private Vector3 velocity;
         private float damage;
@@ -53,6 +54,7 @@ namespace Vhaldren.Gameplay.Player
             float speed, float range, LocalPlayerShooter callback, float gravity)
         {
             owner = attacker;
+            launchOrigin = transform.position;
             shooter = callback;
             velocity = direction * speed;
             damage = Finite(requestedDamage) ? Mathf.Max(0f, requestedDamage) : 0f;
@@ -178,7 +180,7 @@ namespace Vhaldren.Gameplay.Player
                     !receiver.transform.IsChildOf(owner)))
                 {
                     applied = receiver.Receive(damage, CombatDamageKind.Arrow,
-                        owner != null ? owner.position : transform.position).Applied;
+                        launchOrigin).Applied;
                 }
                 else
                 {
