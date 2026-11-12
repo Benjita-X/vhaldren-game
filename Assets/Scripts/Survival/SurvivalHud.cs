@@ -72,6 +72,12 @@ namespace Vhaldren.Gameplay.Survival
 
             GUI.Box(new Rect(10f, Screen.height - 36f, 620f, 26f),
                 resourcesLine + (builder != null && !builder.IsBuilding ? "    B: construir   E: recolectar" : string.Empty), style);
+            if (builder != null)
+                GUI.Box(new Rect(Mathf.Max(10f, Screen.width - 316f),
+                    Screen.height - 36f, 306f, 26f),
+                    builder.CreativeMode
+                        ? "F9: CREATIVO ACTIVO | materiales infinitos"
+                        : "F9: activar construccion libre", style);
             if (tools == null)
                 tools = GetComponent<SurvivalToolbelt>();
             if (tools != null)
@@ -87,7 +93,8 @@ namespace Vhaldren.Gameplay.Survival
             if (builder != null && builder.IsBuilding)
             {
                 int key = builder.SelectedIndex * 1000 + (int)builder.LastResult * 10 + builder.RotationSteps +
-                          (builder.FreePlacement ? 500000 : 0);
+                          (builder.FreePlacement ? 500000 : 0) +
+                          (builder.CreativeMode ? 1000000 : 0);
                 if (key != catalogKey)
                 {
                     catalogKey = key;
@@ -120,12 +127,14 @@ namespace Vhaldren.Gameplay.Survival
         private string BuildCatalogText()
         {
             text.Clear();
-            text.Append("<b>CONSTRUCCIÓN</b>  (B salir)\n");
+            text.Append(builder.CreativeMode
+                ? "<b>CONSTRUCCIÓN CREATIVA — SIN COSTES</b>  (B salir, F9 supervivencia)\n"
+                : "<b>CONSTRUCCIÓN SUPERVIVENCIA</b>  (B salir, F9 creativo)\n");
             for (int i = 0; i < BuildCatalog.Pieces.Count; i++)
             {
                 BuildPieceDefinition piece = BuildCatalog.Pieces[i];
                 bool selected = i == builder.SelectedIndex;
-                bool affordable = inventory.CanAfford(piece.Cost);
+                bool affordable = builder.CreativeMode || inventory.CanAfford(piece.Cost);
                 text.Append(selected ? "<b>> " : "   ");
                 text.Append(i < 9 ? (i + 1).ToString() : (i == 9 ? "0" : "-")).Append(' ');
                 text.Append(affordable ? piece.DisplayName : "<color=#d88>" + piece.DisplayName + "</color>");
