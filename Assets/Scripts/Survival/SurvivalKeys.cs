@@ -13,6 +13,8 @@ namespace Vhaldren.Gameplay.Survival
         public static bool Rotate => Down(KeyCode.R);
         public static bool Dismantle => Down(KeyCode.G);
         public static bool GatherHeld => Held(KeyCode.E);
+        public static bool CraftImprovisedPick => Down(KeyCode.J);
+        public static bool CraftStonePick => Down(KeyCode.K);
         public static bool FreePlacementHeld => Held(KeyCode.LeftShift);
         public static bool Undo => Held(KeyCode.LeftControl) && Down(KeyCode.Z);
 
@@ -83,6 +85,8 @@ namespace Vhaldren.Gameplay.Survival
                 case KeyCode.R: return k.rKey;
                 case KeyCode.G: return k.gKey;
                 case KeyCode.E: return k.eKey;
+                case KeyCode.J: return k.jKey;
+                case KeyCode.K: return k.kKey;
                 case KeyCode.Z: return k.zKey;
                 case KeyCode.LeftShift: return k.leftShiftKey;
                 case KeyCode.LeftControl: return k.leftCtrlKey;
