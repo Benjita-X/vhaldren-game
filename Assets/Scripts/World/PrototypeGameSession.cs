@@ -87,6 +87,10 @@ namespace Vhaldren.Gameplay.World
                     player.gameObject.AddComponent<Vhaldren.Gameplay.Magic.PlayerFeeding>();
                 if (GetComponent<GamePauseMenu>() == null)
                     gameObject.AddComponent<GamePauseMenu>();
+                // Game feel solo en el mundo jugable: parones, temblor, chispas y sonido.
+                GameFeel.Enabled = true;
+                if (player.GetComponent<PlayerMovementFeedback>() == null)
+                    player.gameObject.AddComponent<PlayerMovementFeedback>();
                 if (GetComponent<DayNightCycle>() == null)
                     gameObject.AddComponent<DayNightCycle>();
                 if (player.GetComponent<SurvivalInventory>() != null &&
@@ -171,6 +175,7 @@ namespace Vhaldren.Gameplay.World
 
         private void OnDisable()
         {
+            GameFeel.Enabled = false;
             if (playerHealth != null)
                 playerHealth.Defeated -= OnPlayerDefeated;
             if (enemies != null)

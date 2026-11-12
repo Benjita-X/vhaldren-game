@@ -69,6 +69,16 @@ namespace Vhaldren.Gameplay.World
                 yield return Shot("5-campamento-bandidos.png");
             }
 
+            if (player != null)
+            {
+                player.transform.position = new Vector3(0f, 1.08f, 35.5f);
+                Physics.SyncTransforms();
+                yield return new WaitForSeconds(1.5f);
+                yield return Shot("8-altar-obelisco.png");
+                player.transform.position = new Vector3(0f, 1.08f, -24f);
+                Physics.SyncTransforms();
+            }
+
             if (DayNightCycle.Active != null)
             {
                 DayNightCycle.Active.SetElapsed((3f * 24f + 14f) * DayNightCycle.DaySeconds / 24f);

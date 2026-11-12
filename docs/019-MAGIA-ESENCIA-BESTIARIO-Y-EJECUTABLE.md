@@ -70,8 +70,31 @@ La auditoría de los archivos de V Rising (`auditoria-v-rising/AUDITORIA.md`) se
 - **Campamentos en grupo**: al atacar a un enemigo, sus compañeros a menos de 10 m acuden. Un asentamiento no se limpia de uno en uno.
 - Encima de cada enemigo se ve su nivel: blanco (a tu altura), amarillo (reto) y rojo (6 o más por encima).
 
+### Arte: texturas reales, enemigos animados y modelos propios con Blender
+- **13 texturas de Poly Haven** (CC0, 1K, 26 MB; autores Rob Tuytel y Amal Kumar), en `Assets/ThirdParty/PolyHaven`. Se usan en el suelo, el bosque, las ruinas, el camino de adoquín, el patio del altar, los muros de castillo, los bloques, los troncos, las copas, las rocas y el mineral.
+- **Shader `Vhaldren/Triplanar`**: proyecta la textura según la posición en el mundo (metros por repetición) y añade el relieve del mapa normal. Así el suelo de 92 m y un bloque de 2 m comparten la misma escala sin estirarse.
+- **Enemigos KayKit animados** (CC0): bárbaro (saqueadores y bruto), pícaro (ballestero y acechadores), maga (acólito y sanadora), caballero (centinelas, guardián y jefe) y dos esqueletos. `Vhaldren > Personaje > Preparar enemigos KayKit` crea un controlador base y 24 variantes por estilo de ataque (cuerpo a cuerpo, pesado, distancia, hechizo). `EnemyAnimationDriver` anima el caminar, el ataque (sincronizado con el aviso) y la reacción al golpe. Hay 16 de 19 enemigos con modelo; los lobos conservan su cuerpo de cuadrúpedo.
+- **Flujo Blender → Unity**: `Tools/Blender/*.py` construye modelos originales por script (`blender --background --python ... -- salida.fbx`). El primero es el **obelisco rúnico** del altar, con anillos de runas emisivos. El generador del mundo los coloca si el FBX existe y, si no, vuelve a la primitiva.
+- No se usa ningún archivo de V Rising: sus mallas no tienen esqueleto y su lógica está compilada.
+
+### Game feel: cada golpe y cada paso responden
+- Cada golpe que quita vida pasa por `CombatDamageReceiver`, que llama a `GameFeel.OnHit`. Eso produce:
+  - **Parón** de 30 a 85 ms según el daño (120 ms al rematar).
+  - **Temblor de cámara**.
+  - **Chispas** en dirección contraria al atacante, de color según el tipo de daño.
+  - **Empujón** del enemigo (respeta paredes; el jefe solo un 30 %).
+  - **Sonido** de impacto.
+- Al recibir daño: parón, temblor más fuerte, **bordes rojos** en la pantalla y quejido.
+- Al bloquear o parar: choque metálico con chispas doradas (la parada perfecta, además, con parón).
+- Los críticos tienen un impacto extra.
+- Las áreas que golpean a muchos enemigos producen **un solo parón** (mínimo 0,1 s entre parones). El parón nunca deshace la pausa (Esc) y, si se interrumpe, el tiempo vuelve a 1.
+- **Sonidos sintetizados por código** (`GameAudio`, sin archivos, originales): golpe, corte, metal, conjuro, explosión mágica, hielo, ballesta, pasos, soplido, herida y derrota. Los enemigos hacen un sonido al preparar el golpe, así se oye venir.
+- **Movimiento**: un paso cada 1,7 m con polvo y sonido, y una nube de polvo con soplido al esquivar.
+- Solo está activo en el mundo jugable: las salas de prueba no cambian.
+- Se activó el módulo integrado de partículas de Unity en `Packages/manifest.json`.
+
 ## Pruebas
-- **EditMode 77/77** y **PlayMode 105/105** en Unity 6000.2.12f1 (incluye 6 pruebas de progresión: forja atómica, banco, armadura sin curación gratis, diferencia de nivel, botín y aviso al grupo).
+- **EditMode 77/77** y **PlayMode 110/110** en Unity 6000.2.12f1 (incluye 6 pruebas de progresión: forja atómica, banco, armadura sin curación gratis, diferencia de nivel, botín y aviso al grupo).
 - Nuevas: catálogo de hechizos y esencias, ciclo día/noche, 11 de magia en PlayMode (proyectil, cargas, congelación, maldición, estática, Égida, escuelas en combate, absorción, ejecución, interrupción, Paso sombrío contra muro y regeneración), 7 del bestiario y una prueba de humo que carga `WorldPrototype001` completo y exige consola limpia.
 - El actualizador del Animator 017 se ejecutó al abrir Unity: el controlador pasó de 6 a 14 estados sin perder ninguno.
 

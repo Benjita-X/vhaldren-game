@@ -50,6 +50,7 @@ namespace Vhaldren.Gameplay.World
         private float attackReleaseAt;
         private float staggerUntil;
         private EnemyArchetype archetype;
+        private Vector3 knockback;
         private float nextSupportPulse;
         private bool enraged;
         private LineRenderer aimLine;
@@ -281,7 +282,10 @@ namespace Vhaldren.Gameplay.World
                 Mathf.Max(-40f, fallingSpeed - 25f * Time.deltaTime);
             float currentSpeed = Mathf.Max(0f, moveSpeed) * (enraged ? 1.25f : 1f) *
                 (Time.time < slowUntil ? slowMultiplier : 1f);
-            Vector3 velocity = move * currentSpeed +
+            // Empujon del golpe: se frena rapido y respeta colisiones (CharacterController).
+            Vector3 push = knockback;
+            knockback = Vector3.MoveTowards(knockback, Vector3.zero, 30f * Time.deltaTime);
+            Vector3 velocity = push + move * currentSpeed +
                 Vector3.up * fallingSpeed;
             controller.Move(velocity * Time.deltaTime);
         }
@@ -379,6 +383,19 @@ namespace Vhaldren.Gameplay.World
         }
 
         public bool IsProvoked => !defeated && Time.time < provokedUntil;
+        public Vector3 Knockback => knockback;
+
+        /// <summary>Empuja al enemigo unos centimetros en la direccion del golpe.</summary>
+        public void ApplyKnockback(Vector3 direction, float distance)
+        {
+            if (defeated || float.IsNaN(distance) || distance <= 0f)
+                return;
+            direction.y = 0f;
+            if (direction.sqrMagnitude < 0.0001f)
+                return;
+            // v^2 = 2·a·d con frenado de 30 m/s^2.
+            knockback = direction.normalized * Mathf.Sqrt(60f * Mathf.Min(distance, 2f));
+        }
 
         /// <summary>
         /// Un campamento pelea en grupo: al atacar a uno, sus compañeros a 10 m acuden.
@@ -538,6 +555,10 @@ namespace Vhaldren.Gameplay.World
                     activeAttackKind == CombatDamageKind.Magic);
             if (ranged)
                 ShowAimLine(true);
+            // Aviso sonoro del golpe: se oye venir antes de que impacte.
+            if (GameFeel.Enabled)
+                GameAudio.Play(activeAttackKind == CombatDamageKind.Magic ? GameSound.SpellCast : GameSound.Whoosh,
+                    transform.position, isBoss ? 0.9f : 0.45f, 0.12f);
         }
 
         private void CancelAttack()
@@ -614,6 +635,7 @@ namespace Vhaldren.Gameplay.World
             slowMultiplier = 1f;
             staggerUntil = 0f;
             enraged = false;
+            knockback = Vector3.zero;
             CancelAttack();
             provokedUntil = 0f;
             returningHome = false;

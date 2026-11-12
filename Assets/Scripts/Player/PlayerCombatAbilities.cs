@@ -107,6 +107,8 @@ namespace Vhaldren.Gameplay.Player
                 return false;
 
             animations?.PlayCombatAction(PlayerAnimationDriver.CombatAction.Sword);
+            if (GameFeel.Enabled)
+                GameAudio.Play(GameSound.Slash, transform.position, 0.8f);
             Announce("Tajo de espada");
             swordReadyAt = Time.time + Mathf.Max(0.1f, swordCooldown);
             bool counter = defense.TryConsumeCounter();
@@ -122,6 +124,8 @@ namespace Vhaldren.Gameplay.Player
                 return false;
 
             animations?.PlayCombatAction(PlayerAnimationDriver.CombatAction.Spell);
+            if (GameFeel.Enabled)
+                GameAudio.Play(GameSound.SpellCast, transform.position, 0.8f);
             Announce("Pulso rúnico: canalizando");
             GetComponent<VillageQuestJournal>()?.RecordAction(VillageObjective.CastMagic);
             runeReadyAt = Time.time + Mathf.Max(0.1f, runeCooldown);
@@ -136,6 +140,8 @@ namespace Vhaldren.Gameplay.Player
                 return false;
 
             animations?.PlayCombatAction(PlayerAnimationDriver.CombatAction.Frost);
+            if (GameFeel.Enabled)
+                GameAudio.Play(GameSound.Frost, transform.position, 0.8f);
             Announce("Onda de escarcha: canalizando");
             GetComponent<VillageQuestJournal>()?.RecordAction(VillageObjective.CastMagic);
             frostReadyAt = Time.time + Mathf.Max(0.1f, frostCooldown);

@@ -47,7 +47,7 @@ namespace Vhaldren.Gameplay.World
                         runes.transform.localPosition = new Vector3(0f, 0.1f, 0f);
                 }
                 else if (data.Role == EnemyRole.Brute)
-                    anchor.localScale = new Vector3(anchor.localScale.x * 1.25f, anchor.localScale.y * 1.12f, anchor.localScale.z * 1.25f);
+                    realModel.localScale *= 1.2f;   // no tocar el ancla: EnemyHitReaction la restaura
                 return;
             }
 
@@ -67,7 +67,9 @@ namespace Vhaldren.Gameplay.World
                     Orb(new Vector3(0f, 1.35f, 0f), 0.26f, new Color(0.35f, 1f, 0.45f));
                     break;
                 case EnemyRole.Brute:
-                    anchor.localScale = new Vector3(anchor.localScale.x * 1.3f, anchor.localScale.y * 1.12f, anchor.localScale.z * 1.3f);
+                    Transform bulk = anchor.Find("Modelo texturizado");
+                    if (bulk != null)
+                        bulk.localScale = new Vector3(bulk.localScale.x * 1.3f, bulk.localScale.y * 1.12f, bulk.localScale.z * 1.3f);
                     Shape(PrimitiveType.Cube, new Vector3(-0.48f, 0.42f, 0f), new Vector3(0.36f, 0.22f, 0.42f), data.Tint * 0.8f);
                     Shape(PrimitiveType.Cube, new Vector3(0.48f, 0.42f, 0f), new Vector3(0.36f, 0.22f, 0.42f), data.Tint * 0.8f);
                     Shape(PrimitiveType.Cylinder, new Vector3(0.55f, -0.1f, 0.3f), new Vector3(0.18f, 0.55f, 0.18f), new Color(0.3f, 0.3f, 0.32f));

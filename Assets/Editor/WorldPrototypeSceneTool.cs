@@ -197,8 +197,10 @@ namespace Vhaldren.EditorTools
                         pos + Vector3.up * 1.6f, new Vector3(1.1f, 3.2f, 1.1f), stone, true);
             }
 
-            Primitive("Obelisco de sangre", PrimitiveType.Cube, props,
-                new Vector3(0f, 1.7f, 41f), new Vector3(2.8f, 3.4f, 2.8f), obelisk, true);
+            if (!GeneratedModel("Obelisco de sangre", ObeliskModelPath, props, new Vector3(0f, 0f, 41f),
+                    obelisk, RuneGlow(), new Vector3(2.6f, 5.2f, 2.6f)))
+                Primitive("Obelisco de sangre", PrimitiveType.Cube, props,
+                    new Vector3(0f, 1.7f, 41f), new Vector3(2.8f, 3.4f, 2.8f), obelisk, true);
             if (atlas != null)
             {
                 KayKit("Cofre del bosque", "chest.obj", props,
@@ -349,6 +351,40 @@ namespace Vhaldren.EditorTools
         }
 
         private const string PolyHavenFolder = "Assets/ThirdParty/PolyHaven";
+        private const string ObeliskModelPath = "Assets/Models/Generados/obelisco_runico.fbx";
+
+        /// <summary>Material emisivo para runas de modelos propios hechos en Blender.</summary>
+        private static Material RuneGlow()
+        {
+            Material glow = Mat("RunasBrillo", new Color(0.35f, 0.02f, 0.05f));
+            glow.EnableKeyword("_EMISSION");
+            glow.SetColor("_EmissionColor", new Color(1.6f, 0.12f, 0.18f));
+            glow.globalIlluminationFlags = MaterialGlobalIlluminationFlags.RealtimeEmissive;
+            EditorUtility.SetDirty(glow);
+            return glow;
+        }
+
+        /// <summary>
+        /// Coloca un modelo propio exportado desde Blender (Tools/Blender). La piedra usa
+        /// el material triplanar y los objetos llamados "Runas" el material emisivo.
+        /// Devuelve false si el FBX no existe, para caer a la primitiva de siempre.
+        /// </summary>
+        private static bool GeneratedModel(string name, string path, Transform parent, Vector3 position,
+            Material stoneMaterial, Material glowMaterial, Vector3 colliderSize)
+        {
+            GameObject asset = AssetDatabase.LoadAssetAtPath<GameObject>(path);
+            if (asset == null)
+                return false;
+            GameObject instance = (GameObject)PrefabUtility.InstantiatePrefab(asset, parent);
+            instance.name = name;
+            instance.transform.position = position;
+            foreach (Renderer renderer in instance.GetComponentsInChildren<Renderer>(true))
+                renderer.sharedMaterial = renderer.name.Contains("Runas") ? glowMaterial : stoneMaterial;
+            BoxCollider box = instance.AddComponent<BoxCollider>();
+            box.size = colliderSize;
+            box.center = new Vector3(0f, colliderSize.y * 0.5f, 0f);
+            return true;
+        }
 
         /// <summary>
         /// Material triplanar con textura de Poly Haven. Reutiliza el asset existente

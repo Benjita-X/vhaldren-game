@@ -296,6 +296,9 @@ namespace Vhaldren.Gameplay.Magic
                 ? PlayerAnimationDriver.CombatAction.Frost
                 : PlayerAnimationDriver.CombatAction.Spell);
             Announce(label);
+            if (GameFeel.Enabled)
+                GameAudio.Play(spell.School == SpellSchool.Cryomancy ? GameSound.Frost : GameSound.SpellCast,
+                    transform.position, 0.75f);
             StartCoroutine(Execute(spell, SpellPower, aimPoint));
             return true;
         }
@@ -419,7 +422,10 @@ namespace Vhaldren.Gameplay.Magic
             combat?.Mark();
             TargetsHit++;
             if (critical)
+            {
                 CriticalHits++;
+                GameFeel.Critical(receiver.transform.position + Vector3.up);
+            }
             SpellImpactFlash.Spawn(receiver.transform.position + Vector3.up * 0.9f,
                 SpellCatalog.SchoolColor(spell.School), critical ? 0.8f : 0.5f, 0.22f);
             return total;

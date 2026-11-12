@@ -131,6 +131,10 @@ namespace Vhaldren.Gameplay.Combat
                 if (feedback != null)
                     feedback.ShowDefenseResult(prevented, parried, evaded);
             }
+            if (applied > 0f)
+                GameFeel.OnHit(this, applied, kind, attackSource);
+            else if (prevented > 0f && !evaded)
+                GameFeel.OnBlocked(this, parried);
             if (prevented > 0f || applied > 0f)
                 Resolved?.Invoke(result);
             return result;
