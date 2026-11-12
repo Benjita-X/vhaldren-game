@@ -144,13 +144,68 @@ namespace Vhaldren.Tests
 
             PlayerGatherer gatherer = player.GetComponent<PlayerGatherer>();
             int stone = inventory.Count(ResourceKind.Stone);
-            Assert.That(gatherer.Tick(true, 0.5f), Is.Zero, "Hace falta mantener E el tiempo completo.");
+            Assert.That(node.RequiredTool, Is.EqualTo(GatheringTool.ImprovisedPick));
+            Assert.That(gatherer.Tick(true, 1f), Is.Zero,
+                "La piedra nunca se extrae a mano.");
+            Assert.That(gatherer.TryCraftTool(GatheringTool.ImprovisedPick),
+                Is.EqualTo(CraftingResult.Crafted));
+            Assert.That(gatherer.Tick(true, 0.5f), Is.Zero,
+                "Hace falta mantener E el tiempo completo.");
             Assert.That(gatherer.Tick(true, 0.5f), Is.EqualTo(3));
             Assert.That(gatherer.Tick(false, 1f), Is.Zero, "Soltar E reinicia el progreso.");
             gatherer.Tick(true, 1f);
             Assert.That(inventory.Count(ResourceKind.Stone), Is.EqualTo(stone + 6));
             Assert.That(node.IsDepleted, Is.True);
             Assert.That(gatherer.Tick(true, 1f), Is.Zero, "Un recurso agotado no da mas.");
+        }
+
+        [UnityTest]
+        public IEnumerator ToolsFollowWoodFiberToStoneToOreProgression()
+        {
+            PlayerGatherer gatherer = player.GetComponent<PlayerGatherer>();
+            SurvivalToolbelt belt = player.GetComponent<SurvivalToolbelt>();
+            Assert.That(belt, Is.Not.Null);
+
+            // Un yacimiento de mineral no acepta E sin pico de piedra.
+            extra = new GameObject("MineralPrueba");
+            extra.transform.position = player.transform.position + new Vector3(1.2f, -1.08f, 0f);
+            HarvestNode vein = extra.AddComponent<HarvestNode>();
+            vein.Configure(ResourceKind.Ore, 8, 2);
+            yield return null;
+
+            int ore = inventory.Count(ResourceKind.Ore);
+            Assert.That(gatherer.Tick(true, 1f), Is.Zero);
+            Assert.That(vein.Harvest(inventory), Is.Zero,
+                "La proteccion debe estar en HarvestNode, no solo en el input.");
+            Assert.That(inventory.Count(ResourceKind.Ore), Is.EqualTo(ore));
+
+            Assert.That(gatherer.TryCraftTool(GatheringTool.StonePick),
+                Is.EqualTo(CraftingResult.RequiresPreviousTool));
+            Assert.That(gatherer.TryCraftTool(GatheringTool.ImprovisedPick),
+                Is.EqualTo(CraftingResult.Crafted));
+            Assert.That(gatherer.Tick(true, 1f), Is.Zero,
+                "El pico improvisado no puede extraer mineral.");
+            Assert.That(gatherer.TryCraftTool(GatheringTool.StonePick),
+                Is.EqualTo(CraftingResult.Crafted));
+            Assert.That(gatherer.Tick(true, 1f), Is.EqualTo(2));
+            Assert.That(inventory.Count(ResourceKind.Ore), Is.EqualTo(ore + 2));
+            Assert.That(gatherer.TryCraftTool(GatheringTool.StonePick),
+                Is.EqualTo(CraftingResult.AlreadyOwned));
+        }
+
+        [UnityTest]
+        public IEnumerator CraftingMissingResourcesDoesNotConsumeAnyMaterials()
+        {
+            PlayerGatherer gatherer = player.GetComponent<PlayerGatherer>();
+            int wood = inventory.Count(ResourceKind.Wood);
+            int fiber = inventory.Count(ResourceKind.Fiber);
+            inventory.TrySpend(new[] { new ResourceIngredient(ResourceKind.Fiber, fiber) });
+            Assert.That(gatherer.TryCraftTool(GatheringTool.ImprovisedPick),
+                Is.EqualTo(CraftingResult.MissingMaterials));
+            Assert.That(inventory.Count(ResourceKind.Wood), Is.EqualTo(wood),
+                "Una receta fallida no cobra los ingredientes que si hay.");
+            Assert.That(inventory.Count(ResourceKind.Fiber), Is.Zero);
+            yield return null;
         }
 
         [UnityTest]
