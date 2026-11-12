@@ -50,6 +50,28 @@ namespace Vhaldren.Tests
         }
 
         [UnityTest]
+        public IEnumerator PotionHealsFullThirtyFiveWhenEnoughHealthIsMissing()
+        {
+            player = new GameObject("PlayerRoot");
+            CombatHealth health = player.AddComponent<CombatHealth>();
+            sessionObject = new GameObject("TestSession");
+            sessionObject.SetActive(false);
+            PrototypeGameSession session = sessionObject.AddComponent<PrototypeGameSession>();
+            typeof(PrototypeGameSession).GetField("player",
+                BindingFlags.Instance | BindingFlags.NonPublic)
+                .SetValue(session, player.transform);
+            sessionObject.SetActive(true);
+            yield return null;
+
+            health.ApplyDamage(50f);
+            Assert.That(health.CurrentHealth, Is.EqualTo(50f));
+            Assert.That(session.TryDrinkPotion(), Is.EqualTo(35f),
+                "Con 50 PV faltantes la pocion debe curar los 35 prometidos.");
+            Assert.That(session.LastPotionHealed, Is.EqualTo(35f));
+            Assert.That(health.CurrentHealth, Is.EqualTo(85f));
+        }
+
+        [UnityTest]
         public IEnumerator BuildingModeDisablesDynamicallyAddedAbilitiesAndRestoresThem()
         {
             player = new GameObject("PlayerRoot");
