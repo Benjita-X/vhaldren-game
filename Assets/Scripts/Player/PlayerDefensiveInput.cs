@@ -17,6 +17,7 @@ namespace Vhaldren.Gameplay.Player
     {
         private CombatDefense defense;
         private CombatHealth health;
+        private PlayerActionModifiers actionModifiers;
         private PlayerAnimationDriver animations;
         private PlayerGuardVisual guardVisual;
         private CombatDefense.GuardMode lastGuard;
@@ -27,6 +28,7 @@ namespace Vhaldren.Gameplay.Player
         {
             defense = GetComponent<CombatDefense>();
             health = GetComponent<CombatHealth>();
+            actionModifiers = GetComponent<PlayerActionModifiers>();
             animations = GetComponent<PlayerAnimationDriver>();
             guardVisual = GetComponent<PlayerGuardVisual>();
             if (guardVisual == null && Application.isPlaying)
@@ -37,6 +39,11 @@ namespace Vhaldren.Gameplay.Player
         {
             if (defense == null)
                 return;
+            if (actionModifiers != null && !actionModifiers.AllowsAttack)
+            {
+                defense.SetGuard(CombatDefense.GuardMode.None);
+                return;
+            }
             if (health != null && health.IsDefeated)
             {
                 defense.SetGuard(CombatDefense.GuardMode.None);
