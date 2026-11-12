@@ -147,26 +147,70 @@ namespace Vhaldren.Gameplay.Survival
             }
             BuildPieceDefinition piece = BuildCatalog.Pieces[pieceIndex];
             result = BuildPlacement.Evaluate(piece, true, basePosition, rotationSteps, transform.position, inventory);
-            if (result != PlacementResult.Ok || !inventory.TrySpend(piece.Cost))
+            if (result != PlacementResult.Ok)
                 return null;
+            if (!inventory.TrySpend(piece.Cost))
+            {
+                result = PlacementResult.MissingResources;
+                return null;
+            }
 
-            GameObject built = BuildPieceFactory.Create(piece, basePosition, rotationSteps, false);
-            BuiltPiece builtPiece = built.GetComponent<BuiltPiece>();
-            undoStack.Add(builtPiece);
-            if (undoStack.Count > UndoLimit)
-                undoStack.RemoveAt(0);
-            Physics.SyncTransforms();
-            return builtPiece;
+            GameObject built = null;
+            try
+            {
+                built = BuildPieceFactory.Create(piece, basePosition, rotationSteps, false);
+                BuiltPiece builtPiece = built != null ? built.GetComponent<BuiltPiece>() : null;
+                if (builtPiece == null)
+                    throw new System.InvalidOperationException("La pieza no tiene BuiltPiece.");
+                builtPiece.MarkMaterialsPaid();
+                undoStack.Add(builtPiece);
+                if (undoStack.Count > UndoLimit)
+                    undoStack.RemoveAt(0);
+                Physics.SyncTransforms();
+                return builtPiece;
+            }
+            catch (System.Exception exception)
+            {
+                if (built != null)
+                {
+                    built.SetActive(false);
+                    Destroy(built);
+                }
+                // Si falla la fabrica visual, devolver el cobro completo.
+                if (!inventory.TryRefund(piece.Cost))
+                    Debug.LogError("[Vhaldren] Error critico reembolsando una pieza fallida.");
+                result = PlacementResult.Blocked;
+                Debug.LogException(exception);
+                return null;
+            }
         }
 
         /// <summary>Desmonta una pieza y devuelve todo su coste.</summary>
         public bool Dismantle(BuiltPiece piece)
         {
-            if (piece == null)
+            if (piece == null || inventory == null || !piece.TryClaimRemoval())
                 return false;
+
             BuildPieceDefinition definition = piece.Definition;
-            if (definition != null)
-                inventory.Refund(definition.Cost);
+            if (piece.MaterialsPaid)
+            {
+                if (definition == null)
+                {
+                    piece.CancelRemoval();
+                    return false;
+                }
+
+                int lostStorage = definition.Function == BuildFunction.Chest
+                    ? SurvivalInventory.ChestCapacity : 0;
+                // La pieza continua en pie si no hay espacio para devolver
+                // recursos. Nunca perder material ni reembolsar dos veces.
+                if (!inventory.TryRefund(definition.Cost, 1f, lostStorage))
+                {
+                    piece.CancelRemoval();
+                    return false;
+                }
+            }
+
             undoStack.Remove(piece);
             piece.gameObject.SetActive(false);
             Destroy(piece.gameObject);
