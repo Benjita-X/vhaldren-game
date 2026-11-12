@@ -17,6 +17,7 @@ namespace Vhaldren.Gameplay.Survival
         private SurvivalInventory inventory;
         private PlayerBuilder builder;
         private PlayerGatherer gatherer;
+        private SurvivalToolbelt tools;
         private readonly StringBuilder text = new StringBuilder(256);
         private string resourcesLine = string.Empty;
         private string catalog = string.Empty;
@@ -30,6 +31,7 @@ namespace Vhaldren.Gameplay.Survival
             inventory = GetComponent<SurvivalInventory>();
             builder = GetComponent<PlayerBuilder>();
             gatherer = GetComponent<PlayerGatherer>();
+            tools = GetComponent<SurvivalToolbelt>();
         }
 
         private void OnEnable()
@@ -68,8 +70,19 @@ namespace Vhaldren.Gameplay.Survival
             if (style == null)
                 style = new GUIStyle(GUI.skin.box) { alignment = TextAnchor.UpperLeft, fontSize = 13, richText = true, wordWrap = true };
 
-            GUI.Box(new Rect(10f, Screen.height - 36f, 520f, 26f),
+            GUI.Box(new Rect(10f, Screen.height - 36f, 620f, 26f),
                 resourcesLine + (builder != null && !builder.IsBuilding ? "    B: construir   E: recolectar" : string.Empty), style);
+            if (tools == null)
+                tools = GetComponent<SurvivalToolbelt>();
+            if (tools != null)
+            {
+                string crafting = !tools.OwnsImprovisedPick
+                    ? "J: fabricar pico improvisado (3 madera + 2 fibra)"
+                    : !tools.OwnsStonePick
+                        ? "K: fabricar pico de piedra (3 madera + 5 piedra + 2 fibra)"
+                        : "Equipo: pico de piedra - piedra y mineral disponibles";
+                GUI.Box(new Rect(10f, Screen.height - 65f, 565f, 26f), crafting, style);
+            }
 
             if (builder != null && builder.IsBuilding)
             {
@@ -86,16 +99,20 @@ namespace Vhaldren.Gameplay.Survival
             if (gatherer != null && gatherer.Target != null)
             {
                 HarvestNode node = gatherer.Target;
-                int key = (int)node.Resource * 1000 + node.Remaining;
+                int key = (int)node.Resource * 1000 + node.Remaining +
+                    (gatherer.CanGatherTarget ? 100000 : 0);
                 if (key != gatherKey)
                 {
                     gatherKey = key;
-                    gatherLine = "Mantén E: recolectar " + HarvestNode.ResourceName(node.Resource) +
-                                 " (" + node.Remaining + ")";
+                    gatherLine = gatherer.CanGatherTarget
+                        ? "Mantén E: recolectar " + HarvestNode.ResourceName(node.Resource) +
+                          " (" + node.Remaining + ")"
+                        : "Necesitas " + SurvivalToolbelt.DisplayName(node.RequiredTool) +
+                          " para extraer " + HarvestNode.ResourceName(node.Resource);
                 }
-                Rect rect = new Rect(Screen.width * 0.5f - 130f, Screen.height - 90f, 260f, 26f);
+                Rect rect = new Rect(Screen.width * 0.5f - 170f, Screen.height - 100f, 340f, 26f);
                 GUI.Box(rect, gatherLine, style);
-                if (gatherer.Progress01 > 0f)
+                if (gatherer.CanGatherTarget && gatherer.Progress01 > 0f)
                     GUI.Box(new Rect(rect.x, rect.yMax + 2f, rect.width * gatherer.Progress01, 6f), GUIContent.none);
             }
         }
