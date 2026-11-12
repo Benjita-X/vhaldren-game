@@ -17,6 +17,7 @@ namespace Vhaldren.Gameplay.Player
     {
         private CombatDefense defense;
         private CombatHealth health;
+        private PlayerAnimationDriver animationDriver;
         private string status = "";
         private float nextStatus;
 
@@ -24,6 +25,7 @@ namespace Vhaldren.Gameplay.Player
         {
             defense = GetComponent<CombatDefense>();
             health = GetComponent<CombatHealth>();
+            animationDriver = GetComponent<PlayerAnimationDriver>();
         }
 
         private void Update()
@@ -36,8 +38,8 @@ namespace Vhaldren.Gameplay.Player
                 return;
             }
 
-            if (ParryPressed())
-                defense.TryParry();
+            if (ParryPressed() && defense.TryParry())
+                animationDriver?.TriggerParry();
 
             CombatDefense.GuardMode mode = ShieldHeld()
                 ? CombatDefense.GuardMode.PhysicalShield
