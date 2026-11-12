@@ -17,6 +17,7 @@ namespace Vhaldren.Gameplay.Player
     {
         private CombatDefense defense;
         private CombatHealth health;
+        private PlayerActionModifiers actionModifiers;
         private PlayerAnimationDriver animations;
         private PlayerGuardVisual guardVisual;
         private CombatDefense.GuardMode lastGuard;
@@ -27,6 +28,7 @@ namespace Vhaldren.Gameplay.Player
         {
             defense = GetComponent<CombatDefense>();
             health = GetComponent<CombatHealth>();
+            actionModifiers = GetComponent<PlayerActionModifiers>();
             animations = GetComponent<PlayerAnimationDriver>();
             guardVisual = GetComponent<PlayerGuardVisual>();
             if (guardVisual == null && Application.isPlaying)
@@ -37,6 +39,11 @@ namespace Vhaldren.Gameplay.Player
         {
             if (defense == null)
                 return;
+            if (actionModifiers != null && !actionModifiers.AllowsAttack)
+            {
+                defense.SetGuard(CombatDefense.GuardMode.None);
+                return;
+            }
             if (health != null && health.IsDefeated)
             {
                 defense.SetGuard(CombatDefense.GuardMode.None);
@@ -95,7 +102,7 @@ namespace Vhaldren.Gameplay.Player
         {
             if (Event.current.type != EventType.Repaint || defense == null)
                 return;
-            Rect rect = new Rect(12f, 118f, Mathf.Min(650f, Screen.width - 24f), 46f);
+            Rect rect = new Rect(12f, 132f, Mathf.Min(650f, Screen.width - 24f), 46f);
             GUI.Box(rect, "");
             GUI.Label(new Rect(rect.x + 8f, rect.y + 3f, rect.width - 16f, 20f), status);
             GUI.Label(new Rect(rect.x + 8f, rect.y + 23f, rect.width - 16f, 18f),
