@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using UnityEngine;
 using Vhaldren.Gameplay.Player;
 using Vhaldren.Gameplay.Survival;
@@ -28,6 +29,7 @@ namespace Vhaldren.Gameplay.World
         private string feedback = "";
         private float feedbackUntil;
         private GUIStyle labelStyle;
+        private readonly List<Material> createdMaterials = new List<Material>();
 
         public bool MenuOpen => open;
 
@@ -96,6 +98,20 @@ namespace Vhaldren.Gameplay.World
         }
 
         private void OnDisable() => SetOpen(false);
+
+        private void OnDestroy()
+        {
+            foreach (Material generated in createdMaterials)
+            {
+                if (generated == null)
+                    continue;
+                if (Application.isPlaying)
+                    Destroy(generated);
+                else
+                    DestroyImmediate(generated);
+            }
+            createdMaterials.Clear();
+        }
 
         public VillageTradeResult TryBuyCurrentOffer()
         {
@@ -234,7 +250,7 @@ namespace Vhaldren.Gameplay.World
             text.color = new Color(0.91f, 0.84f, 0.68f);
         }
 
-        private static void Tint(GameObject part, Color color)
+        private void Tint(GameObject part, Color color)
         {
             Renderer renderer = part.GetComponent<Renderer>();
             if (renderer == null)
@@ -245,6 +261,7 @@ namespace Vhaldren.Gameplay.World
             if (shader == null)
                 return;
             Material material = new Material(shader) { color = color };
+            createdMaterials.Add(material);
             renderer.sharedMaterial = material;
         }
 
