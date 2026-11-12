@@ -159,26 +159,7 @@ namespace Vhaldren.Gameplay.World
                     RespawnPlayer();
             }
             else if (WasHealPressed())
-            {
-                if (Time.time < healReadyAt)
-                {
-                    lastHealFeedback = "Poción recargando";
-                    lastHealFeedbackUntil = Time.time + 1.6f;
-                }
-                else
-                {
-                    float actual = playerHealth.Heal(Mathf.Max(0f, healAmount));
-                    if (actual > 0f)
-                    {
-                        healReadyAt = Time.time + Mathf.Max(0.1f, healCooldown);
-                        lastHealFeedback = "Poción: +" + actual.ToString("0.##") + " PV reales";
-                    }
-                    else
-                        lastHealFeedback = "Vida completa: no se gastó la poción";
-                    lastHealFeedbackUntil = Time.time + 2.0f;
-                    nextHudRefresh = 0f;
-                }
-            }
+                TryDrinkPotion();
 
             if (Time.time >= nextHudRefresh)
             {
@@ -212,6 +193,38 @@ namespace Vhaldren.Gameplay.World
                       " / MAGIA " + playerDamage.DamageFor(CombatDamageKind.Magic).ToString("0")
                     : "Estadisticas no disponibles";
             }
+        }
+
+        public float LastPotionHealed { get; private set; }
+
+        /// <summary>
+        /// Una pocion restaura hasta healAmount PV, nunca mas que la vida
+        /// faltante. Deja feedback con el valor real y solo inicia cooldown
+        /// si recupero vida. Se puede invocar desde Tests sin simular Input.
+        /// </summary>
+        public float TryDrinkPotion()
+        {
+            LastPotionHealed = 0f;
+            if (playerHealth == null || playerHealth.IsDefeated)
+                return 0f;
+
+            if (Time.time < healReadyAt)
+                lastHealFeedback = "Poción recargando";
+            else
+            {
+                LastPotionHealed = playerHealth.Heal(Mathf.Max(0f, healAmount));
+                if (LastPotionHealed > 0f)
+                {
+                    healReadyAt = Time.time + Mathf.Max(0.1f, healCooldown);
+                    lastHealFeedback = "Poción: +" +
+                        LastPotionHealed.ToString("0.##") + " PV reales";
+                }
+                else
+                    lastHealFeedback = "Vida completa: no se gastó la poción";
+            }
+            lastHealFeedbackUntil = Time.time + 2.0f;
+            nextHudRefresh = 0f;
+            return LastPotionHealed;
         }
 
         /// <summary>Una cama construida cambia el punto de reaparicion.</summary>
