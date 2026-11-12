@@ -405,9 +405,16 @@ namespace Vhaldren.Gameplay.World
         {
             int count = Physics.OverlapSphereNonAlloc(transform.position, 10f, allies,
                 Physics.DefaultRaycastLayers, QueryTriggerInteraction.Ignore);
+            Collider[] scan = allies;
+            if (count >= allies.Length)
+            {
+                scan = Physics.OverlapSphere(transform.position, 10f,
+                    Physics.DefaultRaycastLayers, QueryTriggerInteraction.Ignore);
+                count = scan.Length;
+            }
             for (int i = 0; i < count; i++)
             {
-                PrototypeEnemy ally = allies[i] != null ? allies[i].GetComponentInParent<PrototypeEnemy>() : null;
+                PrototypeEnemy ally = scan[i] != null ? scan[i].GetComponentInParent<PrototypeEnemy>() : null;
                 if (ally == null || ally == this || ally.defeated || ally.returningHome)
                     continue;
                 ally.provokedUntil = Mathf.Max(ally.provokedUntil, Time.time + 10f);
@@ -465,10 +472,17 @@ namespace Vhaldren.Gameplay.World
         {
             int count = Physics.OverlapSphereNonAlloc(transform.position, 8f, allies,
                 Physics.DefaultRaycastLayers, QueryTriggerInteraction.Ignore);
+            Collider[] scan = allies;
+            if (count >= allies.Length)
+            {
+                scan = Physics.OverlapSphere(transform.position, 8f,
+                    Physics.DefaultRaycastLayers, QueryTriggerInteraction.Ignore);
+                count = scan.Length;
+            }
             int healed = 0;
             for (int i = 0; i < count; i++)
             {
-                PrototypeEnemy ally = allies[i] != null ? allies[i].GetComponentInParent<PrototypeEnemy>() : null;
+                PrototypeEnemy ally = scan[i] != null ? scan[i].GetComponentInParent<PrototypeEnemy>() : null;
                 if (ally == null || ally == this || ally.defeated || ally.health == null)
                     continue;
                 if (ally.health.Heal(ally.health.MaximumHealth * 0.14f) > 0f)
