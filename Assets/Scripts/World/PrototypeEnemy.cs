@@ -292,14 +292,36 @@ namespace Vhaldren.Gameplay.World
             float distance = difference.magnitude;
             if (distance <= 0.001f)
                 return true;
-            int count = Physics.RaycastNonAlloc(origin, difference / distance, SightHits, distance,
+            Vector3 direction = difference / distance;
+            int count = Physics.RaycastNonAlloc(origin, direction, SightHits, distance,
                 Physics.DefaultRaycastLayers, QueryTriggerInteraction.Ignore);
+
+            // RaycastNonAlloc puede dejar fuera una pared si el buffer se lleno.
+            // No considerar despejada una linea de vision incompleta.
+            if (count == SightHits.Length)
+            {
+                RaycastHit[] allHits = Physics.RaycastAll(origin, direction, distance,
+                    Physics.DefaultRaycastLayers, QueryTriggerInteraction.Ignore);
+                for (int i = 0; i < allHits.Length; i++)
+                {
+                    Collider body = allHits[i].collider;
+                    if (body == null)
+                        continue;
+                    Transform hit = body.transform;
+                    if (!hit.IsChildOf(transform) && !hit.IsChildOf(target))
+                        return false;
+                }
+                return true;
+            }
+
             for (int i = 0; i < count; i++)
             {
-                Transform hit = SightHits[i].collider.transform;
-                if (hit.IsChildOf(transform) || hit.IsChildOf(target))
+                Collider body = SightHits[i].collider;
+                if (body == null)
                     continue;
-                return false;
+                Transform hit = body.transform;
+                if (!hit.IsChildOf(transform) && !hit.IsChildOf(target))
+                    return false;
             }
             return true;
         }
