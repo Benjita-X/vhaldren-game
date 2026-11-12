@@ -326,7 +326,7 @@ namespace Vhaldren.Gameplay.World
                 if (archetype != null && archetype.IsRangedRole)
                     DrawTracer(activeAttackKind == CombatDamageKind.Magic);
                 if (response.Applied > 0f && archetype != null && archetype.AppliesStatus)
-                    StatusEffects.For(target)?.ApplyFrom(archetype.OnHit, transform.position);
+                    StatusEffects.For(target)?.ApplyFrom(archetype.OnHit, this);
                 if (response.Parried)
                     InterruptAttack(0.70f);
             }
