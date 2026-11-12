@@ -14,18 +14,45 @@ namespace Vhaldren.Gameplay.Player
         private static Material iron;
         private static Material cord;
         private Transform weapon;
+        private Transform nativeCrossbow;
+        public bool UsesNativeModel => nativeCrossbow != null;
 
         public void Attach(Transform shotOrigin)
         {
             if (shotOrigin == null)
                 return;
+
+            // El Rogue de KayKit ya trae 1H_Crossbow sujeto a su
+            // esqueleto animado. No dibujar otra ballesta enorme encima:
+            // era la principal causa de la silueta superpuesta.
+            if (nativeCrossbow == null)
+            {
+                Transform[] descendants = GetComponentsInChildren<Transform>(true);
+                for (int i = 0; i < descendants.Length; i++)
+                {
+                    if (descendants[i].name == "1H_Crossbow")
+                    {
+                        nativeCrossbow = descendants[i];
+                        break;
+                    }
+                }
+            }
+            if (nativeCrossbow != null)
+            {
+                nativeCrossbow.gameObject.SetActive(true);
+                if (weapon != null)
+                    weapon.gameObject.SetActive(false);
+                return;
+            }
+
             if (weapon == null)
             {
                 Transform existing = shotOrigin.Find("Ballesta visible");
                 weapon = existing != null ? existing : new GameObject("Ballesta visible").transform;
                 weapon.SetParent(shotOrigin, false);
-                weapon.localPosition = Vector3.zero;
+                weapon.localPosition = new Vector3(0f, -0.08f, 0.03f);
                 weapon.localRotation = Quaternion.identity;
+                weapon.localScale = Vector3.one * 0.62f;
             }
             weapon.gameObject.SetActive(true);
             if (weapon.childCount > 0)
@@ -73,6 +100,8 @@ namespace Vhaldren.Gameplay.Player
         {
             if (weapon != null)
                 weapon.gameObject.SetActive(false);
+            if (nativeCrossbow != null)
+                nativeCrossbow.gameObject.SetActive(false);
         }
 
         private GameObject Piece(string title, PrimitiveType type,
