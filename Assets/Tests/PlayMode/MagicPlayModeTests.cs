@@ -166,6 +166,10 @@ namespace Vhaldren.Tests
             float dealt = status.TickIgnition(Time.time + 1.01f);
             Assert.That(dealt, Is.EqualTo(StatusEffects.IgnitionDps * 0.5f).Within(0.01f));
             Assert.That(victim.CurrentHealth, Is.EqualTo(100f - dealt).Within(0.01f));
+            PlayerDamageTracker tracker = player.GetComponent<PlayerDamageTracker>();
+            Assert.That(tracker.DamageFor(CombatDamageKind.DamageOverTime),
+                Is.EqualTo(dealt).Within(0.01f),
+                "La quemadura también debe aparecer en el daño total del jugador.");
             yield break;
         }
 
