@@ -34,6 +34,7 @@ namespace Vhaldren.Gameplay.Player
         private RaycastHit[] aimHits = new RaycastHit[AimHitCapacity];
         private LineRenderer tracer;
         private PlayerActionModifiers actionModifiers;
+        private PlayerDamageTracker damageTracker;
         private Material tracerMaterial;
         private float tracerTimeRemaining;
 
@@ -74,12 +75,17 @@ namespace Vhaldren.Gameplay.Player
                 HitsLanded++;
                 LastDamageDealt = appliedDamage;
                 TotalDamageDealt += appliedDamage;
+                if (damageTracker == null)
+                    damageTracker = GetComponent<PlayerDamageTracker>();
+                if (damageTracker != null)
+                    damageTracker.Record(appliedDamage, CombatDamageKind.Arrow);
             }
         }
 
         private void Awake()
         {
             actionModifiers = GetComponent<PlayerActionModifiers>();
+            damageTracker = GetComponent<PlayerDamageTracker>();
             if (viewCamera == null)
                 viewCamera = Camera.main;
 
@@ -236,6 +242,10 @@ namespace Vhaldren.Gameplay.Player
                             HitsLanded++;
                             LastDamageDealt = applied;
                             TotalDamageDealt += applied;
+                            if (damageTracker == null)
+                                damageTracker = GetComponent<PlayerDamageTracker>();
+                            if (damageTracker != null)
+                                damageTracker.Record(applied, CombatDamageKind.Arrow);
                         }
                     }
                 }
