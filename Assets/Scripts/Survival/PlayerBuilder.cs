@@ -34,6 +34,8 @@ namespace Vhaldren.Gameplay.Survival
 
         public static IReadOnlyList<PlayerBuilder> All => all;
         public bool IsBuilding { get; private set; }
+        /// <summary>Modo sandbox local: piezas ilimitadas sin generar recursos.</summary>
+        public bool CreativeMode { get; private set; }
         public int SelectedIndex { get; private set; }
         public int RotationSteps { get; private set; }
         public bool FreePlacement { get; private set; }
@@ -71,6 +73,8 @@ namespace Vhaldren.Gameplay.Survival
 
         private void Update()
         {
+            if (SurvivalKeys.ToggleCreative)
+                CreativeMode = !CreativeMode;
             if (SurvivalKeys.ToggleBuild)
                 SetBuildMode(!IsBuilding);
             if (!IsBuilding)
@@ -102,7 +106,7 @@ namespace Vhaldren.Gameplay.Survival
             }
 
             LastResult = BuildPlacement.Evaluate(Selected, hasSurface, basePosition, RotationSteps,
-                transform.position, inventory);
+                transform.position, inventory, CreativeMode);
             UpdatePreview(hasSurface, basePosition);
 
             if (SurvivalKeys.PlacePressed && LastResult == PlacementResult.Ok)
@@ -146,10 +150,12 @@ namespace Vhaldren.Gameplay.Survival
                 return null;
             }
             BuildPieceDefinition piece = BuildCatalog.Pieces[pieceIndex];
-            result = BuildPlacement.Evaluate(piece, true, basePosition, rotationSteps, transform.position, inventory);
+            result = BuildPlacement.Evaluate(piece, true, basePosition, rotationSteps,
+                transform.position, inventory, CreativeMode);
             if (result != PlacementResult.Ok)
                 return null;
-            if (!inventory.TrySpend(piece.Cost))
+            bool paid = !CreativeMode;
+            if (paid && (inventory == null || !inventory.TrySpend(piece.Cost)))
             {
                 result = PlacementResult.MissingResources;
                 return null;
@@ -162,7 +168,8 @@ namespace Vhaldren.Gameplay.Survival
                 BuiltPiece builtPiece = built != null ? built.GetComponent<BuiltPiece>() : null;
                 if (builtPiece == null)
                     throw new System.InvalidOperationException("La pieza no tiene BuiltPiece.");
-                builtPiece.MarkMaterialsPaid();
+                if (paid)
+                    builtPiece.MarkMaterialsPaid();
                 undoStack.Add(builtPiece);
                 if (undoStack.Count > UndoLimit)
                     undoStack.RemoveAt(0);
@@ -177,7 +184,7 @@ namespace Vhaldren.Gameplay.Survival
                     Destroy(built);
                 }
                 // Si falla la fabrica visual, devolver el cobro completo.
-                if (!inventory.TryRefund(piece.Cost))
+                if (paid && !inventory.TryRefund(piece.Cost))
                     Debug.LogError("[Vhaldren] Error critico reembolsando una pieza fallida.");
                 result = PlacementResult.Blocked;
                 Debug.LogException(exception);
@@ -192,16 +199,16 @@ namespace Vhaldren.Gameplay.Survival
                 return false;
 
             BuildPieceDefinition definition = piece.Definition;
+            if (definition == null)
+            {
+                piece.CancelRemoval();
+                return false;
+            }
+
+            int lostStorage = definition.Function == BuildFunction.Chest
+                ? SurvivalInventory.ChestCapacity : 0;
             if (piece.MaterialsPaid)
             {
-                if (definition == null)
-                {
-                    piece.CancelRemoval();
-                    return false;
-                }
-
-                int lostStorage = definition.Function == BuildFunction.Chest
-                    ? SurvivalInventory.ChestCapacity : 0;
                 // La pieza continua en pie si no hay espacio para devolver
                 // recursos. Nunca perder material ni reembolsar dos veces.
                 if (!inventory.TryRefund(definition.Cost, 1f, lostStorage))
@@ -209,6 +216,14 @@ namespace Vhaldren.Gameplay.Survival
                     piece.CancelRemoval();
                     return false;
                 }
+            }
+            else if (lostStorage > 0 && inventory.TotalItems >
+                inventory.Capacity - lostStorage)
+            {
+                // Cofre creativo: quitarlo nunca reduce la capacidad
+                // por debajo de los recursos almacenados.
+                piece.CancelRemoval();
+                return false;
             }
 
             undoStack.Remove(piece);
