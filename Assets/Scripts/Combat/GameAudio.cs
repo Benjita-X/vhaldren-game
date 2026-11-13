@@ -92,14 +92,6 @@ namespace Vhaldren.Gameplay.Combat
             int count = Mathf.CeilToInt(seconds * Rate);
             float[] data = new float[count];
             float low = 0f, low2 = 0f;
-            // Karplus-Strong para la cuerda de la ballesta.
-            float[] pluck = null;
-            if (sound == GameSound.BowString)
-            {
-                pluck = new float[Rate / 196];
-                for (int i = 0; i < pluck.Length; i++)
-                    pluck[i] = (float)noise.NextDouble() * 2f - 1f;
-            }
             float phase = 0f;
             for (int i = 0; i < count; i++)
             {
@@ -161,11 +153,16 @@ namespace Vhaldren.Gameplay.Combat
                     }
                     case GameSound.BowString:
                     {
-                        int k = i % pluck.Length;
-                        int k2 = (k + 1) % pluck.Length;
-                        float value = pluck[k];
-                        pluck[k] = 0.5f * (pluck[k] + pluck[k2]) * 0.994f;
-                        s = value * 0.8f + white * Mathf.Exp(-t * 200f) * 0.4f;
+                        // Ballesta: chasquido del gatillo + golpe seco del arco + cuerda
+                        // corta y amortiguada + silbido del virote al salir.
+                        low += (white - low) * 0.35f;
+                        float click = (white - low) * Mathf.Exp(-t * 900f) * 0.9f;
+                        float thump = Mathf.Sin(2f * Mathf.PI * (58f + 70f * Mathf.Exp(-t * 40f)) * t) * Mathf.Exp(-t * 26f) * 0.75f;
+                        float cord = Mathf.Sin(2f * Mathf.PI * 172f * t) * (1f + 0.35f * Mathf.Sin(2f * Mathf.PI * 344f * t)) *
+                                     Mathf.Exp(-t * 32f) * 0.3f;
+                        low2 += (white - low2) * 0.08f;
+                        float air = low2 * Mathf.Clamp01(t / 0.03f) * Mathf.Exp(-t * 14f) * 0.45f;
+                        s = click + thump + cord + air;
                         break;
                     }
                     case GameSound.Footstep:
@@ -210,7 +207,7 @@ namespace Vhaldren.Gameplay.Combat
                 case GameSound.SpellCast: return 0.3f;
                 case GameSound.SpellImpact: return 0.5f;
                 case GameSound.Frost: return 0.45f;
-                case GameSound.BowString: return 0.3f;
+                case GameSound.BowString: return 0.26f;
                 case GameSound.PlayerHurt: return 0.25f;
                 default: return 0.6f;
             }

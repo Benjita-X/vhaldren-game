@@ -22,6 +22,14 @@ namespace Vhaldren.Gameplay.UI
 
         public bool IsRebinding => waiting;
 
+        /// <summary>Abre una pestaña (0 Audio, 1 Graficos, 2 Controles, 3 Juego).</summary>
+        public void SelectTab(int index)
+        {
+            tab = Mathf.Clamp(index, 0, Tabs.Length - 1);
+            scroll = Vector2.zero;
+            waiting = false;
+        }
+
         /// <summary>Captura la tecla pulsada mientras se reasigna (Esc cancela).</summary>
         public void Tick()
         {
@@ -40,7 +48,7 @@ namespace Vhaldren.Gameplay.UI
         /// <summary>Dibuja el panel. Devuelve true si el jugador pulso "Volver".</summary>
         public bool Draw(Rect area)
         {
-            GUI.Box(area, GUIContent.none, MenuStyle.Panel);
+            MenuStyle.FramedPanel(area);
             GUI.Label(new Rect(area.x + 24f, area.y + 14f, 400f, 40f), "OPCIONES", MenuStyle.Header);
             float tabWidth = 150f;
             for (int i = 0; i < Tabs.Length; i++)
@@ -76,6 +84,14 @@ namespace Vhaldren.Gameplay.UI
             GUI.Label(new Rect(row.x, row.y, 280f, row.height), label, MenuStyle.Body);
             float next = GUI.HorizontalSlider(new Rect(row.x + 290f, row.y + 12f, 320f, 20f), value, 0f, 1f);
             GUI.Label(new Rect(row.x + 630f, row.y, 80f, row.height), Mathf.RoundToInt(next * 100f) + " %", MenuStyle.Body);
+            return next;
+        }
+
+        private static float RangeSlider(Rect row, string label, float value, float min, float max, string valueText)
+        {
+            GUI.Label(new Rect(row.x, row.y, 280f, row.height), label, MenuStyle.Body);
+            float next = GUI.HorizontalSlider(new Rect(row.x + 290f, row.y + 12f, 320f, 20f), value, min, max);
+            GUI.Label(new Rect(row.x + 630f, row.y, 120f, row.height), valueText, MenuStyle.Body);
             return next;
         }
 
@@ -156,7 +172,7 @@ namespace Vhaldren.Gameplay.UI
         {
             GUI.Label(new Rect(area.x, area.y, area.width, 30f),
                 waiting ? "<color=#f5c96b>Pulsa la nueva tecla para «" + LabelOf(waitingFor) + "» (Esc cancela)</color>"
-                        : "Haz clic en una tecla para cambiarla. Si ya estaba en uso, se intercambian. Clic izquierdo = ballesta, rueda = zoom.",
+                        : "Haz clic en una tecla para cambiarla. Si ya estaba en uso, se intercambian. Clic = ballesta, rueda = zoom, botón central (arrastrar) = girar cámara; Mayús libre y Ctrl+Z deshacer son atajos fijos.",
                 MenuStyle.Small);
             Rect view = new Rect(area.x, area.y + 36f, area.width, area.height - 36f);
             float rowHeight = 38f;
@@ -211,6 +227,30 @@ namespace Vhaldren.Gameplay.UI
             y += 50f;
             bool help = Toggle(new Rect(area.x, y, area.width, 40f), "Mostrar ayuda (F1) al empezar", GameSettings.ShowHelpOnStart);
             if (help != GameSettings.ShowHelpOnStart) GameSettings.ShowHelpOnStart = help;
+
+            y += 58f;
+            GUI.Label(new Rect(area.x, y, area.width, 30f), "<b>CÁMARA</b>", MenuStyle.Body);
+            y += 36f;
+            float distance = GameSettings.CameraDistance;
+            float nextDistance = Mathf.Round(RangeSlider(new Rect(area.x, y, area.width, 40f), "Distancia de la cámara",
+                distance, GameSettings.CameraDistanceMin, GameSettings.CameraDistanceMax, distance.ToString("0") + " m"));
+            if (!Mathf.Approximately(nextDistance, distance)) GameSettings.CameraDistance = nextDistance;
+            y += 50f;
+            bool rotation = Toggle(new Rect(area.x, y, area.width, 40f), "Permitir girar la cámara", GameSettings.CameraRotation);
+            if (rotation != GameSettings.CameraRotation) GameSettings.CameraRotation = rotation;
+            GUI.Label(new Rect(area.x + 560f, y, Mathf.Max(120f, area.width - 560f), 40f),
+                "<i>Botón central (arrastrar) o " + GameInput.Label(GameAction.CameraRotateLeft) + "/" +
+                GameInput.Label(GameAction.CameraRotateRight) + "; " + GameInput.Label(GameAction.CameraReset) +
+                ": ángulo inicial</i>", MenuStyle.Small);
+            y += 50f;
+            float sensitivity = GameSettings.CameraRotationSensitivity;
+            float nextSensitivity = Mathf.Round(RangeSlider(new Rect(area.x, y, area.width, 40f), "Sensibilidad de giro",
+                sensitivity, GameSettings.CameraSensitivityMin, GameSettings.CameraSensitivityMax,
+                "× " + sensitivity.ToString("0.0")) * 10f) / 10f;
+            if (!Mathf.Approximately(nextSensitivity, sensitivity)) GameSettings.CameraRotationSensitivity = nextSensitivity;
+            y += 50f;
+            bool ahead = Toggle(new Rect(area.x, y, area.width, 40f), "Adelantar cámara hacia el cursor", GameSettings.CameraLookAhead);
+            if (ahead != GameSettings.CameraLookAhead) GameSettings.CameraLookAhead = ahead;
         }
     }
 }

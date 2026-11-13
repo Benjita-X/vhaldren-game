@@ -87,6 +87,10 @@ namespace Vhaldren.Gameplay.Combat
             }
         }
 
+        /// <summary>Altura de la barra de vida sobre el personaje (el HUD coloca encima los estados).</summary>
+        public Vector3 LabelOffset => labelOffset;
+        public bool IsBossBar => bossTarget;
+
         public void ConfigureForEnemy(bool isBoss)
         {
             playerTarget = false;

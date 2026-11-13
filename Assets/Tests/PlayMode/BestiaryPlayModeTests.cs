@@ -88,6 +88,31 @@ namespace Vhaldren.Tests
         }
 
         [UnityTest]
+        public IEnumerator AuthoredVisualPreventsPrimitiveBodyFromBeingGeneratedOnTop()
+        {
+            GameObject root = new GameObject("EnemigoArteFinal");
+            Transform anchor = new GameObject("Visual enemigo").transform;
+            anchor.SetParent(root.transform, false);
+            Transform authored = new GameObject("Modelo Blender final").transform;
+            authored.SetParent(anchor, false);
+            authored.gameObject.AddComponent<AuthoredVisual>();
+            spawned.Add(root);
+
+            EnemyVisualPrototype fallback = root.AddComponent<EnemyVisualPrototype>();
+            fallback.BuildIfNeeded();
+            Assert.That(anchor.Find("Modelo texturizado"), Is.Null,
+                "Un modelo marcado como autoral no recibe el cuerpo provisional.");
+
+            EnemyArchetypeVisual roleVisual = root.AddComponent<EnemyArchetypeVisual>();
+            roleVisual.Build(EnemyArchetypes.Find("saqueador"));
+            Transform props = anchor.Find("Accesorios Saqueador del camino");
+            Assert.That(props, Is.Not.Null);
+            Assert.That(props.childCount, Is.Zero,
+                "Un melee con arte final no recibe armas primitivas encima.");
+            yield return null;
+        }
+
+        [UnityTest]
         public IEnumerator ArchetypeSetsStatsAndSkeletonsShrugOffArrows()
         {
             PrototypeEnemy skeleton = Spawn("esqueleto", new Vector3(20f, 1.08f, 20f));

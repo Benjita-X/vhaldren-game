@@ -56,10 +56,24 @@ namespace Vhaldren.Gameplay.World
         private LineRenderer aimLine;
         private static readonly Collider[] allies = new Collider[24];
 
+        /// <summary>Segundos que el cuerpo queda a la vista tras morir antes de ocultarse.</summary>
+        public const float CorpseSeconds = 1.8f;
+        private const float SinkSeconds = 0.45f;
+        private EnemyAnimationDriver animationDriver;
+        private float defeatedAt;
+        private float hideModelAt = float.PositiveInfinity;
+        private bool proceduralDeath;
+        private bool landedDust;
+        private bool modelRestSaved;
+        private Vector3 modelRestPosition;
+        private Quaternion modelRestRotation;
+
         public bool IsBoss => isBoss;
         public bool IsDefeated => defeated;
         public bool IsSlowed => !defeated && Time.time < slowUntil;
         public bool IsAttackTelegraphed => windingUp;
+        /// <summary>A quién persigue y golpea (el jugador en el mundo).</summary>
+        public Transform Target => target;
         public bool IsStaggered => !defeated && Time.time < staggerUntil;
         public EnemyArchetype Archetype => archetype;
         public bool IsEnraged => enraged;
@@ -67,6 +81,11 @@ namespace Vhaldren.Gameplay.World
         public float AttackRange => attackRange;
         public float AttackDamage => attackDamage;
         public int SupportPulses { get; private set; }
+        /// <summary>El cuerpo sigue a la vista (cayendo o en el suelo) tras la derrota.</summary>
+        public bool IsCorpseVisible => defeated && modelRoot != null && modelRoot.activeSelf;
+        /// <summary>Sin estado de muerte en su Animator (lobos, cuerpos provisionales): cae de lado por codigo.</summary>
+        public bool UsesProceduralDeath => proceduralDeath;
+        public EnemyAnimationDriver AnimationDriver => animationDriver;
         public event Action<PrototypeEnemy> Defeated;
 
         private void Awake()
@@ -87,7 +106,14 @@ namespace Vhaldren.Gameplay.World
             if (GetComponent<EnemyVisualPrototype>() == null)
                 gameObject.AddComponent<EnemyVisualPrototype>();
             // Modelo KayKit animado (si la escena lo trae bajo "Visual enemigo").
-            EnemyAnimationDriver.Attach(this, modelRoot != null ? modelRoot.transform : transform.Find("Visual enemigo"));
+            animationDriver = EnemyAnimationDriver.Attach(this,
+                modelRoot != null ? modelRoot.transform : transform.Find("Visual enemigo"));
+            if (modelRoot != null)
+            {
+                modelRestPosition = modelRoot.transform.localPosition;
+                modelRestRotation = modelRoot.transform.localRotation;
+                modelRestSaved = true;
+            }
             // Se agrega tambien a escenas 008 ya versionadas sin recompilar la escena.
             attackWarning = GetComponent<EnemyAttackTelegraph>();
             if (attackWarning == null)
@@ -177,20 +203,87 @@ namespace Vhaldren.Gameplay.World
             if (defeated)
                 return;
             defeated = true;
+            defeatedAt = Time.time;
             CancelAttack();
             respawnAt = Time.time + Mathf.Max(1f, respawnSeconds);
+            // Las colisiones se apagan al instante: el cuerpo que cae ya no bloquea ni recibe golpes.
             if (controller != null)
                 controller.enabled = false;
             returningHome = false;
+            knockback = Vector3.zero;
             if (modelRoot != null)
-                modelRoot.SetActive(false);
+            {
+                // Animacion de muerte (Death_A) si el modelo la tiene; si no, cae de lado.
+                proceduralDeath = animationDriver == null || !animationDriver.PlayDeath();
+                landedDust = false;
+                hideModelAt = Time.time + CorpseSeconds;
+                if (TryGetComponent(out EnemyArchetypeVisual roleVisual))
+                    roleVisual.SetDefeated(true);
+            }
             Defeated?.Invoke(this);
+        }
+
+        /// <summary>
+        /// Cuerpo tras la derrota: cae (por animacion o de lado), levanta polvo al tocar
+        /// el suelo, se hunde un poco y se oculta a los <see cref="CorpseSeconds"/>.
+        /// </summary>
+        private void UpdateCorpse()
+        {
+            if (modelRoot == null || !modelRoot.activeSelf || hideModelAt == float.PositiveInfinity)
+                return;
+            float age = Time.time - defeatedAt;
+            Transform model = modelRoot.transform;
+            Vector3 position = modelRestPosition;
+            Quaternion rotation = modelRestRotation;
+            float halfHeight = controller != null ? controller.height * 0.5f : 1f;
+            if (proceduralDeath)
+            {
+                float fall = Mathf.Clamp01(age / 0.42f);
+                fall *= fall;   // cae acelerando, como un peso muerto
+                rotation = Quaternion.AngleAxis(82f * fall, Vector3.forward) * modelRestRotation;
+                position += Vector3.down * (halfHeight * 0.62f * fall);
+            }
+            if (!landedDust && age >= (proceduralDeath ? 0.42f : 0.55f))
+            {
+                landedDust = true;
+                if (GameFeel.Enabled)
+                {
+                    Vector3 feet = transform.position + Vector3.down * (halfHeight - 0.1f);
+                    VfxHost.Get()?.Smoke(feet, 0.5f, new Color(0.5f, 0.46f, 0.4f, 0.5f), 10, 0.55f, 0.7f, Vector3.up * 0.35f);
+                }
+            }
+            float sinkStart = CorpseSeconds - SinkSeconds;
+            if (age > sinkStart)
+                position += Vector3.down * (Mathf.Clamp01((age - sinkStart) / SinkSeconds) * 0.75f);
+            model.localPosition = position;
+            model.localRotation = rotation;
+
+            if (Time.time >= hideModelAt)
+            {
+                hideModelAt = float.PositiveInfinity;
+                if (GameFeel.Enabled)
+                {
+                    Vector3 feet = transform.position + Vector3.down * (halfHeight - 0.15f);
+                    VfxHost.Get()?.Smoke(feet, 0.45f, new Color(0.16f, 0.13f, 0.12f, 0.55f), 12, 0.7f, 0.8f, Vector3.up * 0.5f);
+                }
+                modelRoot.SetActive(false);
+                RestoreModelPose();
+            }
+        }
+
+        private void RestoreModelPose()
+        {
+            if (modelRoot == null || !modelRestSaved)
+                return;
+            modelRoot.transform.localPosition = modelRestPosition;
+            modelRoot.transform.localRotation = modelRestRotation;
         }
 
         private void Update()
         {
             if (defeated)
             {
+                UpdateCorpse();
                 if (Time.time >= respawnAt)
                     Respawn();
                 return;
@@ -326,7 +419,7 @@ namespace Vhaldren.Gameplay.World
                 if (archetype != null && archetype.IsRangedRole)
                     DrawTracer(activeAttackKind == CombatDamageKind.Magic);
                 if (response.Applied > 0f && archetype != null && archetype.AppliesStatus)
-                    StatusEffects.For(target)?.Apply(archetype.OnHit);
+                    StatusEffects.For(target)?.ApplyFrom(archetype.OnHit, this);
                 if (response.Parried)
                     InterruptAttack(0.70f);
             }
@@ -405,9 +498,16 @@ namespace Vhaldren.Gameplay.World
         {
             int count = Physics.OverlapSphereNonAlloc(transform.position, 10f, allies,
                 Physics.DefaultRaycastLayers, QueryTriggerInteraction.Ignore);
+            Collider[] scan = allies;
+            if (count >= allies.Length)
+            {
+                scan = Physics.OverlapSphere(transform.position, 10f,
+                    Physics.DefaultRaycastLayers, QueryTriggerInteraction.Ignore);
+                count = scan.Length;
+            }
             for (int i = 0; i < count; i++)
             {
-                PrototypeEnemy ally = allies[i] != null ? allies[i].GetComponentInParent<PrototypeEnemy>() : null;
+                PrototypeEnemy ally = scan[i] != null ? scan[i].GetComponentInParent<PrototypeEnemy>() : null;
                 if (ally == null || ally == this || ally.defeated || ally.returningHome)
                     continue;
                 ally.provokedUntil = Mathf.Max(ally.provokedUntil, Time.time + 10f);
@@ -465,10 +565,17 @@ namespace Vhaldren.Gameplay.World
         {
             int count = Physics.OverlapSphereNonAlloc(transform.position, 8f, allies,
                 Physics.DefaultRaycastLayers, QueryTriggerInteraction.Ignore);
+            Collider[] scan = allies;
+            if (count >= allies.Length)
+            {
+                scan = Physics.OverlapSphere(transform.position, 8f,
+                    Physics.DefaultRaycastLayers, QueryTriggerInteraction.Ignore);
+                count = scan.Length;
+            }
             int healed = 0;
             for (int i = 0; i < count; i++)
             {
-                PrototypeEnemy ally = allies[i] != null ? allies[i].GetComponentInParent<PrototypeEnemy>() : null;
+                PrototypeEnemy ally = scan[i] != null ? scan[i].GetComponentInParent<PrototypeEnemy>() : null;
                 if (ally == null || ally == this || ally.defeated || ally.health == null)
                     continue;
                 if (ally.health.Heal(ally.health.MaximumHealth * 0.14f) > 0f)
@@ -495,10 +602,12 @@ namespace Vhaldren.Gameplay.World
                 GameObject line = new GameObject("Linea de tiro — sin colision");
                 line.transform.SetParent(transform, false);
                 aimLine = line.AddComponent<LineRenderer>();
-                aimLine.sharedMaterial = PrototypeVfx.SharedMaterial;
+                Material beam = VfxLibrary.AdditiveBeam;
+                aimLine.sharedMaterial = beam != null ? beam : PrototypeVfx.SharedMaterial;
                 aimLine.useWorldSpace = true;
                 aimLine.positionCount = 2;
-                aimLine.widthMultiplier = 0.06f;
+                aimLine.widthMultiplier = 0.09f;
+                aimLine.textureMode = LineTextureMode.Stretch;
                 aimLine.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
             }
             Color tint = activeAttackKind == CombatDamageKind.Magic
@@ -520,16 +629,14 @@ namespace Vhaldren.Gameplay.World
         {
             if (target == null)
                 return;
-            GameObject tracer = new GameObject("Proyectil enemigo — sin colision");
-            LineRenderer line = tracer.AddComponent<LineRenderer>();
-            line.sharedMaterial = PrototypeVfx.SharedMaterial;
-            line.useWorldSpace = true;
-            line.positionCount = 2;
-            line.widthMultiplier = magic ? 0.18f : 0.08f;
-            line.startColor = line.endColor = magic ? new Color(1f, 0.55f, 0.15f) : new Color(0.9f, 0.85f, 0.7f);
-            line.SetPosition(0, transform.position + Vector3.up * 0.4f);
-            line.SetPosition(1, target.position + Vector3.up * 0.4f);
-            Destroy(tracer, 0.12f);
+            // Haz reutilizable (sin crear ni destruir objetos por disparo): virote recto y
+            // palido, o brasas del acolito con un leve zigzag y chispas al llegar.
+            Vector3 from = transform.position + Vector3.up * 0.4f;
+            Vector3 to = target.position + Vector3.up * 0.4f;
+            LightningArc.Strike(from, to, magic ? new Color(1f, 0.5f, 0.12f) : new Color(0.95f, 0.88f, 0.7f),
+                magic ? 0.12f : 0.05f, magic ? 0.18f : 0.12f, magic ? 0.12f : 0f);
+            if (magic)
+                VfxHost.Get()?.Burst(VfxElement.Fire, to, from - to, new Color(1f, 0.8f, 0.45f), 10, 3.5f, 0.14f, 0.45f, 0.8f, 0.1f);
         }
 
         private void BeginAttack()
@@ -640,8 +747,18 @@ namespace Vhaldren.Gameplay.World
             provokedUntil = 0f;
             returningHome = false;
             health.ResetToFull();
+            // Si reaparece antes de ocultarse el cuerpo, se cancela el ocultado pendiente.
+            hideModelAt = float.PositiveInfinity;
+            proceduralDeath = false;
             if (modelRoot != null)
+            {
+                RestoreModelPose();
                 modelRoot.SetActive(true);
+            }
+            if (animationDriver != null)
+                animationDriver.ResetAfterRespawn();
+            if (TryGetComponent(out EnemyArchetypeVisual roleVisual))
+                roleVisual.SetDefeated(false);
             if (controller != null)
                 controller.enabled = true;
             defeated = false;

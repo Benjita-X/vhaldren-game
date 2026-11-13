@@ -177,11 +177,18 @@ namespace Vhaldren.Gameplay.Magic
         {
             int count = Physics.OverlapSphereNonAlloc(transform.position, Range, nearby,
                 Physics.DefaultRaycastLayers, QueryTriggerInteraction.Ignore);
+            Collider[] scan = nearby;
+            if (count >= nearby.Length)
+            {
+                scan = Physics.OverlapSphere(transform.position, Range,
+                    Physics.DefaultRaycastLayers, QueryTriggerInteraction.Ignore);
+                count = scan.Length;
+            }
             CombatHealth best = null;
             float bestDistance = float.PositiveInfinity;
             for (int i = 0; i < count; i++)
             {
-                CombatHealth candidate = nearby[i] != null ? nearby[i].GetComponentInParent<CombatHealth>() : null;
+                CombatHealth candidate = scan[i] != null ? scan[i].GetComponentInParent<CombatHealth>() : null;
                 if (candidate == null || !IsEligible(candidate))
                     continue;
                 float distance = HorizontalDistance(candidate.transform.position);
@@ -280,11 +287,13 @@ namespace Vhaldren.Gameplay.Magic
         {
             message = value;
             messageUntil = Time.time + 2.2f;
+            Vhaldren.Gameplay.UI.HudNotices.Post(value, new Color(1f, 0.55f, 0.55f), 2.2f);
         }
 
         private void OnGUI()
         {
-            if (Event.current.type != EventType.Repaint)
+            // El aviso de absorber y su progreso los dibuja ActionBarHud; esto es solo F3.
+            if (Event.current.type != EventType.Repaint || !Vhaldren.Gameplay.UI.HudMode.Debug)
                 return;
             if (style == null)
                 style = new GUIStyle(GUI.skin.box) { alignment = TextAnchor.MiddleCenter, fontSize = 13, richText = true };

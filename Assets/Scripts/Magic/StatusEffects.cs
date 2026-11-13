@@ -23,7 +23,7 @@ namespace Vhaldren.Gameplay.Magic
     /// deterministas y no dependen de los FPS: todo se calcula con tiempos absolutos.
     /// </summary>
     [DisallowMultipleComponent]
-    [RequireComponent(typeof(CombatHealth))]
+    [RequireComponent(typeof(CombatHealth), typeof(CombatDamageReceiver))]
     public sealed class StatusEffects : MonoBehaviour, IDamageTakenModifier
     {
         public const float IgnitionDps = 5f;
@@ -49,7 +49,10 @@ namespace Vhaldren.Gameplay.Magic
 
         private readonly float[] until = new float[KindCount];
         private CombatHealth health;
+        private CombatDamageReceiver receiver;
         private PrototypeEnemy enemy;
+        private Vector3 ignitionSource;
+        private Transform ignitionOwner;
         private int chillStacks;
         private float frozenUntil;
         private float nextIgnitionTick;
@@ -93,6 +96,7 @@ namespace Vhaldren.Gameplay.Magic
         private void Awake()
         {
             health = GetComponent<CombatHealth>();
+            receiver = GetComponent<CombatDamageReceiver>();
             enemy = GetComponent<PrototypeEnemy>();
         }
 
@@ -116,8 +120,24 @@ namespace Vhaldren.Gameplay.Magic
 
         public float Remaining(StatusKind kind) => Mathf.Max(0f, until[(int)kind] - Time.time);
 
-        /// <summary>Aplica o renueva un estado. Devuelve false si el objetivo ya cayo.</summary>
-        public bool Apply(StatusKind kind, float seconds = -1f)
+        /// <summary>
+        /// Aplica o renueva un estado. Para estados con daño diferido conserva
+        /// el origen real del atacante, de modo que el daño futuro pase por el
+        /// mismo receptor central que armas y hechizos.
+        /// </summary>
+        public bool Apply(StatusKind kind, float seconds = -1f) =>
+            ApplyInternal(kind, transform.position, null, seconds);
+
+        public bool ApplyFrom(StatusKind kind, Vector3 source, float seconds = -1f) =>
+            ApplyInternal(kind, source, null, seconds);
+
+        public bool ApplyFrom(StatusKind kind, Component source, float seconds = -1f) =>
+            ApplyInternal(kind,
+                source != null ? source.transform.position : transform.position,
+                source != null ? source.transform : null, seconds);
+
+        private bool ApplyInternal(StatusKind kind, Vector3 source,
+            Transform sourceOwner, float seconds)
         {
             if (health == null || health.IsDefeated)
                 return false;
@@ -133,6 +153,8 @@ namespace Vhaldren.Gameplay.Magic
             switch (kind)
             {
                 case StatusKind.Ignition:
+                    ignitionSource = IsFinite(source) ? source : transform.position;
+                    ignitionOwner = sourceOwner;
                     if (!wasActive)
                         nextIgnitionTick = Time.time + 1f;
                     break;
@@ -167,13 +189,21 @@ namespace Vhaldren.Gameplay.Magic
             }
         }
 
-        /// <summary>Descarga la estatica si esta presente. Devuelve el daño extra causado.</summary>
-        public float ConsumeStatic()
+        /// <summary>
+        /// Descarga la estatica por el receptor central. Respeta resistencias,
+        /// barreras, modificadores de raza/equipo y feedback de daño.
+        /// </summary>
+        public float ConsumeStatic(Vector3 source)
         {
             if (!Has(StatusKind.Static))
                 return 0f;
             until[(int)StatusKind.Static] = 0f;
-            return health.ApplyDamage(StaticBonusDamage);
+            if (receiver == null)
+                receiver = GetComponent<CombatDamageReceiver>();
+            return receiver != null
+                ? receiver.Receive(StaticBonusDamage, CombatDamageKind.Magic,
+                    IsFinite(source) ? source : transform.position).Applied
+                : 0f;
         }
 
         public void Clear(StatusKind kind)
@@ -181,6 +211,8 @@ namespace Vhaldren.Gameplay.Magic
             until[(int)kind] = 0f;
             if (kind == StatusKind.Chill)
                 chillStacks = 0;
+            if (kind == StatusKind.Ignition)
+                ignitionOwner = null;
         }
 
         public void ClearAll()
@@ -189,6 +221,7 @@ namespace Vhaldren.Gameplay.Magic
                 until[i] = 0f;
             chillStacks = 0;
             frozenUntil = 0f;
+            ignitionOwner = null;
         }
 
         /// <summary>Avanza la quemadura. Separado de Update para poder probarlo.</summary>
@@ -200,7 +233,17 @@ namespace Vhaldren.Gameplay.Magic
             while (now >= nextIgnitionTick && nextIgnitionTick <= until[(int)StatusKind.Ignition] + 0.001f)
             {
                 nextIgnitionTick += 1f;
-                dealt += health.ApplyDamage(IgnitionDps);
+                if (receiver == null)
+                    receiver = GetComponent<CombatDamageReceiver>();
+                if (receiver == null)
+                    break;
+                float applied = receiver.Receive(IgnitionDps,
+                    CombatDamageKind.DamageOverTime,
+                    IsFinite(ignitionSource) ? ignitionSource : transform.position).Applied;
+                dealt += applied;
+                if (applied > 0f && ignitionOwner != null)
+                    ignitionOwner.GetComponentInParent<PlayerDamageTracker>()?
+                        .Record(applied, CombatDamageKind.DamageOverTime);
                 if (health.IsDefeated)
                     break;
             }
@@ -212,6 +255,10 @@ namespace Vhaldren.Gameplay.Magic
             if (Has(StatusKind.Ignition))
                 TickIgnition(Time.time);
         }
+
+        private static bool IsFinite(Vector3 value) =>
+            !float.IsNaN(value.x) && !float.IsNaN(value.y) && !float.IsNaN(value.z) &&
+            !float.IsInfinity(value.x) && !float.IsInfinity(value.y) && !float.IsInfinity(value.z);
 
         public static float DefaultSeconds(StatusKind kind)
         {

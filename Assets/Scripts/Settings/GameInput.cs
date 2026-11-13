@@ -8,14 +8,22 @@ using UnityEngine.InputSystem.Controls;
 
 namespace Vhaldren.Gameplay.Settings
 {
-    /// <summary>Todas las acciones de teclado del juego. El clic izquierdo (ballesta) y la rueda no se reasignan.</summary>
+    /// <summary>
+    /// Acciones principales de teclado. El clic izquierdo, la rueda, Mayús de colocación
+    /// libre y Ctrl+Z de deshacer permanecen como atajos fijos.
+    /// </summary>
     public enum GameAction
     {
         MoveForward, MoveBack, MoveLeft, MoveRight, Dash,
         Sword, RunePulse, Frost, Shield, Ward, Parry, Potion,
         Spell1, Spell2, Spell3, NextSchool, Absorb, RacialPower,
-        Equipment, Build, Rotate, Dismantle, Gather, CraftPick1, CraftPick2,
-        Noticeboard, Accept, Offer, Buy, Help, Pause
+        Equipment, Build, BuildSlot1, BuildSlot2, BuildSlot3, BuildSlot4, BuildSlot5,
+        BuildSlot6, BuildSlot7, BuildSlot8, BuildSlot9, BuildSlot10,
+        Rotate, Dismantle, Gather, CraftPick1, CraftPick2,
+        Noticeboard, Accept, Offer, Buy, Help, Pause,
+        // Al final: los valores anteriores no cambian.
+        CameraRotateLeft, CameraRotateRight, CameraReset,
+        DebugHud
     }
 
     /// <summary>
@@ -52,8 +60,9 @@ namespace Vhaldren.Gameplay.Settings
             void Add(GameAction action, string label, string group, int key) =>
                 list.Add(new Binding { Action = action, Label = label, Group = group });
             const int W = 0, S = 0, A = 0, D = 0, Space = 0, V = 0, T = 0, F = 0, Z = 0, C = 0, X = 0, Q = 0,
-                Digit1 = 0, Digit2 = 0, Digit3 = 0, Tab = 0, H = 0, R = 0, U = 0, B = 0, G = 0, E = 0, J = 0,
-                K = 0, N = 0, Y = 0, O = 0, P = 0, F1 = 0, Escape = 0;
+                Digit0 = 0, Digit1 = 0, Digit2 = 0, Digit3 = 0, Digit4 = 0, Digit5 = 0, Digit6 = 0,
+                Digit7 = 0, Digit8 = 0, Digit9 = 0, Tab = 0, H = 0, R = 0, U = 0, B = 0, G = 0, E = 0, J = 0,
+                K = 0, N = 0, Y = 0, O = 0, P = 0, F1 = 0, F3 = 0, Escape = 0;
 #endif
 #if ENABLE_INPUT_SYSTEM
             Add(GameAction.MoveForward, "Avanzar", "Movimiento", Key.W);
@@ -61,6 +70,10 @@ namespace Vhaldren.Gameplay.Settings
             Add(GameAction.MoveLeft, "Izquierda", "Movimiento", Key.A);
             Add(GameAction.MoveRight, "Derecha", "Movimiento", Key.D);
             Add(GameAction.Dash, "Esquivar", "Movimiento", Key.Space);
+            // Tambien se gira arrastrando con el boton central del raton.
+            Add(GameAction.CameraRotateLeft, "Girar cámara a la izquierda", "Cámara", Key.Insert);
+            Add(GameAction.CameraRotateRight, "Girar cámara a la derecha", "Cámara", Key.Delete);
+            Add(GameAction.CameraReset, "Cámara al ángulo inicial", "Cámara", Key.Home);
             Add(GameAction.Sword, "Tajo de espada", "Combate", Key.V);
             Add(GameAction.RunePulse, "Pulso rúnico", "Combate", Key.T);
             Add(GameAction.Frost, "Onda de escarcha", "Combate", Key.F);
@@ -76,6 +89,16 @@ namespace Vhaldren.Gameplay.Settings
             Add(GameAction.RacialPower, "Poder de raza", "Magia", Key.R);
             Add(GameAction.Equipment, "Forja de equipo", "Supervivencia", Key.U);
             Add(GameAction.Build, "Modo construcción", "Supervivencia", Key.B);
+            Add(GameAction.BuildSlot1, "Construcción: pieza 1", "Construcción", Key.Digit1);
+            Add(GameAction.BuildSlot2, "Construcción: pieza 2", "Construcción", Key.Digit2);
+            Add(GameAction.BuildSlot3, "Construcción: pieza 3", "Construcción", Key.Digit3);
+            Add(GameAction.BuildSlot4, "Construcción: pieza 4", "Construcción", Key.Digit4);
+            Add(GameAction.BuildSlot5, "Construcción: pieza 5", "Construcción", Key.Digit5);
+            Add(GameAction.BuildSlot6, "Construcción: pieza 6", "Construcción", Key.Digit6);
+            Add(GameAction.BuildSlot7, "Construcción: pieza 7", "Construcción", Key.Digit7);
+            Add(GameAction.BuildSlot8, "Construcción: pieza 8", "Construcción", Key.Digit8);
+            Add(GameAction.BuildSlot9, "Construcción: pieza 9", "Construcción", Key.Digit9);
+            Add(GameAction.BuildSlot10, "Construcción: pieza 10", "Construcción", Key.Digit0);
             Add(GameAction.Rotate, "Girar pieza (construcción)", "Supervivencia", Key.R);
             Add(GameAction.Dismantle, "Desmontar (construcción)", "Supervivencia", Key.G);
             Add(GameAction.Gather, "Recolectar (mantener)", "Supervivencia", Key.E);
@@ -87,14 +110,29 @@ namespace Vhaldren.Gameplay.Settings
             Add(GameAction.Buy, "Comprar", "Pueblos", Key.P);
             Add(GameAction.Help, "Ayuda en pantalla", "Interfaz", Key.F1);
             Add(GameAction.Pause, "Menú / pausa", "Interfaz", Key.Escape);
+            Add(GameAction.DebugHud, "Recuadros de depuración", "Interfaz", Key.F3);
 #endif
             return list.ToArray();
         }
 
-        /// <summary>Girar y poder de raza comparten R: uno solo funciona en construcción.</summary>
-        private static bool SharesKeyByDesign(GameAction a, GameAction b) =>
-            (a == GameAction.Rotate && b == GameAction.RacialPower) || (a == GameAction.RacialPower && b == GameAction.Rotate) ||
-            (a == GameAction.Dismantle && b == GameAction.RacialPower) || (a == GameAction.RacialPower && b == GameAction.Dismantle);
+        /// <summary>
+        /// Acciones que pueden compartir tecla porque nunca están activas en el
+        /// mismo contexto. Construcción bloquea magia/combate y usa sus propias ranuras.
+        /// </summary>
+        private static bool SharesKeyByDesign(GameAction a, GameAction b)
+        {
+            if ((a == GameAction.Rotate || a == GameAction.Dismantle) && b == GameAction.RacialPower ||
+                (b == GameAction.Rotate || b == GameAction.Dismantle) && a == GameAction.RacialPower)
+                return true;
+            return (IsBuildSlot(a) && IsSpellSlot(b)) ||
+                   (IsBuildSlot(b) && IsSpellSlot(a));
+        }
+
+        private static bool IsBuildSlot(GameAction action) =>
+            action >= GameAction.BuildSlot1 && action <= GameAction.BuildSlot10;
+
+        private static bool IsSpellSlot(GameAction action) =>
+            action >= GameAction.Spell1 && action <= GameAction.Spell3;
 
         private static int IndexOf(GameAction action)
         {
@@ -218,6 +256,11 @@ namespace Vhaldren.Gameplay.Settings
                 case Key.LeftShift: return "Mayús";
                 case Key.LeftCtrl: return "Ctrl";
                 case Key.Enter: return "Intro";
+                case Key.Insert: return "Insert";
+                case Key.Delete: return "Supr";
+                case Key.Home: return "Inicio";
+                case Key.End: return "Fin";
+                case Key.F3: return "F3";
                 case Key.None: return "—";
             }
             string name = key.ToString();

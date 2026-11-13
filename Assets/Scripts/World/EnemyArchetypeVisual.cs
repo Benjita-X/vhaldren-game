@@ -14,8 +14,20 @@ namespace Vhaldren.Gameplay.World
         private static readonly int ColorId = Shader.PropertyToID("_Color");
         private Transform props;
         private string builtFor;
+        private bool authoredModel;
 
         public string BuiltFor => builtFor;
+
+        /// <summary>
+        /// Con un modelo real los accesorios son brillos sueltos (orbe, runas) que no siguen
+        /// al esqueleto: se apagan mientras el cuerpo cae. En los cuerpos provisionales los
+        /// accesorios SON el cuerpo (lobo), asi que se quedan y caen con el.
+        /// </summary>
+        public void SetDefeated(bool defeated)
+        {
+            if (props != null && authoredModel)
+                props.gameObject.SetActive(!defeated);
+        }
 
         public void Build(EnemyArchetype data)
         {
@@ -32,9 +44,10 @@ namespace Vhaldren.Gameplay.World
 
             // Con un personaje KayKit texturizado no se tiñe ni se añaden armas falsas:
             // solo los brillos que delatan magia (mago, sanadora, elite).
-            Transform realModel = anchor.Find("Modelo texturizado");
-            bool textured = realModel != null && realModel.GetComponentInChildren<Animator>(true) != null;
-            if (textured)
+            Transform realModel = AuthoredVisual.FindRoot(anchor);
+            bool authored = realModel != null;
+            authoredModel = authored;
+            if (authored)
             {
                 if (data.Role == EnemyRole.Caster)
                     Orb(new Vector3(0.45f, 0.95f, 0.25f), 0.2f, new Color(1f, 0.45f, 0.1f));

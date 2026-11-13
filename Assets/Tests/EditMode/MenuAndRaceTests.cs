@@ -44,7 +44,7 @@ namespace Vhaldren.Tests
         }
 
         [Test]
-        public void NoTwoActionsShareAKeyExceptBuildModeR()
+        public void DefaultSharedKeysOnlyExistInMutuallyExclusiveContexts()
         {
             GameInput.ResetDefaults();
             Dictionary<Key, GameAction> used = new Dictionary<Key, GameAction>();
@@ -52,12 +52,39 @@ namespace Vhaldren.Tests
             {
                 Key key = GameInput.KeyFor(binding.Action);
                 if (used.TryGetValue(key, out GameAction other))
-                    Assert.That((other == GameAction.RacialPower || binding.Action == GameAction.RacialPower) && key == Key.R,
-                        Is.True, binding.Action + " choca con " + other);
+                {
+                    bool buildAndSpell =
+                        IsBuildSlot(other) && IsSpell(binding.Action) ||
+                        IsBuildSlot(binding.Action) && IsSpell(other);
+                    bool buildAndRace = key == Key.R &&
+                        (other == GameAction.RacialPower || binding.Action == GameAction.RacialPower);
+                    Assert.That(buildAndSpell || buildAndRace, Is.True,
+                        binding.Action + " choca con " + other + " fuera de un contexto exclusivo.");
+                }
                 else
                     used[key] = binding.Action;
             }
         }
+
+        [Test]
+        public void ConstructionSlotsAreRebindableWithoutStealingSpellKeys()
+        {
+            GameInput.ResetDefaults();
+            Assert.That(GameInput.KeyFor(GameAction.BuildSlot1), Is.EqualTo(Key.Digit1));
+            Assert.That(GameInput.KeyFor(GameAction.Spell1), Is.EqualTo(Key.Digit1));
+            GameInput.Rebind(GameAction.BuildSlot1, Key.Digit4);
+            Assert.That(GameInput.KeyFor(GameAction.BuildSlot1), Is.EqualTo(Key.Digit4));
+            Assert.That(GameInput.KeyFor(GameAction.BuildSlot4), Is.EqualTo(Key.Digit1),
+                "Las ranuras de construcción se intercambian entre sí.");
+            Assert.That(GameInput.KeyFor(GameAction.Spell1), Is.EqualTo(Key.Digit1),
+                "El hechizo conserva su tecla porque magia y construcción son contextos excluyentes.");
+        }
+
+        private static bool IsBuildSlot(GameAction action) =>
+            action >= GameAction.BuildSlot1 && action <= GameAction.BuildSlot10;
+
+        private static bool IsSpell(GameAction action) =>
+            action >= GameAction.Spell1 && action <= GameAction.Spell3;
 
         [Test]
         public void CodexHasContentForEveryTab()

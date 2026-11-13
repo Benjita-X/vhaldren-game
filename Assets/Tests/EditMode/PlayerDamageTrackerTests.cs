@@ -23,17 +23,19 @@ namespace Vhaldren.Tests
             Assert.That(tracker.Record(25f, CombatDamageKind.Arrow), Is.True);
             Assert.That(tracker.Record(35f, CombatDamageKind.Melee), Is.True);
             Assert.That(tracker.Record(22f, CombatDamageKind.Magic), Is.True);
-            Assert.That(tracker.TotalHits, Is.EqualTo(3));
-            Assert.That(tracker.TotalDamage, Is.EqualTo(82f));
+            Assert.That(tracker.Record(5f, CombatDamageKind.DamageOverTime), Is.True);
+            Assert.That(tracker.TotalHits, Is.EqualTo(4));
+            Assert.That(tracker.TotalDamage, Is.EqualTo(87f));
             Assert.That(tracker.DamageFor(CombatDamageKind.Arrow), Is.EqualTo(25f));
             Assert.That(tracker.DamageFor(CombatDamageKind.Melee), Is.EqualTo(35f));
             Assert.That(tracker.DamageFor(CombatDamageKind.Magic), Is.EqualTo(22f));
-            Assert.That(tracker.LastDamage, Is.EqualTo(22f));
-            Assert.That(tracker.LastKind, Is.EqualTo(CombatDamageKind.Magic));
+            Assert.That(tracker.DamageFor(CombatDamageKind.DamageOverTime), Is.EqualTo(5f));
+            Assert.That(tracker.LastDamage, Is.EqualTo(5f));
+            Assert.That(tracker.LastKind, Is.EqualTo(CombatDamageKind.DamageOverTime));
             Assert.That(tracker.Record(0f, CombatDamageKind.Arrow), Is.False);
             Assert.That(tracker.Record(float.NaN, CombatDamageKind.Melee), Is.False);
             Assert.That(tracker.Record(float.PositiveInfinity, CombatDamageKind.Arrow), Is.False);
-            Assert.That(tracker.TotalHits, Is.EqualTo(3));
+            Assert.That(tracker.TotalHits, Is.EqualTo(4));
         }
 
         [Test]

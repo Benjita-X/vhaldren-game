@@ -28,6 +28,18 @@ namespace Vhaldren.Gameplay.Combat
                 return;
             bool playerHurt = victim.GetComponent<Vhaldren.Gameplay.Player.PlayerMotor>() != null;
             Vector3 center = Center(victim);
+
+            // Daño periódico (fuego/venenos futuros) conserva números y vida real,
+            // pero no debe congelar el juego ni empujar al objetivo cada segundo.
+            if (kind == CombatDamageKind.DamageOverTime)
+            {
+                if (playerHurt)
+                    Host().FlashHurt(Mathf.Clamp01(applied / 50f) * 0.45f);
+                Host().Burst(center, Vector3.up, new Color(1f, 0.34f, 0.08f, 0.75f),
+                    4, 1.8f, 0.22f, 0.07f);
+                return;
+            }
+
             Vector3 away = center - source;
             away.y = 0f;
             away = away.sqrMagnitude > 0.001f ? away.normalized : -victim.transform.forward;
@@ -88,12 +100,17 @@ namespace Vhaldren.Gameplay.Combat
             Host().Burst(position, Vector3.up, new Color(1f, 0.95f, 0.6f), 16, 6f);
         }
 
-        /// <summary>Polvo al moverse o esquivar.</summary>
+        /// <summary>Polvo al moverse o esquivar: bocanadas suaves que tapan (no brillan).</summary>
         public static void Dust(Vector3 feet, Vector3 direction, int count, float speed)
         {
             if (!Enabled)
                 return;
-            Host().Burst(feet + Vector3.up * 0.05f, direction, new Color(0.55f, 0.5f, 0.44f, 0.7f), count, speed, 0.5f, 0.22f);
+            VfxHost vfx = VfxHost.Get();
+            if (vfx != null)
+                vfx.Smoke(feet + Vector3.up * 0.12f, 0.18f, new Color(0.58f, 0.53f, 0.46f, 0.55f),
+                    Mathf.Clamp(count, 1, 24), 0.32f, 0.6f, direction * (speed * 0.45f));
+            else
+                Host().Burst(feet + Vector3.up * 0.05f, direction, new Color(0.55f, 0.5f, 0.44f, 0.7f), count, speed, 0.5f, 0.22f);
         }
 
         public static void HitStop(float seconds)
@@ -194,7 +211,8 @@ namespace Vhaldren.Gameplay.Combat
             main.startColor = color;
             main.startSpeed = new ParticleSystem.MinMaxCurve(speed * 0.5f, speed);
             main.startLifetime = new ParticleSystem.MinMaxCurve(lifetime * 0.6f, lifetime);
-            main.startSize = new ParticleSystem.MinMaxCurve(size * 0.6f, size);
+            // La forma de luz tiene bordes suaves: algo mas grande para ocupar lo mismo.
+            main.startSize = new ParticleSystem.MinMaxCurve(size * 0.9f, size * 1.6f);
             system.Emit(Mathf.Clamp(count, 1, 40));
         }
 
@@ -227,11 +245,15 @@ namespace Vhaldren.Gameplay.Combat
             shrink.enabled = true;
             shrink.size = new ParticleSystem.MinMaxCurve(1f, AnimationCurve.Linear(0f, 1f, 1f, 0.2f));
             ParticleSystemRenderer renderer = go.GetComponent<ParticleSystemRenderer>();
-            renderer.sharedMaterial = PrototypeVfx.SharedMaterial;
+            // Chispa con forma de luz (centro caliente y bordes suaves) en vez de un
+            // rectangulo plano: los golpes se leen como destellos, no como cuadrados.
+            Material spark = VfxLibrary.AdditiveGlow;
+            renderer.sharedMaterial = spark != null ? spark : PrototypeVfx.SharedMaterial;
             renderer.renderMode = ParticleSystemRenderMode.Stretch;
-            renderer.velocityScale = 0.04f;
-            renderer.lengthScale = 1.5f;
+            renderer.velocityScale = 0.05f;
+            renderer.lengthScale = 2f;
             renderer.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
+            renderer.receiveShadows = false;
             return system;
         }
 
@@ -261,15 +283,9 @@ namespace Vhaldren.Gameplay.Combat
                 pixel.SetPixel(0, 0, Color.white);
                 pixel.Apply();
             }
-            // Viñeta roja: bordes de la pantalla al recibir daño.
-            Color previous = GUI.color;
-            GUI.color = new Color(0.7f, 0f, 0.03f, hurtAlpha);
-            float edge = Mathf.Min(Screen.width, Screen.height) * 0.08f;
-            GUI.DrawTexture(new Rect(0f, 0f, Screen.width, edge), pixel);
-            GUI.DrawTexture(new Rect(0f, Screen.height - edge, Screen.width, edge), pixel);
-            GUI.DrawTexture(new Rect(0f, edge, edge, Screen.height - 2f * edge), pixel);
-            GUI.DrawTexture(new Rect(Screen.width - edge, edge, edge, Screen.height - 2f * edge), pixel);
-            GUI.color = previous;
+            // Viñeta roja al recibir daño: el mismo degradado suave del HUD (sin bordes duros).
+            Vhaldren.Gameplay.UI.HudSkin.DrawVignette(new Rect(0f, 0f, Screen.width, Screen.height),
+                new Color(0.75f, 0f, 0.04f, Mathf.Clamp01(hurtAlpha * 1.6f)));
         }
 
         private void OnDisable()

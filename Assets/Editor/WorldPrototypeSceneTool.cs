@@ -20,12 +20,14 @@ namespace Vhaldren.EditorTools
     public static class WorldPrototypeSceneTool
     {
         private const string Source = "Assets/Scenes/Movement001.unity";
-        private const string Destination = "Assets/Scenes/WorldPrototype001.unity";
-        private const string MaterialFolder = "Assets/WorldPrototype/Materials";
+        // Desde 018 este generador SOLO escribe un blockout desechable.
+        // WorldPrototype001.unity es la escena jugable/artística y no se regenera.
+        private const string Destination = "Assets/Scenes/WorldBlockoutGenerated.unity";
+        private const string MaterialFolder = "Assets/WorldBlockout/Materials";
         private const string KayKitFolder = "Assets/ThirdParty/KayKitDungeon/Models/";
         private const string AtlasPath = "Assets/ThirdParty/KayKitDungeon/KayKitAtlas.mat";
 
-        [MenuItem("Vhaldren/Crear mundo jugable 008 (bosque + ruinas + jefe)")]
+        [MenuItem("Vhaldren/Blockout/Regenerar mundo técnico (NO toca escena jugable)")]
         public static void CreateWorld()
         {
             if (EditorApplication.isPlaying)
@@ -39,7 +41,7 @@ namespace Vhaldren.EditorTools
             if (AssetDatabase.LoadAssetAtPath<SceneAsset>(Destination) != null &&
                 !Application.isBatchMode && !EditorUtility.DisplayDialog(
                     "Vhaldren: generar mundo",
-                    "WorldPrototype001 ya existe. ¿Reemplazar solamente esa escena?",
+                    "El blockout generado ya existe. ¿Reemplazar solamente el blockout?\n\nWorldPrototype001 NO se tocará.",
                     "Reemplazar", "Cancelar"))
                 return;
 
@@ -231,26 +233,26 @@ namespace Vhaldren.EditorTools
             sessionData.ApplyModifiedPropertiesWithoutUndo();
 
             if (!EditorSceneManager.SaveScene(scene, Destination))
-                throw new InvalidOperationException("No se pudo guardar WorldPrototype001.");
+                throw new InvalidOperationException("No se pudo guardar WorldBlockoutGenerated.");
 
             List<EditorBuildSettingsScene> settings =
                 new List<EditorBuildSettingsScene>(EditorBuildSettings.scenes);
             if (!settings.Exists(s => s.path == Destination))
-                settings.Add(new EditorBuildSettingsScene(Destination, true));
+                settings.Add(new EditorBuildSettingsScene(Destination, false));
             else
             {
                 int i = settings.FindIndex(s => s.path == Destination);
-                settings[i] = new EditorBuildSettingsScene(Destination, true);
+                settings[i] = new EditorBuildSettingsScene(Destination, false);
             }
             EditorBuildSettings.scenes = settings.ToArray();
             AssetDatabase.SaveAssets();
             if (!ValidateWorldScene(false))
                 throw new InvalidOperationException("El mundo generado no supero la validacion estructural.");
-            Debug.Log("[Vhaldren] Mundo 008 generado: abre WorldPrototype001. " +
+            Debug.Log("[Vhaldren] Blockout técnico regenerado: abre WorldBlockoutGenerated. " +
                 "Recorre bosque, ruinas y altar, combate 6 enemigos y 5 campamentos del bestiario, y usa Q para curarte.");
         }
 
-        [MenuItem("Vhaldren/Validar mundo jugable 008")]
+        [MenuItem("Vhaldren/Blockout/Validar blockout técnico")]
         public static void ValidateWorld()
         {
             ValidateWorldScene(true);
@@ -261,7 +263,7 @@ namespace Vhaldren.EditorTools
             Scene scene = SceneManager.GetActiveScene();
             if (scene.path != Destination)
             {
-                Debug.LogError("[Vhaldren] Abre WorldPrototype001 para validar el mapa.");
+                Debug.LogError("[Vhaldren] Abre WorldBlockoutGenerated para validar el blockout.");
                 return false;
             }
 
@@ -338,10 +340,10 @@ namespace Vhaldren.EditorTools
 
         private static void EnsureFolders()
         {
-            if (!AssetDatabase.IsValidFolder("Assets/WorldPrototype"))
-                AssetDatabase.CreateFolder("Assets", "WorldPrototype");
+            if (!AssetDatabase.IsValidFolder("Assets/WorldBlockout"))
+                AssetDatabase.CreateFolder("Assets", "WorldBlockout");
             if (!AssetDatabase.IsValidFolder(MaterialFolder))
-                AssetDatabase.CreateFolder("Assets/WorldPrototype", "Materials");
+                AssetDatabase.CreateFolder("Assets/WorldBlockout", "Materials");
         }
 
         private const string PolyHavenFolder = "Assets/ThirdParty/PolyHaven";
@@ -469,7 +471,7 @@ namespace Vhaldren.EditorTools
         }
 
         // -- Terreno ------------------------------------------------------
-        private const string TerrainFolder = "Assets/WorldPrototype/Terrain";
+        private const string TerrainFolder = "Assets/WorldBlockout/Terrain";
         private const float TerrainSize = 192f;
         private const float TerrainHeight = 26f;
         private const float TerrainBase = 1f;      // metros bajo el suelo jugable
@@ -516,8 +518,8 @@ namespace Vhaldren.EditorTools
         private static void BuildTerrain(Transform parent)
         {
             if (!AssetDatabase.IsValidFolder(TerrainFolder))
-                AssetDatabase.CreateFolder("Assets/WorldPrototype", "Terrain");
-            string dataPath = TerrainFolder + "/TerrenoMundo.asset";
+                AssetDatabase.CreateFolder("Assets/WorldBlockout", "Terrain");
+            string dataPath = TerrainFolder + "/TerrenoBlockout.asset";
             AssetDatabase.DeleteAsset(dataPath);
             TerrainData data = new TerrainData { heightmapResolution = 257, alphamapResolution = 256 };
             data.size = new Vector3(TerrainSize, TerrainHeight, TerrainSize);
@@ -802,7 +804,7 @@ namespace Vhaldren.EditorTools
                 : position;
             CharacterController body = root.AddComponent<CharacterController>();
             body.height = boss ? 2.8f : 2f;
-            body.radius = boss ? 0.65f : 0.42f;
+            body.radius = boss ? 0.55f : 0.34f;
             body.center = Vector3.zero;
             body.minMoveDistance = 0f;
             CombatHealth health = root.AddComponent<CombatHealth>();

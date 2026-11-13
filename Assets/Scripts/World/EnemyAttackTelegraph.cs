@@ -1,72 +1,54 @@
 using UnityEngine;
+using Vhaldren.Gameplay.Combat;
 
 namespace Vhaldren.Gameplay.World
 {
     /// <summary>
-    /// Aviso visual de ataques cuerpo a cuerpo. No aplica dano ni decide impactos.
-    /// LineRenderer persistente con radio exacto: la IA resuelve el golpe tras la carga.
-    /// No necesita regenerar WorldPrototype001 ni anadir assets externos.
+    /// Aviso visual de los ataques enemigos. No aplica dano ni decide impactos.
+    /// Un disco en el suelo con el radio exacto del golpe: el borde marca el alcance y el
+    /// relleno crece desde los pies del enemigo hasta tocar el borde justo cuando el golpe
+    /// se resuelve. Al golpear destella en rojo. No necesita regenerar WorldPrototype001.
     /// </summary>
     [DisallowMultipleComponent]
     public sealed class EnemyAttackTelegraph : MonoBehaviour
     {
-        private const int Segments = 60;
-        private const float FlashDuration = 0.13f;
+        private const float FlashDuration = 0.16f;
 
         [SerializeField, Range(0.03f, 0.18f)] private float ringWidth = 0.10f;
 
         private CharacterController controller;
-        private LineRenderer ring;
-        private Material ringMaterial;
+        private MeshRenderer disc;
+        private MaterialPropertyBlock block;
         private bool warningActive;
         private bool bossWarning;
         private bool magicWarning;
         private float warningStarted;
         private float warningEnds;
         private float flashEnds;
+        private float radius = 1f;
 
         public bool WarningActive => warningActive;
-        public bool IsVisible => ring != null && ring.enabled;
+        public bool IsVisible => disc != null && disc.enabled;
+        /// <summary>Progreso del aviso: 0 al empezar la carga, 1 en el instante del golpe.</summary>
+        public float Fill { get; private set; }
 
         private void Awake()
         {
             controller = GetComponent<CharacterController>();
-            GameObject visual = new GameObject("Aviso de ataque - sin colision");
-            visual.transform.SetParent(transform, false);
-            ring = visual.AddComponent<LineRenderer>();
-            ring.useWorldSpace = false;
-            ring.loop = true;
-            ring.positionCount = Segments;
-            ring.widthMultiplier = ringWidth;
-            ring.numCornerVertices = 2;
-            ring.numCapVertices = 2;
-            ring.receiveShadows = false;
-            ring.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
-
-            Shader shader = Shader.Find("Sprites/Default");
-            if (shader == null)
-                shader = Shader.Find("Universal Render Pipeline/Unlit");
-            if (shader == null)
-                shader = Shader.Find("Unlit/Color");
-            if (shader != null)
-            {
-                ringMaterial = new Material(shader);
-                ringMaterial.name = "Aviso de ataque runtime";
-                ring.sharedMaterial = ringMaterial;
-            }
-
-            ring.enabled = false;
+            block = new MaterialPropertyBlock();
+            disc = VfxLibrary.CreateQuad("Aviso de ataque - sin colision", transform, true, VfxLibrary.GroundAdditive);
+            disc.enabled = false;
         }
 
         /// <summary>
-        /// Inicia un anillo telegrafiado. Su centro sigue al enemigo, pero
-        /// este debe permanecer quieto mientras carga para que el jugador pueda reaccionar.
+        /// Inicia el aviso. Su centro sigue al enemigo, pero este debe permanecer
+        /// quieto mientras carga para que el jugador pueda reaccionar.
         /// </summary>
         public void Begin(float reach, float seconds, bool boss, bool magic = false)
         {
-            if (ring == null)
+            if (disc == null)
                 return;
-            float radius = float.IsNaN(reach) || float.IsInfinity(reach)
+            radius = float.IsNaN(reach) || float.IsInfinity(reach)
                 ? 0.5f : Mathf.Max(0.5f, reach);
             bossWarning = boss;
             magicWarning = magic;
@@ -74,87 +56,100 @@ namespace Vhaldren.Gameplay.World
             warningStarted = Time.time;
             warningEnds = Time.time + Mathf.Max(0.1f, seconds);
             flashEnds = 0f;
+            Fill = 0f;
 
             float foot = controller != null
-                ? controller.center.y - controller.height * 0.5f + 0.10f
+                ? controller.center.y - controller.height * 0.5f + 0.06f
                 : -0.95f;
-            ring.transform.localPosition = new Vector3(0f, foot, 0f);
-            ring.widthMultiplier = boss ? ringWidth * 1.7f : ringWidth;
-            for (int i = 0; i < Segments; i++)
-            {
-                float angle = (Mathf.PI * 2f * i) / Segments;
-                ring.SetPosition(i, new Vector3(
-                    Mathf.Cos(angle) * radius, 0f, Mathf.Sin(angle) * radius));
-            }
-
-            ring.startColor = ring.endColor = magic
-                ? new Color(0.23f, 0.73f, 1f, 0.93f)
-                : boss
-                    ? new Color(0.85f, 0.30f, 0.85f, 0.85f)
-                    : new Color(1f, 0.48f, 0.14f, 0.85f);
-            ring.enabled = true;
+            disc.transform.localPosition = new Vector3(0f, foot, 0f);
+            disc.transform.localRotation = Quaternion.identity;
+            disc.transform.localScale = new Vector3(radius, 1f, radius);
+            disc.enabled = true;
+            Refresh();
         }
 
         public void Strike()
         {
-            if (ring == null)
+            if (disc == null)
                 return;
             warningActive = false;
+            Fill = 1f;
             flashEnds = Time.time + FlashDuration;
-            ring.startColor = ring.endColor = new Color(1f, 0.20f, 0.15f, 1f);
-            ring.enabled = true;
+            disc.enabled = true;
+            Refresh();
         }
 
         public void Cancel()
         {
             warningActive = false;
             flashEnds = 0f;
-            if (ring != null)
-                ring.enabled = false;
+            Fill = 0f;
+            if (disc != null)
+                disc.enabled = false;
         }
 
         private void Update()
         {
-            if (ring == null || !ring.enabled)
+            if (disc == null || !disc.enabled)
                 return;
+            if (!warningActive && Time.time >= flashEnds)
+            {
+                disc.enabled = false;
+                return;
+            }
+            Refresh();
+        }
+
+        private Color StartColor => magicWarning
+            ? new Color(0.14f, 0.58f, 0.95f, 1f)
+            : bossWarning
+                ? new Color(0.6f, 0.22f, 0.8f, 1f)
+                : new Color(0.98f, 0.52f, 0.15f, 1f);
+
+        private Color EndColor => magicWarning
+            ? new Color(0.40f, 0.95f, 1f, 1f)
+            : bossWarning
+                ? new Color(1f, 0.3f, 0.7f, 1f)
+                : new Color(1f, 0.15f, 0.12f, 1f);
+
+        private void Refresh()
+        {
+            // El grosor del borde se fija en metros (ringWidth) y se pasa al disco relativo al radio.
+            float width = (bossWarning ? ringWidth * 1.7f : ringWidth) / radius;
+            VfxDisc style = new VfxDisc
+            {
+                Soft = 0.02f,
+                RimWidth = Mathf.Clamp(width, 0.02f, 0.25f),
+                EdgeWidth = Mathf.Clamp(0.3f / radius, 0.05f, 0.4f)
+            };
 
             if (!warningActive)
             {
-                if (Time.time >= flashEnds)
-                    ring.enabled = false;
+                // Golpe: el disco entero destella en rojo y se apaga enseguida.
+                float t = 1f - Mathf.Clamp01((flashEnds - Time.time) / FlashDuration);
+                style.Color = VfxLibrary.WithAlpha(new Color(1f, 0.2f, 0.15f), 1f - t * t);
+                style.Base = 0.3f;
+                style.RimAlpha = 1f;
+                style.Fill = 1f;
+                style.FillAlpha = 0.55f;
+                style.EdgeAlpha = 0f;
+                style.Apply(disc, block);
                 return;
             }
 
             float duration = Mathf.Max(0.1f, warningEnds - warningStarted);
-            float progress = Mathf.Clamp01((Time.time - warningStarted) / duration);
-            float pulse = 0.45f + 0.55f * Mathf.Abs(Mathf.Sin(Time.time * 13f));
-            Color start = magicWarning
-                ? new Color(0.14f, 0.58f, 0.95f, 1f)
-                : bossWarning
-                    ? new Color(0.6f, 0.22f, 0.8f, 1f)
-                    : new Color(0.98f, 0.52f, 0.15f, 1f);
-            Color end = magicWarning
-                ? new Color(0.40f, 0.95f, 1f, 1f)
-                : bossWarning
-                    ? new Color(1f, 0.3f, 0.7f, 1f)
-                    : new Color(1f, 0.15f, 0.12f, 1f);
-            Color current = Color.Lerp(start, end, progress);
-            current.a = Mathf.Lerp(0.4f, 1f, progress) * pulse;
-            ring.startColor = current;
-            ring.endColor = current;
+            Fill = Mathf.Clamp01((Time.time - warningStarted) / duration);
+            // El borde late cada vez mas rapido a medida que se acerca el golpe.
+            float pulse = 0.6f + 0.4f * Mathf.Abs(Mathf.Sin((Time.time - warningStarted) * Mathf.Lerp(7f, 20f, Fill)));
+            style.Color = Color.Lerp(StartColor, EndColor, Fill);
+            style.Base = 0.1f + 0.1f * Fill;
+            style.RimAlpha = Mathf.Lerp(0.6f, 1f, Fill) * pulse;
+            style.Fill = Mathf.Max(0.002f, Fill);
+            style.FillAlpha = 0.3f + 0.25f * Fill;
+            style.EdgeAlpha = 1f;
+            style.Apply(disc, block);
         }
 
         private void OnDisable() => Cancel();
-
-        private void OnDestroy()
-        {
-            if (ringMaterial != null)
-            {
-                if (Application.isPlaying)
-                    Destroy(ringMaterial);
-                else
-                    DestroyImmediate(ringMaterial);
-            }
-        }
     }
 }

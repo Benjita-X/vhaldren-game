@@ -31,7 +31,9 @@ namespace Vhaldren.Gameplay.World
             anchor = transform.Find("Visual enemigo");
             if (anchor == null)
                 return;
-            if (anchor.Find("Modelo texturizado") != null)
+            // Un modelo real (Blender/KayKit) anula por completo el cuerpo
+            // provisional. El gameplay permanece en la raíz del enemigo.
+            if (AuthoredVisual.FindRoot(anchor) != null)
             {
                 built = true;
                 return;

@@ -24,7 +24,7 @@ namespace Vhaldren.Gameplay.UI
 
         public bool Draw(Rect area)
         {
-            GUI.Box(area, GUIContent.none, MenuStyle.Panel);
+            MenuStyle.FramedPanel(area);
             GUI.Label(new Rect(area.x + 24f, area.y + 14f, 500f, 40f), "INFORMACIÓN", MenuStyle.Header);
             float tabWidth = Mathf.Min(140f, (area.width - 48f) / Tabs.Length - 6f);
             for (int i = 0; i < Tabs.Length; i++)

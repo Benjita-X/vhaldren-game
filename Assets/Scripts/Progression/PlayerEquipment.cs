@@ -105,6 +105,7 @@ namespace Vhaldren.Gameplay.Progression
         {
             message = value;
             messageUntil = Time.unscaledTime + 3f;
+            Vhaldren.Gameplay.UI.HudNotices.Post(value, Vhaldren.Gameplay.UI.HudNotices.Reward, 2.6f);
         }
 
         public static string CostText(GearTier tier)
@@ -148,40 +149,51 @@ namespace Vhaldren.Gameplay.Progression
             if (style == null)
                 style = new GUIStyle(GUI.skin.box) { alignment = TextAnchor.UpperLeft, fontSize = 13, richText = true, wordWrap = true };
 
-            if (Time.unscaledTime < messageUntil && Event.current.type == EventType.Repaint)
+            // Los mensajes van a los avisos breves (HudNotices); el recuadro queda para F3.
+            if (Vhaldren.Gameplay.UI.HudMode.Debug && Time.unscaledTime < messageUntil && Event.current.type == EventType.Repaint)
                 GUI.Box(new Rect(Screen.width * 0.5f - 230f, 250f, 460f, 26f), message, style);
 
             if (!panelOpen)
                 return;
-            float width = 470f;
-            float x = (Screen.width - width) * 0.5f;
-            float y = Mathf.Max(60f, Screen.height * 0.5f - 190f);
-            GUI.Box(new Rect(x, y, width, 300f), "<b>FORJA DE EQUIPO</b>   (U cerrar)   Nivel de equipo: <b>" + GearLevel + "</b>", style);
+            // Panel de la forja con el mismo marco que los menús, en el lienzo virtual.
+            Vhaldren.Gameplay.UI.MenuStyle.Begin();
+            float width = 560f;
+            float x = (Vhaldren.Gameplay.UI.MenuStyle.Width - width) * 0.5f;
+            float y = Vhaldren.Gameplay.UI.MenuStyle.Height * 0.5f - 230f;
+            Rect area = new Rect(x, y, width, 360f);
+            Vhaldren.Gameplay.UI.MenuStyle.FramedPanel(area);
+            GUI.Label(new Rect(x + 24f, y + 14f, width - 48f, 34f), "FORJA DE EQUIPO", Vhaldren.Gameplay.UI.MenuStyle.Header);
+            GUI.Label(new Rect(x + 24f, y + 16f, width - 48f, 30f),
+                "Nivel de equipo <b>" + GearLevel + "</b>   ·   " + Vhaldren.Gameplay.Settings.GameInput.Label(Vhaldren.Gameplay.Settings.GameAction.Equipment) + ": cerrar",
+                Vhaldren.Gameplay.UI.MenuStyle.SmallRight);
             for (int i = 0; i < 3; i++)
             {
                 GearSlot slot = (GearSlot)i;
                 int tier = tiers[i];
                 text.Clear();
-                text.Append("<b>").Append(ItemName(slot)).Append("</b>  (nivel ").Append(GearCatalog.Get(tier).Level).Append(")\n");
+                text.Append("<b>").Append(ItemName(slot)).Append("</b>  <color=#bba98c>(nivel ").Append(GearCatalog.Get(tier).Level).Append(")</color>\n");
                 if (tier >= GearCatalog.MaxTier)
                 {
-                    text.Append("Calidad máxima");
+                    text.Append("<color=#e9c46a>Calidad máxima</color>");
                 }
                 else
                 {
                     GearTier next = GearCatalog.Get(tier + 1);
                     bool affordable = inventory.CanAfford(next.Cost);
-                    text.Append("Siguiente: ").Append(next.Suffix).Append(" (nivel ").Append(next.Level).Append(") — ")
-                        .Append(affordable ? "<color=#8f8>" : "<color=#f99>").Append(CostText(next)).Append("</color>");
+                    text.Append("Siguiente: ").Append(next.Suffix).Append(" (nivel ").Append(next.Level).Append(")  ")
+                        .Append(affordable ? "<color=#9fd89f>" : "<color=#e39a9a>").Append(CostText(next)).Append("</color>");
                 }
-                GUI.Box(new Rect(x + 10f, y + 32f + i * 78f, width - 130f, 70f), text.ToString(), style);
+                Rect row = new Rect(x + 24f, y + 62f + i * 84f, width - 48f, 74f);
+                Vhaldren.Gameplay.UI.HudSkin.SoftPanel(row, 0.5f);
+                GUI.Label(new Rect(row.x + 12f, row.y + 8f, row.width - 150f, row.height - 12f), text.ToString(), Vhaldren.Gameplay.UI.MenuStyle.Small);
                 GUI.enabled = tier < GearCatalog.MaxTier;
-                if (GUI.Button(new Rect(x + width - 112f, y + 46f + i * 78f, 100f, 40f), "Forjar"))
+                if (GUI.Button(new Rect(row.xMax - 124f, row.y + 16f, 112f, 42f), "Forjar", Vhaldren.Gameplay.UI.MenuStyle.Tab))
                     TryUpgrade(slot);
                 GUI.enabled = true;
             }
-            GUI.Label(new Rect(x + 10f, y + 268f, width - 20f, 26f),
-                "Armadura: +vida máxima · Talismán: +poder de hechizo · Botín: caza enemigos");
+            GUI.Label(new Rect(x + 24f, y + 318f, width - 48f, 30f),
+                "Armadura: +vida máxima · Talismán: +poder de hechizo · Botín: caza enemigos", Vhaldren.Gameplay.UI.MenuStyle.Small);
+            Vhaldren.Gameplay.UI.MenuStyle.End();
         }
 
         private static bool TogglePressed()

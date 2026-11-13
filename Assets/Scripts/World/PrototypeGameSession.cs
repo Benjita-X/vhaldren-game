@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 using Vhaldren.Gameplay.Settings;
+using Vhaldren.Gameplay.CameraSystem;
 using Vhaldren.Gameplay.Combat;
 using Vhaldren.Gameplay.Player;
 using Vhaldren.Gameplay.Survival;
@@ -17,6 +18,11 @@ namespace Vhaldren.Gameplay.World
     [DisallowMultipleComponent]
     public sealed class PrototypeGameSession : MonoBehaviour
     {
+        /// <summary>Camara cenital de accion del mundo: inclinacion hacia abajo, en grados.</summary>
+        public const float ActionCameraPitch = 54f;
+        /// <summary>Campo de vision vertical estrecho: aspecto casi isometrico.</summary>
+        public const float ActionCameraFieldOfView = 40f;
+
         [SerializeField] private Transform player;
         [SerializeField] private float healAmount = 35f;
         [SerializeField, Min(0.1f)] private float healCooldown = 12f;
@@ -44,6 +50,10 @@ namespace Vhaldren.Gameplay.World
         private float nextHudRefresh;
         private int minionCount;
         private bool bossDefeated;
+        private SimpleFollowCamera worldCamera;
+
+        /// <summary>Camara del mundo configurada por esta sesion (null en salas de prueba).</summary>
+        public SimpleFollowCamera WorldCamera => worldCamera;
 
         private void OnEnable()
         {
@@ -101,6 +111,19 @@ namespace Vhaldren.Gameplay.World
                 if (player.GetComponent<SurvivalInventory>() != null &&
                     player.GetComponent<Vhaldren.Gameplay.Progression.PlayerEquipment>() == null)
                     player.gameObject.AddComponent<Vhaldren.Gameplay.Progression.PlayerEquipment>();
+                // HUD 022: barra de acción única, viñeta, avisos, misión, estados y armas visibles.
+                if (player.GetComponent<Vhaldren.Gameplay.UI.ActionBarHud>() == null)
+                    player.gameObject.AddComponent<Vhaldren.Gameplay.UI.ActionBarHud>().Bind(this);
+                Vhaldren.Gameplay.UI.ScreenVignette vignette = GetComponent<Vhaldren.Gameplay.UI.ScreenVignette>();
+                if (vignette == null)
+                    vignette = gameObject.AddComponent<Vhaldren.Gameplay.UI.ScreenVignette>();
+                vignette.Bind(playerHealth);
+                Vhaldren.Gameplay.UI.WorldHud worldHud = GetComponent<Vhaldren.Gameplay.UI.WorldHud>();
+                if (worldHud == null)
+                    worldHud = gameObject.AddComponent<Vhaldren.Gameplay.UI.WorldHud>();
+                worldHud.Bind(player);
+                if (player.GetComponent<CharacterLoadout>() == null)
+                    player.gameObject.AddComponent<CharacterLoadout>();
                 if (GameAutoCapture.RequestedFolder() != null && GetComponent<GameAutoCapture>() == null)
                     gameObject.AddComponent<GameAutoCapture>();
 
@@ -108,6 +131,12 @@ namespace Vhaldren.Gameplay.World
                 // de entrenamiento conservan el disparo legacy configurable.
                 if (playerShooter != null)
                     playerShooter.SetPhysicalArrows(true);
+            }
+            if (Application.isPlaying)
+            {
+                // Camara cenital de accion solo en el mundo; las salas de prueba conservan la suya.
+                ConfigureWorldCamera(true);
+                GameSettings.Changed += OnSettingsChanged;
             }
             if (playerHealth != null)
             {
@@ -162,6 +191,9 @@ namespace Vhaldren.Gameplay.World
                         candidate.gameObject.AddComponent<Vhaldren.Gameplay.Progression.EnemyLoot>();
                     if (candidate.GetComponent<Vhaldren.Gameplay.Races.RacePowerTaken>() == null)
                         candidate.gameObject.AddComponent<Vhaldren.Gameplay.Races.RacePowerTaken>();
+                    // Arma propia en la mano según el modelo (hacha, espada y escudo, bastón...).
+                    if (candidate.GetComponent<CharacterLoadout>() == null)
+                        candidate.gameObject.AddComponent<CharacterLoadout>();
                 }
             minionCount = 0;
             defeated.Clear();
@@ -180,8 +212,51 @@ namespace Vhaldren.Gameplay.World
             nextHudRefresh = 0f;
         }
 
+        private void Start()
+        {
+            // Al cargar la escena, la camara puede activarse despues que esta sesion.
+            if (Application.isPlaying && worldCamera == null)
+                ConfigureWorldCamera(true);
+        }
+
+        private void OnSettingsChanged() => ConfigureWorldCamera(false);
+
+        /// <summary>
+        /// Encuadre del mundo: perspectiva inclinada con FOV estrecho, distancia por defecto
+        /// de las opciones, zoom entre los limites, giro y adelanto segun las opciones.
+        /// Los objetos que tapan al personaje se ocultan; solo el terreno acerca la camara.
+        /// Solo toca la camara principal si sigue a este jugador.
+        /// </summary>
+        private void ConfigureWorldCamera(bool immediate)
+        {
+            if (player == null)
+                return;
+            if (worldCamera == null)
+            {
+                Camera view = Camera.main;
+                SimpleFollowCamera follow = view != null ? view.GetComponent<SimpleFollowCamera>() : null;
+                if (follow == null || follow.Target != player)
+                    return;
+                worldCamera = follow;
+                immediate = true;
+            }
+
+            worldCamera.ConfigureActionView(ActionCameraPitch, GameSettings.CameraDistance,
+                GameSettings.CameraDistanceMin, GameSettings.CameraDistanceMax,
+                ActionCameraFieldOfView, immediate);
+            worldCamera.AllowRotation = GameSettings.CameraRotation;
+            worldCamera.LookAheadEnabled = GameSettings.CameraLookAhead;
+            worldCamera.ObstructionTerrainOnly = true;
+
+            CameraOcclusionHider hider = worldCamera.GetComponent<CameraOcclusionHider>();
+            if (hider == null)
+                hider = worldCamera.gameObject.AddComponent<CameraOcclusionHider>();
+            hider.SetTarget(player);
+        }
+
         private void OnDisable()
         {
+            GameSettings.Changed -= OnSettingsChanged;
             GameFeel.Enabled = false;
             if (playerHealth != null)
                 playerHealth.Defeated -= OnPlayerDefeated;
@@ -206,16 +281,24 @@ namespace Vhaldren.Gameplay.World
 
         private void OnEnemyDefeated(PrototypeEnemy enemy)
         {
-            if (enemy == null || !defeated.Add(enemy))
+            if (enemy == null)
                 return;
+
+            // El HUD/victoria cuentan cada enemigo unico una sola vez, pero una
+            // mision activa debe recibir TODA derrota posterior al aceptarla,
+            // incluso si ese mismo enemigo ya murio antes y luego reaparecio.
+            bool firstUniqueDefeat = defeated.Add(enemy);
             if (enemy.IsBoss)
             {
-                bossDefeated = true;
+                if (firstUniqueDefeat)
+                    bossDefeated = true;
                 villageJournal?.RecordAction(VillageObjective.DefeatBoss);
             }
             else
                 villageJournal?.RecordAction(VillageObjective.DefeatGuardians);
-            nextHudRefresh = 0f;
+
+            if (firstUniqueDefeat)
+                nextHudRefresh = 0f;
         }
 
         private void OnPlayerDefeated()
@@ -272,12 +355,33 @@ namespace Vhaldren.Gameplay.World
                       "  |  DANO TOTAL: " + playerDamage.TotalDamage.ToString("0.#") +
                       " PV  |  FLECHA " + playerDamage.DamageFor(CombatDamageKind.Arrow).ToString("0") +
                       " / ESPADA " + playerDamage.DamageFor(CombatDamageKind.Melee).ToString("0") +
-                      " / MAGIA " + playerDamage.DamageFor(CombatDamageKind.Magic).ToString("0")
+                      " / MAGIA " + playerDamage.DamageFor(CombatDamageKind.Magic).ToString("0") +
+                      " / DOT " + playerDamage.DamageFor(CombatDamageKind.DamageOverTime).ToString("0")
                     : "Estadisticas no disponibles";
             }
         }
 
         public float LastPotionHealed { get; private set; }
+
+        /// <summary>Segundos hasta poder beber otra poción (barra de acción).</summary>
+        public float PotionCooldownRemaining => Mathf.Max(0f, healReadyAt - Time.time);
+        public float PotionCooldown => Mathf.Max(0.1f, healCooldown);
+        public bool IsPlayerDefeated => playerHealth != null && playerHealth.IsDefeated;
+        public float RespawnSecondsLeft => float.IsInfinity(respawnAt) ? 0f : Mathf.Max(0f, respawnAt - Time.time);
+        public bool TrialComplete => bossDefeated && defeated.Count >= minionCount + 1;
+        public int GuardiansDefeated
+        {
+            get
+            {
+                int fallen = 0;
+                foreach (PrototypeEnemy enemy in defeated)
+                    if (enemy != null && !enemy.IsBoss)
+                        fallen++;
+                return fallen;
+            }
+        }
+        public int GuardianCount => minionCount;
+        public bool BossDefeated => bossDefeated;
 
         /// <summary>
         /// Una pocion restaura hasta healAmount PV, nunca mas que la vida
@@ -306,6 +410,8 @@ namespace Vhaldren.Gameplay.World
             }
             lastHealFeedbackUntil = Time.time + 2.0f;
             nextHudRefresh = 0f;
+            Vhaldren.Gameplay.UI.HudNotices.Post(lastHealFeedback, LastPotionHealed > 0f
+                ? new Color(1f, 0.62f, 0.62f) : Vhaldren.Gameplay.UI.HudNotices.Warning);
             return LastPotionHealed;
         }
 
@@ -352,6 +458,11 @@ namespace Vhaldren.Gameplay.World
         {
             if (playerHealth == null)
                 return;
+            if (!Vhaldren.Gameplay.UI.HudMode.Debug)
+            {
+                DrawOutcome();
+                return;
+            }
             const float height = 114f;
             Rect box = new Rect(12f, 12f, Mathf.Max(240f, Mathf.Min(Screen.width - 24f, 900f)), height);
             GUI.Box(box, "");
@@ -368,6 +479,36 @@ namespace Vhaldren.Gameplay.World
             else if (bossDefeated && defeated.Count >= minionCount + 1)
                 GUI.Box(new Rect(Screen.width / 2f - 180f, 102f, 360f, 60f),
                     "PRUEBA COMPLETADA\nHas derrotado a los guardianes y al jefe");
+        }
+
+        /// <summary>Caída y victoria: texto grande con contorno, sin cajas opacas.</summary>
+        private void DrawOutcome()
+        {
+            if (Event.current.type != EventType.Repaint || Vhaldren.Gameplay.UI.HudMode.Hidden)
+                return;
+            string title = null, subtitle = null;
+            Color tint = Vhaldren.Gameplay.UI.HudSkin.GoldBright;
+            if (playerHealth.IsDefeated)
+            {
+                title = "HAS CAÍDO";
+                subtitle = "Reaparecerás en " + Mathf.CeilToInt(RespawnSecondsLeft) + " s";
+                tint = new Color(0.95f, 0.3f, 0.3f);
+            }
+            else if (TrialComplete)
+            {
+                title = "PRUEBA COMPLETADA";
+                subtitle = "Has derrotado a los guardianes y al jefe";
+            }
+            if (title == null)
+                return;
+            Vhaldren.Gameplay.UI.MenuStyle.Begin();
+            float w = Vhaldren.Gameplay.UI.MenuStyle.Width;
+            float y = playerHealth.IsDefeated ? Vhaldren.Gameplay.UI.MenuStyle.Height * 0.36f : 130f;
+            Vhaldren.Gameplay.UI.HudSkin.SoftPanel(new Rect(w * 0.5f - 300f, y - 10f, 600f, 92f), 0.6f);
+            Vhaldren.Gameplay.UI.HudSkin.Label(new Rect(0f, y, w, 46f), title, 40, tint, TextAnchor.MiddleCenter, true);
+            Vhaldren.Gameplay.UI.HudSkin.FadeLine(new Rect(w * 0.5f - 200f, y + 50f, 400f, 1.5f), Vhaldren.Gameplay.UI.HudSkin.Gold);
+            Vhaldren.Gameplay.UI.HudSkin.Label(new Rect(0f, y + 54f, w, 24f), subtitle, 17, Vhaldren.Gameplay.UI.HudSkin.Text);
+            Vhaldren.Gameplay.UI.MenuStyle.End();
         }
 
         private static bool WasHealPressed()
