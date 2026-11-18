@@ -1,0 +1,32 @@
+{
+  "LOD0": {
+    "vertices": 1652,
+    "tris": 3300,
+    "non_manifold": 0,
+    "boundary": 0,
+    "degenerate": 0,
+    "uv": 1,
+    "materials": 1,
+    "dims": [
+      2.0001,
+      1.009,
+      0.5002
+    ]
+  },
+  "LOD1": {
+    "vertices": 702,
+    "tris": 1400,
+    "non_manifold": 0,
+    "boundary": 0,
+    "degenerate": 0,
+    "uv": 1,
+    "materials": 1,
+    "dims": [
+      1.9999,
+      1.0087,
+      0.5001
+    ]
+  },
+  "reference_file": "ST_01_v0007.blend",
+  "source_unchanged": true
+}

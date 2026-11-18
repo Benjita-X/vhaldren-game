@@ -1,0 +1,19 @@
+{
+ "dims": [
+  2.0,
+  1.0,
+  0.5
+ ],
+ "z_min": 0.0,
+ "tris_LOD0": 320,
+ "tris_LOD1": 160,
+ "tris_HIGH_horneado": 221008,
+ "no_manifold": 0,
+ "caras_degeneradas": 0,
+ "materiales": 1,
+ "uv": 1,
+ "mapas": [
+  "Normal 1024",
+  "AO 1024"
+ ]
+}

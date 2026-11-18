@@ -1,0 +1,53 @@
+{
+ "ST_01_Cimiento": {
+  "tipo": "EMPTY",
+  "padre": null
+ },
+ "ST_01_Cimiento_LOD0": {
+  "tipo": "MESH",
+  "padre": "ST_01_Cimiento",
+  "tris": 618,
+  "dims": [
+   2.0,
+   0.5,
+   1.0
+  ],
+  "materiales": [
+   "M_ST_01_Piedra"
+  ],
+  "uv": 1
+ },
+ "ST_01_Cimiento_LOD1": {
+  "tipo": "MESH",
+  "padre": "ST_01_Cimiento",
+  "tris": 308,
+  "dims": [
+   2.002,
+   0.501,
+   1.002
+  ],
+  "materiales": [
+   "M_ST_01_Piedra"
+  ],
+  "uv": 1
+ },
+ "UCX_ST_01_Cimiento": {
+  "tipo": "MESH",
+  "padre": "ST_01_Cimiento",
+  "tris": 12,
+  "dims": [
+   2.0,
+   0.5,
+   1.0
+  ],
+  "materiales": [],
+  "uv": 1
+ },
+ "_texturas": [
+  "T_ST_01_AO.png",
+  "T_ST_01_Albedo.png",
+  "T_ST_01_Normal.png",
+  "T_ST_01_Roughness.png"
+ ],
+ "_fbx_kb": 106
+}

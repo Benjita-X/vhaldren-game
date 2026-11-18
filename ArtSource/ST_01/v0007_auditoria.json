@@ -1,0 +1,26 @@
+{
+ "dims": [
+  2.0,
+  1.009,
+  0.502
+ ],
+ "tris_LOD0": 2806,
+ "tris_LOD1": 1262,
+ "tris_HIGH": 399832,
+ "no_manifold": 6,
+ "caras_degeneradas": 0,
+ "materiales": 1,
+ "uv": 1,
+ "vertices_en_junta_-X_+X": [
+  56,
+  68
+ ],
+ "mapas": [
+  "Normal/AO/Curvatura 2048"
+ ],
+ "curv_percentiles": [
+  0.4705882668495178,
+  0.501960813999176,
+  0.5333333611488342
+ ]
+}
