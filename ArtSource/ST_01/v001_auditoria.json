@@ -1,0 +1,14 @@
+{
+ "dims": [
+  1.998,
+  0.999,
+  0.501
+ ],
+ "z_min": 0.0,
+ "tris_LOD0": 3888,
+ "tris_LOD1": 1166,
+ "no_manifold": 0,
+ "caras_degeneradas": 0,
+ "materiales": 1,
+ "uv": 1
+}
