@@ -79,6 +79,9 @@ namespace Vhaldren.Gameplay.World
                 driver = owner.gameObject.AddComponent<EnemyAnimationDriver>();
             driver.animator = found;
             driver.deathChecked = false;
+            // Fuera de camara no se escriben huesos (la maquina de estados sigue): ahorra CPU
+            // en el mapa grande sin cambiar tiempos ni la muerte.
+            found.cullingMode = AnimatorCullingMode.CullUpdateTransforms;
             return driver;
         }
 
@@ -138,6 +141,24 @@ namespace Vhaldren.Gameplay.World
             animator.SetTrigger(DeathId);
             DeathsPlayed++;
             return true;
+        }
+
+        /// <summary>True mientras el enemigo duerme lejos del jugador (Animator apagado).</summary>
+        public bool Sleeping { get; private set; }
+
+        /// <summary>
+        /// Lejos del jugador el enemigo duerme: el Animator se apaga y no gasta CPU. Al
+        /// despertar se reanuda sin confundir el salto de posicion con una carrera.
+        /// </summary>
+        public void SetSleeping(bool sleeping)
+        {
+            if (Sleeping == sleeping)
+                return;
+            Sleeping = sleeping;
+            lastPosition = transform.position;
+            smoothedSpeed = 0f;
+            if (animator != null && !dead)
+                animator.enabled = !sleeping;
         }
 
         /// <summary>Al reaparecer: vuelve al reposo como si nada hubiera pasado.</summary>

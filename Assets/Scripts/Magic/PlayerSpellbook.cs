@@ -27,6 +27,7 @@ namespace Vhaldren.Gameplay.Magic
         [SerializeField] private Camera viewCamera;
 
         private readonly bool[] unlocked = new bool[SpellCatalog.SchoolCount];
+        private readonly bool[] exclusiveGranted = new bool[SpellCatalog.SchoolCount];
         private readonly int[] charges = new int[SpellCatalog.SchoolCount * SpellCatalog.SpellsPerSchool];
         private readonly float[] rechargeAt = new float[SpellCatalog.SchoolCount * SpellCatalog.SpellsPerSchool];
         private readonly HashSet<CombatDamageReceiver> struck = new HashSet<CombatDamageReceiver>();
@@ -114,6 +115,10 @@ namespace Vhaldren.Gameplay.Magic
             castingUntil = 0f;
             if (castCharge != null)
                 castCharge.Cancel();
+            // Un Salto de alas cortado a medias nunca deja al jugador sin colisiones ni bloqueado.
+            LuciferFlight flight = GetComponent<LuciferFlight>();
+            if (flight != null)
+                flight.Land();
         }
 
         // ── Escuelas ─────────────────────────────────────────────────────
@@ -137,10 +142,53 @@ namespace Vhaldren.Gameplay.Magic
         {
             if (unlocked[(int)value])
                 return false;
+            // La Luz caída no se aprende: solo la trae el linaje de Lucifer.
+            if (SpellCatalog.IsExclusive(value) && !exclusiveGranted[(int)value])
+                return false;
             unlocked[(int)value] = true;
             SchoolUnlocked?.Invoke(value);
             Announce("Nueva escuela aprendida: " + SpellCatalog.SchoolName(value) + " (Tab)");
             return true;
+        }
+
+        /// <summary>Escuelas que este personaje podría llegar a tener (comunes + exclusivas concedidas).</summary>
+        public int AvailableSchoolCount
+        {
+            get
+            {
+                int count = SpellCatalog.CommonSchoolCount;
+                for (int i = 0; i < exclusiveGranted.Length; i++)
+                    if (exclusiveGranted[i])
+                        count++;
+                return count;
+            }
+        }
+
+        public bool HasExclusive(SpellSchool value) => exclusiveGranted[(int)value];
+
+        /// <summary>
+        /// Concede una escuela exclusiva del linaje (Luz caída para Lucifer), la aprende sin
+        /// aviso y, si se pide, la deja activa aunque haya combate (inicio de partida).
+        /// </summary>
+        public void GrantExclusive(SpellSchool value, bool select)
+        {
+            exclusiveGranted[(int)value] = true;
+            if (!unlocked[(int)value])
+            {
+                unlocked[(int)value] = true;
+                SchoolUnlocked?.Invoke(value);
+            }
+            if (select)
+                school = value;
+        }
+
+        /// <summary>Retira una escuela exclusiva (cambio de linaje en pruebas o capturas).</summary>
+        public void RevokeExclusive(SpellSchool value)
+        {
+            exclusiveGranted[(int)value] = false;
+            unlocked[(int)value] = false;
+            if (school == value)
+                school = SpellSchool.Pyromancy;
         }
 
         public bool SelectSchool(SpellSchool value)
@@ -243,6 +291,8 @@ namespace Vhaldren.Gameplay.Magic
             PlayerBuilder builder = GetComponent<PlayerBuilder>();
             if (builder != null && builder.IsBuilding)
                 return;   // En construccion 1-0 eligen piezas.
+            if (Vhaldren.Gameplay.NPC.NpcDialogue.IsOpen)
+                return;   // En un dialogo 1-4 eligen respuesta.
 
             if (MagicKeys.NextSchool)
                 NextSchool();
@@ -267,6 +317,10 @@ namespace Vhaldren.Gameplay.Magic
                 feeding = GetComponent<PlayerFeeding>();
             if (feeding != null && feeding.IsChanneling)
                 return Reject(label + ": estás absorbiendo esencia");
+            // En pleno Salto de alas no se conjura (sin avisos: es un instante).
+            LuciferFlight flight = GetComponent<LuciferFlight>();
+            if (flight != null && flight.Busy)
+                return false;
             if (modifiers != null && !modifiers.AllowsAttack)
                 return Reject(label + ": cierra construcción (B) o diálogo (N)");
 
@@ -308,7 +362,10 @@ namespace Vhaldren.Gameplay.Magic
             if (GameFeel.Enabled)
                 GameAudio.Play(spell.School == SpellSchool.Cryomancy ? GameSound.Frost : GameSound.SpellCast,
                     transform.position, 0.75f);
-            StartCoroutine(Execute(spell, SpellPower, aimPoint));
+            // La Luz caída (Lucifer) tiene su propio kit; el resto, el grimorio común.
+            StartCoroutine(spell.School == SpellSchool.FallenLight
+                ? FallenLightKit.Execute(this, spell, SpellPower, aimPoint)
+                : Execute(spell, SpellPower, aimPoint));
             return true;
         }
 
@@ -442,7 +499,7 @@ namespace Vhaldren.Gameplay.Magic
             }
         }
 
-        private SpellCastCharge CastCharge()
+        internal SpellCastCharge CastCharge()
         {
             if (castCharge == null)
                 castCharge = SpellCastCharge.For(this);
@@ -466,24 +523,36 @@ namespace Vhaldren.Gameplay.Magic
         }
 
         /// <summary>Suelo real bajo el centro de una zona (terreno irregular incluido).</summary>
-        private Vector3 ZoneGround(Vector3 point)
+        internal Vector3 ZoneGround(Vector3 point)
         {
             Vector3 flat = Ground(point);
             return VfxLibrary.FindGround(flat, out Vector3 ground, out _) ? ground : flat;
         }
 
         /// <summary>Aplica el golpe de un hechizo: daño, critico, estatica, estado y robo de vida.</summary>
-        public float ApplySpellHit(CombatDamageReceiver receiver, SpellDefinition spell, float power, Vector3 origin)
+        public float ApplySpellHit(CombatDamageReceiver receiver, SpellDefinition spell, float power, Vector3 origin) =>
+            ApplySpellHit(receiver, spell, power, origin, 1f, 1f);
+
+        /// <summary>
+        /// Igual, con una escala de daño (lanza que pierde fuerza al atravesar, borde de un
+        /// area) y una fuerza de empuje para la respuesta del golpe.
+        /// </summary>
+        public float ApplySpellHit(CombatDamageReceiver receiver, SpellDefinition spell, float power, Vector3 origin,
+            float damageScale, float force)
         {
             if (receiver == null || spell == null || receiver.transform.IsChildOf(transform))
                 return 0f;
             // Afinidad de la raza con la escuela (p. ej. vampiro +30 % Hemomancia).
-            float damage = spell.Damage * Mathf.Max(0f, power) * Vhaldren.Gameplay.Races.PlayerRace.AffinityFor(spell.School);
+            float damage = spell.Damage * Mathf.Max(0f, power) * Mathf.Max(0f, damageScale) *
+                           Vhaldren.Gameplay.Races.PlayerRace.AffinityFor(spell.School);
             bool critical = essence != null && random.NextDouble() < essence.CriticalChance;
             if (critical)
                 damage *= CriticalMultiplier;
 
-            CombatDamageResult result = receiver.Receive(damage, CombatDamageKind.Magic, origin);
+            CombatDamageResult result;
+            // El receptor y la respuesta del golpe saben si es critico y cuanto empuja.
+            using (CombatHitContext.Push(critical, force))
+                result = receiver.Receive(damage, CombatDamageKind.Magic, origin);
             if (result.Applied <= 0f)
                 return 0f;
 
@@ -589,6 +658,30 @@ namespace Vhaldren.Gameplay.Magic
             DrawChain(points, spell.School);
         }
 
+        /// <summary>
+        /// Enemigos vivos dentro del radio y con linea despejada desde el centro (las paredes
+        /// tapan, los demas combatientes no). Para los hechizos de la Luz caida.
+        /// </summary>
+        internal int CollectTargets(Vector3 center, float radius, List<CombatDamageReceiver> into)
+        {
+            into.Clear();
+            int count = Query(center, radius);
+            for (int i = 0; i < count; i++)
+            {
+                CombatDamageReceiver receiver = candidates[i] != null
+                    ? candidates[i].GetComponentInParent<CombatDamageReceiver>() : null;
+                if (receiver == null || receiver.transform.IsChildOf(transform) || !struck.Add(receiver))
+                    continue;
+                CombatHealth targetHealth = receiver.GetComponent<CombatHealth>();
+                if (targetHealth == null || targetHealth.IsDefeated)
+                    continue;
+                if (!Unobstructed(receiver, center + Vector3.up * 0.55f))
+                    continue;
+                into.Add(receiver);
+            }
+            return into.Count;
+        }
+
         private int Query(Vector3 center, float radius)
         {
             struck.Clear();
@@ -606,7 +699,7 @@ namespace Vhaldren.Gameplay.Magic
             return count;
         }
 
-        private bool Unobstructed(CombatDamageReceiver target, Vector3 start)
+        internal bool Unobstructed(CombatDamageReceiver target, Vector3 start)
         {
             Collider targetCollider = target.GetComponent<Collider>();
             Vector3 end = targetCollider != null ? targetCollider.bounds.center : target.transform.position + Vector3.up * 0.6f;
@@ -661,19 +754,19 @@ namespace Vhaldren.Gameplay.Magic
 
         // ── Utilidades ───────────────────────────────────────────────────
 
-        private bool Alive() => this != null && health != null && !health.IsDefeated;
+        internal bool Alive() => this != null && health != null && !health.IsDefeated;
 
-        private Vector3 Facing()
+        internal Vector3 Facing()
         {
             Vector3 facing = motor != null ? motor.CurrentFacing : transform.forward;
             facing.y = 0f;
             return facing.sqrMagnitude > 0.001f ? facing.normalized : Vector3.forward;
         }
 
-        private Vector3 CastOrigin() =>
+        internal Vector3 CastOrigin() =>
             body != null ? body.bounds.center + Vector3.up * 0.2f : transform.position + Vector3.up;
 
-        private Vector3 Ground(Vector3 point)
+        internal Vector3 Ground(Vector3 point)
         {
             float feet = body != null ? body.bounds.min.y : transform.position.y - 1f;
             return new Vector3(point.x, feet + 0.08f, point.z);
@@ -718,7 +811,7 @@ namespace Vhaldren.Gameplay.Magic
         /// Aviso de area en el suelo que se llena durante la preparacion: con
         /// <paramref name="parent"/> sigue al mago (Nova); sin el, queda en el punto (Zona).
         /// </summary>
-        private GroundTelegraph Telegraph(Transform parent, Vector3 position, float radius, Color tint, float seconds)
+        internal GroundTelegraph Telegraph(Transform parent, Vector3 position, float radius, Color tint, float seconds)
         {
             if (seconds <= 0f)
                 return null;
@@ -850,7 +943,7 @@ namespace Vhaldren.Gameplay.Magic
 
             text.Clear();
             text.Append("<b><color=#").Append(hex).Append('>').Append(SpellCatalog.SchoolName(school).ToUpperInvariant())
-                .Append("</color></b>   Tab: escuela (").Append(UnlockedCount).Append("/6)");
+                .Append("</color></b>   Tab: escuela (").Append(UnlockedCount).Append('/').Append(AvailableSchoolCount).Append(')');
             if (equipment == null)
                 equipment = GetComponent<Vhaldren.Gameplay.Progression.PlayerEquipment>();
             if (equipment != null)

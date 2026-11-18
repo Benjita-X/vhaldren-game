@@ -1,0 +1,3626 @@
+{
+ "tamano": 2048,
+ "alturaMaxima": 260,
+ "nivelAgua": 18,
+ "camara": {
+  "inclinacion": 54,
+  "fov": 40,
+  "distancia": 22,
+  "distanciaMin": 14,
+  "distanciaMax": 36
+ },
+ "regiones": [
+  {
+   "id": "llanos_cruce",
+   "nombre": "Llanos del Cruce",
+   "bioma": "pradera",
+   "centro": {
+    "x": 0,
+    "z": 0
+   },
+   "radio": 320,
+   "alturaBase": 32,
+   "relieve": 14,
+   "rugosidad": 0.3,
+   "nivel": 1,
+   "colorNiebla": {
+    "r": 0.78,
+    "g": 0.74,
+    "b": 0.62
+   },
+   "densidadNiebla": 0.004,
+   "texturas": [
+    "pasto",
+    "pasto_seco",
+    "tierra",
+    "grava"
+   ],
+   "densidadArboles": 10,
+   "arboles": [
+    "roble_a",
+    "abedul",
+    "roble_b"
+   ],
+   "descripcion": "Praderas onduladas de hierba dorada alrededor del Cruce, el pueblo de la encrucijada junto al vado del río Albo. Terrazas suaves de 4-8 m, setos y piedras sueltas. Saqueadores, ballesteros y lobos jóvenes. Paleta: ocres y verdes apagados con luz cálida."
+  },
+  {
+   "id": "bosque_hondaniebla",
+   "nombre": "Bosque de Hondaniebla",
+   "bioma": "bosque",
+   "centro": {
+    "x": -450,
+    "z": -350
+   },
+   "radio": 300,
+   "alturaBase": 40,
+   "relieve": 30,
+   "rugosidad": 0.55,
+   "nivel": 5,
+   "colorNiebla": {
+    "r": 0.46,
+    "g": 0.53,
+    "b": 0.56
+   },
+   "densidadNiebla": 0.011,
+   "texturas": [
+    "musgo_bosque",
+    "hojarasca",
+    "pasto",
+    "roca"
+   ],
+   "densidadArboles": 80,
+   "arboles": [
+    "pino_a",
+    "pino_b",
+    "abedul"
+   ],
+   "descripcion": "Pinar cerrado y húmedo sobre colinas escalonadas, con niebla baja entre los troncos y un lago oscuro en el centro. Lobos de bruma y cazadores furtivos. Paleta: verdes azulados, musgo y corteza casi negra."
+  },
+  {
+   "id": "marjal_ahogados",
+   "nombre": "Marjal de los Ahogados",
+   "bioma": "pantano",
+   "centro": {
+    "x": 470,
+    "z": -390
+   },
+   "radio": 300,
+   "alturaBase": 22,
+   "relieve": 5,
+   "rugosidad": 0.7,
+   "nivel": 10,
+   "colorNiebla": {
+    "r": 0.42,
+    "g": 0.48,
+    "b": 0.36
+   },
+   "densidadNiebla": 0.014,
+   "texturas": [
+    "barro",
+    "musgo_bosque",
+    "pasto_seco"
+   ],
+   "densidadArboles": 35,
+   "arboles": [
+    "sauce",
+    "arbol_muerto",
+    "cipres"
+   ],
+   "descripcion": "Ciénaga a ras del agua: charcas, juncos, sauces caídos y una laguna negra donde desembocan tres ríos. Esqueletos ahogados, acólitos y sanadoras del culto. Paleta: verde enfermizo, pardo y gris de niebla."
+  },
+  {
+   "id": "costa_velas_rotas",
+   "nombre": "Costa de las Velas Rotas",
+   "bioma": "costa",
+   "centro": {
+    "x": 0,
+    "z": -760
+   },
+   "radio": 330,
+   "alturaBase": 26,
+   "relieve": 18,
+   "rugosidad": 0.45,
+   "nivel": 14,
+   "colorNiebla": {
+    "r": 0.63,
+    "g": 0.69,
+    "b": 0.74
+   },
+   "densidadNiebla": 0.006,
+   "texturas": [
+    "arena",
+    "pasto_seco",
+    "roca",
+    "tierra"
+   ],
+   "densidadArboles": 12,
+   "arboles": [
+    "cipres",
+    "pino_b"
+   ],
+   "descripcion": "Acantilados bajos, calas de arena gris y restos de barcos frente al mar del sur. Raqueros que encienden luces falsas, brutos de carga y marineros ahogados. Al este, el Peñón del Grifo, un promontorio sobre el mar. Paleta: gris azulado, arena pálida y espuma."
+  },
+  {
+   "id": "meseta_yunque",
+   "nombre": "Meseta del Yunque",
+   "bioma": "meseta",
+   "centro": {
+    "x": 740,
+    "z": 130
+   },
+   "radio": 290,
+   "alturaBase": 110,
+   "relieve": 22,
+   "rugosidad": 0.4,
+   "nivel": 18,
+   "colorNiebla": {
+    "r": 0.78,
+    "g": 0.62,
+    "b": 0.46
+   },
+   "densidadNiebla": 0.004,
+   "texturas": [
+    "pasto_seco",
+    "tierra_roja",
+    "arena",
+    "roca"
+   ],
+   "densidadArboles": 6,
+   "arboles": [
+    "arbol_muerto",
+    "pino_b"
+   ],
+   "descripcion": "Altiplano de arcilla roja a 110 m, partido por el Cañón de la Herida, que el río excava hasta el nivel del agua. Minas, canteras, brutos y ballesteros; leones en los riscos del este. Paleta: ocre, rojo óxido y cielo polvoriento."
+  },
+  {
+   "id": "ruinas_velmora",
+   "nombre": "Ruinas de Velmora",
+   "bioma": "ruinas",
+   "centro": {
+    "x": -760,
+    "z": 190
+   },
+   "radio": 280,
+   "alturaBase": 55,
+   "relieve": 18,
+   "rugosidad": 0.5,
+   "nivel": 22,
+   "colorNiebla": {
+    "r": 0.44,
+    "g": 0.42,
+    "b": 0.52
+   },
+   "densidadNiebla": 0.009,
+   "texturas": [
+    "grava",
+    "musgo_bosque",
+    "tierra",
+    "hojarasca"
+   ],
+   "densidadArboles": 18,
+   "arboles": [
+    "arbol_muerto",
+    "cipres",
+    "roble_b"
+   ],
+   "descripcion": "Ciudad gótica abandonada sobre colinas: catedral rota, campanario, criptas y plazas de estatuas sin rostro. Esqueletos, centinelas rúnicos y el culto ceniciento. Paleta: piedra gris violácea, hiedra oscura y velas."
+  },
+  {
+   "id": "tierra_carmesi",
+   "nombre": "Tierra Carmesí",
+   "bioma": "carmesi",
+   "centro": {
+    "x": 0,
+    "z": 780
+   },
+   "radio": 250,
+   "alturaBase": 70,
+   "relieve": 28,
+   "rugosidad": 0.5,
+   "nivel": 26,
+   "colorNiebla": {
+    "r": 0.56,
+    "g": 0.17,
+    "b": 0.15
+   },
+   "densidadNiebla": 0.01,
+   "texturas": [
+    "tierra_roja",
+    "hojarasca",
+    "grava",
+    "roca"
+   ],
+   "densidadArboles": 22,
+   "arboles": [
+    "arbol_carmesi",
+    "arbol_muerto"
+   ],
+   "descripcion": "Valle cerrado tras la Muralla del Juramento, corrompido por la esencia del Caballero de sangre: hierba roja, árboles desangrados y el rayo carmesí del Altar del Norte, visible desde todo el mapa. Hueste roja, acólitos y centinelas. Paleta: rojo sangre, negro y oro viejo."
+  },
+  {
+   "id": "picos_albor",
+   "nombre": "Picos de Albor",
+   "bioma": "nieve",
+   "centro": {
+    "x": -560,
+    "z": 650
+   },
+   "radio": 280,
+   "alturaBase": 120,
+   "relieve": 45,
+   "rugosidad": 0.6,
+   "nivel": 32,
+   "colorNiebla": {
+    "r": 0.82,
+    "g": 0.86,
+    "b": 0.93
+   },
+   "densidadNiebla": 0.009,
+   "texturas": [
+    "nieve",
+    "roca",
+    "grava"
+   ],
+   "densidadArboles": 35,
+   "arboles": [
+    "pino_nevado",
+    "pino_a"
+   ],
+   "descripcion": "Valles nevados entre cumbres de 230 m, lagos helados y pinares blancos. Lobos de las nieves, brutos de la escarcha y el jarl Hrimvald. Ventisca de noche. Paleta: blanco azulado, roca gris y luz fría."
+  },
+  {
+   "id": "brasanegra",
+   "nombre": "Tierras de Brasanegra",
+   "bioma": "ceniza",
+   "centro": {
+    "x": 700,
+    "z": 760
+   },
+   "radio": 290,
+   "alturaBase": 90,
+   "relieve": 55,
+   "rugosidad": 0.65,
+   "nivel": 38,
+   "colorNiebla": {
+    "r": 0.34,
+    "g": 0.24,
+    "b": 0.21
+   },
+   "densidadNiebla": 0.012,
+   "texturas": [
+    "ceniza",
+    "roca",
+    "grava"
+   ],
+   "densidadArboles": 4,
+   "arboles": [
+    "arbol_calcinado"
+   ],
+   "descripcion": "Llanuras de ceniza y coladas de basalto al pie del volcán Brasanegra (245 m), con fumarolas y ríos de escoria fría que aún brillan. Acólitos de la llama negra, brutos tiznados y centinelas. Paleta: negro, gris ceniza y naranja brasa."
+  },
+  {
+   "id": "corona_lucero",
+   "nombre": "Corona del Lucero",
+   "bioma": "cumbres",
+   "centro": {
+    "x": -850,
+    "z": 890
+   },
+   "radio": 180,
+   "alturaBase": 170,
+   "relieve": 70,
+   "rugosidad": 0.75,
+   "nivel": 46,
+   "colorNiebla": {
+    "r": 0.3,
+    "g": 0.33,
+    "b": 0.5
+   },
+   "densidadNiebla": 0.005,
+   "texturas": [
+    "nieve",
+    "roca",
+    "grava"
+   ],
+   "densidadArboles": 3,
+   "arboles": [
+    "pino_nevado"
+   ],
+   "descripcion": "Las cumbres más altas del mundo (hasta 255 m), por encima de las nubes, en la esquina noroeste. Aquí cayó el Lucero hace mil años y aquí recupera sus alas. Solo se llega a pie por la Escalera del Lucero o volando. Centinelas del Heraldo. Paleta: azul noche, plata y blanco."
+  }
+ ],
+ "cordilleras": [
+  {
+   "puntos": [
+    {
+     "x": -330,
+     "z": 470
+    },
+    {
+     "x": -160,
+     "z": 420
+    },
+    {
+     "x": 40,
+     "z": 432
+    },
+    {
+     "x": 180,
+     "z": 415
+    },
+    {
+     "x": 340,
+     "z": 470
+    }
+   ],
+   "altura": 165,
+   "anchura": 120
+  },
+  {
+   "puntos": [
+    {
+     "x": -330,
+     "z": 470
+    },
+    {
+     "x": -410,
+     "z": 300
+    },
+    {
+     "x": -450,
+     "z": 110
+    },
+    {
+     "x": -470,
+     "z": -50
+    },
+    {
+     "x": -640,
+     "z": -120
+    },
+    {
+     "x": -880,
+     "z": -190
+    },
+    {
+     "x": -1020,
+     "z": -215
+    }
+   ],
+   "altura": 140,
+   "anchura": 110
+  },
+  {
+   "puntos": [
+    {
+     "x": 340,
+     "z": 470
+    },
+    {
+     "x": 395,
+     "z": 300
+    },
+    {
+     "x": 420,
+     "z": 120
+    },
+    {
+     "x": 440,
+     "z": -40
+    }
+   ],
+   "altura": 150,
+   "anchura": 100
+  },
+  {
+   "puntos": [
+    {
+     "x": 560,
+     "z": -150
+    },
+    {
+     "x": 720,
+     "z": -215
+    },
+    {
+     "x": 880,
+     "z": -280
+    },
+    {
+     "x": 1020,
+     "z": -330
+    }
+   ],
+   "altura": 135,
+   "anchura": 100
+  },
+  {
+   "puntos": [
+    {
+     "x": -330,
+     "z": 470
+    },
+    {
+     "x": -300,
+     "z": 620
+    },
+    {
+     "x": -275,
+     "z": 800
+    },
+    {
+     "x": -255,
+     "z": 1020
+    }
+   ],
+   "altura": 175,
+   "anchura": 110
+  },
+  {
+   "puntos": [
+    {
+     "x": -1020,
+     "z": 500
+    },
+    {
+     "x": -820,
+     "z": 440
+    },
+    {
+     "x": -620,
+     "z": 380
+    },
+    {
+     "x": -410,
+     "z": 300
+    }
+   ],
+   "altura": 160,
+   "anchura": 110
+  },
+  {
+   "puntos": [
+    {
+     "x": 340,
+     "z": 470
+    },
+    {
+     "x": 330,
+     "z": 640
+    },
+    {
+     "x": 350,
+     "z": 820
+    },
+    {
+     "x": 360,
+     "z": 1020
+    }
+   ],
+   "altura": 175,
+   "anchura": 110
+  },
+  {
+   "puntos": [
+    {
+     "x": 340,
+     "z": 470
+    },
+    {
+     "x": 520,
+     "z": 440
+    },
+    {
+     "x": 720,
+     "z": 450
+    },
+    {
+     "x": 1020,
+     "z": 420
+    }
+   ],
+   "altura": 150,
+   "anchura": 110
+  },
+  {
+   "puntos": [
+    {
+     "x": -1020,
+     "z": 540
+    },
+    {
+     "x": -910,
+     "z": 600
+    },
+    {
+     "x": -820,
+     "z": 695
+    },
+    {
+     "x": -737,
+     "z": 796
+    },
+    {
+     "x": -650,
+     "z": 900
+    },
+    {
+     "x": -575,
+     "z": 1020
+    }
+   ],
+   "altura": 230,
+   "anchura": 100
+  },
+  {
+   "puntos": [
+    {
+     "x": -960,
+     "z": 975
+    },
+    {
+     "x": -890,
+     "z": 935
+    }
+   ],
+   "altura": 255,
+   "anchura": 150
+  },
+  {
+   "puntos": [
+    {
+     "x": 780,
+     "z": 800
+    },
+    {
+     "x": 800,
+     "z": 815
+    }
+   ],
+   "altura": 245,
+   "anchura": 280
+  },
+  {
+   "puntos": [
+    {
+     "x": 430,
+     "z": -790
+    },
+    {
+     "x": 442,
+     "z": -800
+    }
+   ],
+   "altura": 58,
+   "anchura": 160
+  },
+  {
+   "puntos": [
+    {
+     "x": -470,
+     "z": 800
+    },
+    {
+     "x": -430,
+     "z": 830
+    }
+   ],
+   "altura": 230,
+   "anchura": 170
+  }
+ ],
+ "pasos": [
+  {
+   "posicion": {
+    "x": 40,
+    "z": 432
+   },
+   "anchura": 24,
+   "nombre": "Paso del Juramento"
+  },
+  {
+   "posicion": {
+    "x": -450,
+    "z": 110
+   },
+   "anchura": 22,
+   "nombre": "Paso de los Cuervos"
+  },
+  {
+   "posicion": {
+    "x": -640,
+    "z": -120
+   },
+   "anchura": 18,
+   "nombre": "Desfiladero del Ahorcado"
+  },
+  {
+   "posicion": {
+    "x": 420,
+    "z": 120
+   },
+   "anchura": 22,
+   "nombre": "Paso del Yunque"
+  },
+  {
+   "posicion": {
+    "x": 880,
+    "z": -280
+   },
+   "anchura": 20,
+   "nombre": "Cuesta de los Carros"
+  },
+  {
+   "posicion": {
+    "x": -300,
+    "z": 620
+   },
+   "anchura": 20,
+   "nombre": "Paso de la Escarcha"
+  },
+  {
+   "posicion": {
+    "x": -620,
+    "z": 380
+   },
+   "anchura": 20,
+   "nombre": "Paso del Lobo Blanco"
+  },
+  {
+   "posicion": {
+    "x": 330,
+    "z": 640
+   },
+   "anchura": 20,
+   "nombre": "Paso de las Brasas"
+  },
+  {
+   "posicion": {
+    "x": 720,
+    "z": 450
+   },
+   "anchura": 22,
+   "nombre": "Paso del Humo"
+  },
+  {
+   "posicion": {
+    "x": -737,
+    "z": 796
+   },
+   "anchura": 10,
+   "nombre": "Escalera del Lucero"
+  }
+ ],
+ "rios": [
+  {
+   "puntos": [
+    {
+     "x": -200,
+     "z": 380
+    },
+    {
+     "x": -150,
+     "z": 250
+    },
+    {
+     "x": -95,
+     "z": 130
+    },
+    {
+     "x": -60,
+     "z": 40
+    },
+    {
+     "x": -55,
+     "z": -40
+    },
+    {
+     "x": -30,
+     "z": -110
+    },
+    {
+     "x": 60,
+     "z": -150
+    },
+    {
+     "x": 132,
+     "z": -150
+    }
+   ],
+   "anchura": 10,
+   "profundidad": 2.5
+  },
+  {
+   "puntos": [
+    {
+     "x": 245,
+     "z": -180
+    },
+    {
+     "x": 330,
+     "z": -260
+    },
+    {
+     "x": 432,
+     "z": -330
+    }
+   ],
+   "anchura": 12,
+   "profundidad": 3
+  },
+  {
+   "puntos": [
+    {
+     "x": 560,
+     "z": -480
+    },
+    {
+     "x": 590,
+     "z": -620
+    },
+    {
+     "x": 600,
+     "z": -760
+    },
+    {
+     "x": 608,
+     "z": -880
+    }
+   ],
+   "anchura": 16,
+   "profundidad": 3.5
+  },
+  {
+   "puntos": [
+    {
+     "x": -720,
+     "z": -205
+    },
+    {
+     "x": -640,
+     "z": -270
+    },
+    {
+     "x": -606,
+     "z": -290
+    }
+   ],
+   "anchura": 10,
+   "profundidad": 2.5
+  },
+  {
+   "puntos": [
+    {
+     "x": -500,
+     "z": -390
+    },
+    {
+     "x": -460,
+     "z": -520
+    },
+    {
+     "x": -420,
+     "z": -680
+    },
+    {
+     "x": -400,
+     "z": -955
+    }
+   ],
+   "anchura": 12,
+   "profundidad": 3
+  },
+  {
+   "puntos": [
+    {
+     "x": 850,
+     "z": 385
+    },
+    {
+     "x": 800,
+     "z": 260
+    },
+    {
+     "x": 750,
+     "z": 150
+    },
+    {
+     "x": 700,
+     "z": 30
+    },
+    {
+     "x": 640,
+     "z": -60
+    },
+    {
+     "x": 510,
+     "z": -100
+    },
+    {
+     "x": 480,
+     "z": -200
+    },
+    {
+     "x": 475,
+     "z": -305
+    }
+   ],
+   "anchura": 24,
+   "profundidad": 4
+  }
+ ],
+ "lagos": [
+  {
+   "centro": {
+    "x": 190,
+    "z": -150
+   },
+   "radio": 60,
+   "profundidad": 6,
+   "nombre": "Lago Espejo"
+  },
+  {
+   "centro": {
+    "x": -540,
+    "z": -320
+   },
+   "radio": 80,
+   "profundidad": 8,
+   "nombre": "Lago de Hondaniebla"
+  },
+  {
+   "centro": {
+    "x": 500,
+    "z": -400
+   },
+   "radio": 100,
+   "profundidad": 3,
+   "nombre": "Laguna Negra"
+  },
+  {
+   "centro": {
+    "x": 370,
+    "z": -530
+   },
+   "radio": 32,
+   "profundidad": 2,
+   "nombre": "Charca de los Ahogados"
+  },
+  {
+   "centro": {
+    "x": 650,
+    "z": -290
+   },
+   "radio": 28,
+   "profundidad": 2,
+   "nombre": "Charca Verde"
+  },
+  {
+   "centro": {
+    "x": -260,
+    "z": -700
+   },
+   "radio": 55,
+   "profundidad": 2,
+   "nombre": "Albufera de la Sal"
+  },
+  {
+   "centro": {
+    "x": -640,
+    "z": -1170
+   },
+   "radio": 330,
+   "profundidad": 14,
+   "nombre": "Mar de las Velas (oeste)"
+  },
+  {
+   "centro": {
+    "x": -120,
+    "z": -1160
+   },
+   "radio": 300,
+   "profundidad": 14,
+   "nombre": "Mar de las Velas (centro)"
+  },
+  {
+   "centro": {
+    "x": 720,
+    "z": -1170
+   },
+   "radio": 330,
+   "profundidad": 14,
+   "nombre": "Mar de las Velas (este)"
+  },
+  {
+   "centro": {
+    "x": 380,
+    "z": -905
+   },
+   "radio": 90,
+   "profundidad": 10,
+   "nombre": "Bahía del Grifo"
+  }
+ ],
+ "caminos": [
+  {
+   "puntos": [
+    {
+     "x": 0,
+     "z": -20
+    },
+    {
+     "x": 15,
+     "z": 100
+    },
+    {
+     "x": 30,
+     "z": 250
+    },
+    {
+     "x": 38,
+     "z": 370
+    },
+    {
+     "x": 40,
+     "z": 432
+    },
+    {
+     "x": 55,
+     "z": 520
+    },
+    {
+     "x": 65,
+     "z": 590
+    },
+    {
+     "x": 40,
+     "z": 700
+    },
+    {
+     "x": 10,
+     "z": 800
+    },
+    {
+     "x": 0,
+     "z": 860
+    }
+   ],
+   "anchura": 7
+  },
+  {
+   "puntos": [
+    {
+     "x": 0,
+     "z": -20
+    },
+    {
+     "x": -80,
+     "z": 10
+    },
+    {
+     "x": -200,
+     "z": 60
+    },
+    {
+     "x": -330,
+     "z": 100
+    },
+    {
+     "x": -450,
+     "z": 110
+    },
+    {
+     "x": -520,
+     "z": 120
+    },
+    {
+     "x": -590,
+     "z": 130
+    },
+    {
+     "x": -700,
+     "z": 170
+    },
+    {
+     "x": -820,
+     "z": 230
+    }
+   ],
+   "anchura": 6
+  },
+  {
+   "puntos": [
+    {
+     "x": 0,
+     "z": -20
+    },
+    {
+     "x": 100,
+     "z": 20
+    },
+    {
+     "x": 240,
+     "z": 50
+    },
+    {
+     "x": 340,
+     "z": 90
+    },
+    {
+     "x": 420,
+     "z": 120
+    },
+    {
+     "x": 500,
+     "z": 150
+    },
+    {
+     "x": 545,
+     "z": 160
+    },
+    {
+     "x": 590,
+     "z": 170
+    },
+    {
+     "x": 680,
+     "z": 200
+    },
+    {
+     "x": 770,
+     "z": 210
+    },
+    {
+     "x": 900,
+     "z": 200
+    },
+    {
+     "x": 875,
+     "z": 292
+    }
+   ],
+   "anchura": 6
+  },
+  {
+   "puntos": [
+    {
+     "x": 770,
+     "z": 210
+    },
+    {
+     "x": 760,
+     "z": 330
+    },
+    {
+     "x": 720,
+     "z": 450
+    },
+    {
+     "x": 650,
+     "z": 520
+    },
+    {
+     "x": 615,
+     "z": 535
+    },
+    {
+     "x": 580,
+     "z": 550
+    },
+    {
+     "x": 560,
+     "z": 560
+    },
+    {
+     "x": 600,
+     "z": 700
+    },
+    {
+     "x": 580,
+     "z": 790
+    },
+    {
+     "x": 560,
+     "z": 850
+    }
+   ],
+   "anchura": 5
+  },
+  {
+   "puntos": [
+    {
+     "x": 0,
+     "z": -20
+    },
+    {
+     "x": 5,
+     "z": -60
+    },
+    {
+     "x": 8,
+     "z": -150
+    },
+    {
+     "x": -20,
+     "z": -300
+    },
+    {
+     "x": -60,
+     "z": -450
+    },
+    {
+     "x": -90,
+     "z": -600
+    },
+    {
+     "x": -80,
+     "z": -780
+    },
+    {
+     "x": -110,
+     "z": -800
+    }
+   ],
+   "anchura": 6
+  },
+  {
+   "puntos": [
+    {
+     "x": -20,
+     "z": -300
+    },
+    {
+     "x": -180,
+     "z": -295
+    },
+    {
+     "x": -300,
+     "z": -298
+    },
+    {
+     "x": -330,
+     "z": -300
+    },
+    {
+     "x": -430,
+     "z": -400
+    },
+    {
+     "x": -540,
+     "z": -460
+    },
+    {
+     "x": -610,
+     "z": -470
+    }
+   ],
+   "anchura": 5
+  },
+  {
+   "puntos": [
+    {
+     "x": -330,
+     "z": -300
+    },
+    {
+     "x": -420,
+     "z": -220
+    },
+    {
+     "x": -560,
+     "z": -160
+    },
+    {
+     "x": -640,
+     "z": -120
+    },
+    {
+     "x": -700,
+     "z": 0
+    },
+    {
+     "x": -700,
+     "z": 170
+    }
+   ],
+   "anchura": 5
+  },
+  {
+   "puntos": [
+    {
+     "x": 8,
+     "z": -150
+    },
+    {
+     "x": 120,
+     "z": -210
+    },
+    {
+     "x": 250,
+     "z": -300
+    },
+    {
+     "x": 340,
+     "z": -420
+    },
+    {
+     "x": 440,
+     "z": -520
+    },
+    {
+     "x": 580,
+     "z": -560
+    },
+    {
+     "x": 680,
+     "z": -560
+    }
+   ],
+   "anchura": 5
+  },
+  {
+   "puntos": [
+    {
+     "x": 580,
+     "z": -560
+    },
+    {
+     "x": 700,
+     "z": -470
+    },
+    {
+     "x": 800,
+     "z": -380
+    },
+    {
+     "x": 880,
+     "z": -280
+    },
+    {
+     "x": 870,
+     "z": -150
+    },
+    {
+     "x": 850,
+     "z": -60
+    },
+    {
+     "x": 800,
+     "z": 40
+    },
+    {
+     "x": 770,
+     "z": 210
+    }
+   ],
+   "anchura": 5
+  },
+  {
+   "puntos": [
+    {
+     "x": -500,
+     "z": -830
+    },
+    {
+     "x": -400,
+     "z": -790
+    },
+    {
+     "x": -240,
+     "z": -780
+    },
+    {
+     "x": -110,
+     "z": -800
+    },
+    {
+     "x": 60,
+     "z": -740
+    },
+    {
+     "x": 150,
+     "z": -690
+    },
+    {
+     "x": 230,
+     "z": -720
+    },
+    {
+     "x": 255,
+     "z": -750
+    }
+   ],
+   "anchura": 5
+  },
+  {
+   "puntos": [
+    {
+     "x": 255,
+     "z": -750
+    },
+    {
+     "x": 340,
+     "z": -770
+    },
+    {
+     "x": 405,
+     "z": -784
+    }
+   ],
+   "anchura": 3
+  },
+  {
+   "puntos": [
+    {
+     "x": -90,
+     "z": -600
+    },
+    {
+     "x": -240,
+     "z": -620
+    }
+   ],
+   "anchura": 4
+  },
+  {
+   "puntos": [
+    {
+     "x": -820,
+     "z": 230
+    },
+    {
+     "x": -900,
+     "z": 150
+    },
+    {
+     "x": -900,
+     "z": 60
+    }
+   ],
+   "anchura": 4
+  },
+  {
+   "puntos": [
+    {
+     "x": -700,
+     "z": 170
+    },
+    {
+     "x": -680,
+     "z": 280
+    },
+    {
+     "x": -620,
+     "z": 380
+    },
+    {
+     "x": -575,
+     "z": 450
+    },
+    {
+     "x": -567,
+     "z": 485
+    },
+    {
+     "x": -560,
+     "z": 520
+    },
+    {
+     "x": -440,
+     "z": 575
+    },
+    {
+     "x": -330,
+     "z": 600
+    },
+    {
+     "x": -300,
+     "z": 620
+    },
+    {
+     "x": -200,
+     "z": 670
+    },
+    {
+     "x": -80,
+     "z": 700
+    },
+    {
+     "x": 40,
+     "z": 700
+    }
+   ],
+   "anchura": 5
+  },
+  {
+   "puntos": [
+    {
+     "x": -560,
+     "z": 520
+    },
+    {
+     "x": -620,
+     "z": 620
+    },
+    {
+     "x": -680,
+     "z": 700
+    },
+    {
+     "x": -737,
+     "z": 796
+    },
+    {
+     "x": -760,
+     "z": 858
+    },
+    {
+     "x": -780,
+     "z": 880
+    },
+    {
+     "x": -860,
+     "z": 930
+    },
+    {
+     "x": -900,
+     "z": 960
+    }
+   ],
+   "anchura": 3
+  },
+  {
+   "puntos": [
+    {
+     "x": 40,
+     "z": 700
+    },
+    {
+     "x": 150,
+     "z": 690
+    },
+    {
+     "x": 250,
+     "z": 660
+    },
+    {
+     "x": 330,
+     "z": 640
+    },
+    {
+     "x": 450,
+     "z": 600
+    },
+    {
+     "x": 560,
+     "z": 560
+    }
+   ],
+   "anchura": 5
+  }
+ ],
+ "lugares": [
+  {
+   "id": "cruce",
+   "nombre": "El Cruce",
+   "tipo": "poblado",
+   "region": "llanos_cruce",
+   "posicion": {
+    "x": 0,
+    "z": -20
+   },
+   "secreto": false,
+   "descripcion": "Pueblo de la encrucijada junto al vado del río Albo: plaza con tablón, forja, posada y Fuego del refugio. Aquí llegan los cuatro caminos y aquí empieza todo.",
+   "recompensa": "Base, comercio y misiones"
+  },
+  {
+   "id": "crater_despertar",
+   "nombre": "Cráter del Despertar",
+   "tipo": "hito",
+   "region": "llanos_cruce",
+   "posicion": {
+    "x": -140,
+    "z": -150
+   },
+   "secreto": false,
+   "descripcion": "Hoyo humeante lleno de plumas negras calcinadas. Aquí despierta el Lucero, con las alas rotas y sin recuerdos.",
+   "recompensa": "Primera pluma negra (inicio del diario)"
+  },
+  {
+   "id": "colina_molino",
+   "nombre": "Colina del Molino",
+   "tipo": "mirador",
+   "region": "llanos_cruce",
+   "posicion": {
+    "x": 150,
+    "z": 90
+   },
+   "secreto": false,
+   "descripcion": "Molino quemado sobre una loma. Desde arriba se ve todo el llano y el rayo carmesí del norte.",
+   "recompensa": "Revela el mapa de la región"
+  },
+  {
+   "id": "torre_academia",
+   "nombre": "Torre de la Academia Velada",
+   "tipo": "torre",
+   "region": "llanos_cruce",
+   "posicion": {
+    "x": 240,
+    "z": 30
+   },
+   "secreto": false,
+   "descripcion": "Torre de las escuelas de magia, sitiada por saqueadores. Dentro espera la maga Iria.",
+   "recompensa": "Rescate de Iria y segunda escuela de magia"
+  },
+  {
+   "id": "granja_quemada",
+   "nombre": "Granja de los Hesse",
+   "tipo": "ruina",
+   "region": "llanos_cruce",
+   "posicion": {
+    "x": -180,
+    "z": 120
+   },
+   "secreto": false,
+   "descripcion": "Granja arrasada la noche de la luna roja: graneros vacíos y huellas de lobo.",
+   "recompensa": "Cofre común y pieles"
+  },
+  {
+   "id": "santuario_alba",
+   "nombre": "Santuario del Alba",
+   "tipo": "santuario",
+   "region": "llanos_cruce",
+   "posicion": {
+    "x": -60,
+    "z": 230
+   },
+   "secreto": false,
+   "descripcion": "Círculo de piedras blancas donde la esencia brilla al amanecer.",
+   "recompensa": "Calidad de esencia +10"
+  },
+  {
+   "id": "campamento_desollador",
+   "nombre": "Campamento del Desollador",
+   "tipo": "campamento",
+   "region": "llanos_cruce",
+   "posicion": {
+    "x": 120,
+    "z": -260
+   },
+   "secreto": false,
+   "descripcion": "Empalizada de bandidos junto al lago Espejo; su humo se ve desde el Cruce. Tienen enjaulado a Toren el herrero.",
+   "recompensa": "Rescate de Toren y cofre raro"
+  },
+  {
+   "id": "sotano_granja",
+   "nombre": "Sótano de la granja",
+   "tipo": "secreto",
+   "region": "llanos_cruce",
+   "posicion": {
+    "x": -190,
+    "z": 130
+   },
+   "secreto": true,
+   "descripcion": "Trampilla escondida bajo la paja del granero de los Hesse; aparece al quemar la paja con Piromancia.",
+   "recompensa": "Cofre épico: ballesta de caza"
+  },
+  {
+   "id": "claro_luciernagas",
+   "nombre": "Claro de las Luciérnagas",
+   "tipo": "secreto",
+   "region": "llanos_cruce",
+   "posicion": {
+    "x": 190,
+    "z": 250
+   },
+   "secreto": true,
+   "descripcion": "Claro rodeado de zarzas al norte del molino; se entra por un hueco entre dos rocas. De noche las luciérnagas marcan la entrada.",
+   "recompensa": "Pluma negra y planta rara"
+  },
+  {
+   "id": "aserradero_hondaniebla",
+   "nombre": "Aserradero de Hondaniebla",
+   "tipo": "poblado",
+   "region": "bosque_hondaniebla",
+   "posicion": {
+    "x": -330,
+    "z": -300
+   },
+   "secreto": false,
+   "descripcion": "Aldea de leñadores con empalizada y torre de vigía. Viven con miedo a la manada de la Loba Gris.",
+   "recompensa": "Comercio de madera noble y misiones de caza"
+  },
+  {
+   "id": "guarida_loba_gris",
+   "nombre": "Guarida de la Loba Gris",
+   "tipo": "guarida",
+   "region": "bosque_hondaniebla",
+   "posicion": {
+    "x": -620,
+    "z": -470
+   },
+   "secreto": false,
+   "descripcion": "Hondonada rocosa llena de huesos con una cueva poco profunda: hogar de la manada y de su cazadora.",
+   "recompensa": "Domar al lobo de bruma"
+  },
+  {
+   "id": "cueva_susurros",
+   "nombre": "Cueva de los Susurros",
+   "tipo": "cueva",
+   "region": "bosque_hondaniebla",
+   "posicion": {
+    "x": -300,
+    "z": -480
+   },
+   "secreto": false,
+   "descripcion": "Cueva corta cuyos ecos repiten el nombre verdadero de quien entra.",
+   "recompensa": "Mineral y cofre común"
+  },
+  {
+   "id": "roble_juramento",
+   "nombre": "Roble del Juramento",
+   "tipo": "hito",
+   "region": "bosque_hondaniebla",
+   "posicion": {
+    "x": -470,
+    "z": -230
+   },
+   "secreto": false,
+   "descripcion": "Roble gigantesco y hueco junto al lago; su copa se ve desde lejos y sirve de faro.",
+   "recompensa": "Piedra de historia"
+  },
+  {
+   "id": "puesto_fronterizo",
+   "nombre": "Puesto Fronterizo Caído",
+   "tipo": "ruina",
+   "region": "bosque_hondaniebla",
+   "posicion": {
+    "x": -680,
+    "z": -330
+   },
+   "secreto": false,
+   "descripcion": "Fortín de piedra en ruinas al pie de la Sierra de Velmora.",
+   "recompensa": "Cofre raro"
+  },
+  {
+   "id": "pena_cuervo",
+   "nombre": "Peña del Cuervo",
+   "tipo": "mirador",
+   "region": "bosque_hondaniebla",
+   "posicion": {
+    "x": -560,
+    "z": -560
+   },
+   "secreto": false,
+   "descripcion": "Roca alta sobre el pinar; desde arriba se ve el mar del sur.",
+   "recompensa": "Revela el mapa de la región"
+  },
+  {
+   "id": "campamento_furtivos",
+   "nombre": "Campamento de los Furtivos",
+   "tipo": "campamento",
+   "region": "bosque_hondaniebla",
+   "posicion": {
+    "x": -250,
+    "z": -420
+   },
+   "secreto": false,
+   "descripcion": "Cazadores furtivos que venden pieles a los saqueadores.",
+   "recompensa": "Pieles y cofre común"
+  },
+  {
+   "id": "gruta_cascada",
+   "nombre": "Gruta tras la Cascada",
+   "tipo": "cueva",
+   "region": "bosque_hondaniebla",
+   "posicion": {
+    "x": -735,
+    "z": -190
+   },
+   "secreto": true,
+   "descripcion": "Detrás de la cascada donde nace el río Hondo hay una gruta con un altar de plumas.",
+   "recompensa": "Talismán de bruma (más velocidad de noche)"
+  },
+  {
+   "id": "claro_dama_blanca",
+   "nombre": "Claro de la Dama Blanca",
+   "tipo": "secreto",
+   "region": "bosque_hondaniebla",
+   "posicion": {
+    "x": -560,
+    "z": -640
+   },
+   "secreto": true,
+   "descripcion": "Círculo de abedules blancos oculto tras un muro de zarzas que solo se abre en Luna carmesí.",
+   "recompensa": "Esencia Salvaje de calidad alta"
+  },
+  {
+   "id": "pilotes_brumafria",
+   "nombre": "Pilotes de Brumafría",
+   "tipo": "poblado",
+   "region": "marjal_ahogados",
+   "posicion": {
+    "x": 330,
+    "z": -430
+   },
+   "secreto": false,
+   "descripcion": "Aldea sobre pilotes unida por pasarelas; barcas, redes y lámparas verdes contra la niebla.",
+   "recompensa": "Comercio de hierbas y barcas"
+  },
+  {
+   "id": "torre_hundida",
+   "nombre": "Torre Hundida",
+   "tipo": "torre",
+   "region": "marjal_ahogados",
+   "posicion": {
+    "x": 620,
+    "z": -480
+   },
+   "secreto": false,
+   "descripcion": "Atalaya inclinada y medio enterrada en el barro; se sube por dentro hasta un balcón.",
+   "recompensa": "Cofre raro y vista del marjal"
+  },
+  {
+   "id": "cementerio_anegado",
+   "nombre": "Cementerio Anegado",
+   "tipo": "cripta",
+   "region": "marjal_ahogados",
+   "posicion": {
+    "x": 420,
+    "z": -600
+   },
+   "secreto": false,
+   "descripcion": "Lápidas bajo el agua y un mausoleo donde se levantan los ahogados.",
+   "recompensa": "Equipo de hueso"
+  },
+  {
+   "id": "arbol_ahorcados",
+   "nombre": "Árbol de los Ahorcados",
+   "tipo": "hito",
+   "region": "marjal_ahogados",
+   "posicion": {
+    "x": 300,
+    "z": -320
+   },
+   "secreto": false,
+   "descripcion": "Sauce muerto con sogas viejas; marca la entrada al marjal.",
+   "recompensa": "Piedra de historia"
+  },
+  {
+   "id": "choza_cienaga",
+   "nombre": "Choza de la Madre Ciénaga",
+   "tipo": "guarida",
+   "region": "marjal_ahogados",
+   "posicion": {
+    "x": 680,
+    "z": -560
+   },
+   "secreto": false,
+   "descripcion": "Choza de huesos y juncos sobre un islote de barro; dentro hierve el caldero de la jefa.",
+   "recompensa": "Esencia Sanguínea y receta de poción"
+  },
+  {
+   "id": "campamento_ahogados",
+   "nombre": "Campamento de los Ahogados",
+   "tipo": "campamento",
+   "region": "marjal_ahogados",
+   "posicion": {
+    "x": 560,
+    "z": -300
+   },
+   "secreto": false,
+   "descripcion": "Restos de una caravana hundida donde acampan esqueletos y sanadoras del culto.",
+   "recompensa": "Cofre común"
+  },
+  {
+   "id": "barca_diezmos",
+   "nombre": "Barca de los Diezmos",
+   "tipo": "secreto",
+   "region": "marjal_ahogados",
+   "posicion": {
+    "x": 740,
+    "z": -520
+   },
+   "secreto": true,
+   "descripcion": "Barca hundida entre juncos altos con el tesoro que nunca llegó al Cruce; solo se ve con la niebla baja de la mañana.",
+   "recompensa": "Cofre épico de oro"
+  },
+  {
+   "id": "muro_cripta",
+   "nombre": "Muro ilusorio de la cripta",
+   "tipo": "secreto",
+   "region": "marjal_ahogados",
+   "posicion": {
+    "x": 440,
+    "z": -625
+   },
+   "secreto": true,
+   "descripcion": "Una pared del mausoleo es falsa: se atraviesa caminando hacia ella mientras se lanza Lumancia.",
+   "recompensa": "Talismán de los ahogados"
+  },
+  {
+   "id": "puerto_ancla_rota",
+   "nombre": "Puerto Ancla Rota",
+   "tipo": "puerto",
+   "region": "costa_velas_rotas",
+   "posicion": {
+    "x": -110,
+    "z": -800
+   },
+   "secreto": false,
+   "descripcion": "Puerto de pescadores con muelle de madera, almacenes y astillero; la flota fue quemada por los raqueros.",
+   "recompensa": "Comercio, barcos y misiones del mar"
+  },
+  {
+   "id": "faro_ultimo_fuego",
+   "nombre": "Faro del Último Fuego",
+   "tipo": "torre",
+   "region": "costa_velas_rotas",
+   "posicion": {
+    "x": 260,
+    "z": -760
+   },
+   "secreto": false,
+   "descripcion": "Faro apagado sobre el acantilado; desde su linterna se ve el Peñón del Grifo.",
+   "recompensa": "Encender el faro: revela el mapa de la costa"
+  },
+  {
+   "id": "playa_pecios",
+   "nombre": "Playa de los Pecios",
+   "tipo": "ruina",
+   "region": "costa_velas_rotas",
+   "posicion": {
+    "x": -500,
+    "z": -830
+   },
+   "secreto": false,
+   "descripcion": "Cala con cascos de barcos varados donde vagan marineros ahogados.",
+   "recompensa": "Madera de barco y cofre común"
+  },
+  {
+   "id": "acantilados_lamentos",
+   "nombre": "Acantilados de los Lamentos",
+   "tipo": "mirador",
+   "region": "costa_velas_rotas",
+   "posicion": {
+    "x": 150,
+    "z": -690
+   },
+   "secreto": false,
+   "descripcion": "Borde de acantilado donde el viento silba como un llanto; vista de todo el mar del sur.",
+   "recompensa": "Revela el mapa de la región"
+  },
+  {
+   "id": "salinas",
+   "nombre": "Salinas Abandonadas",
+   "tipo": "mina",
+   "region": "costa_velas_rotas",
+   "posicion": {
+    "x": -240,
+    "z": -620
+   },
+   "secreto": false,
+   "descripcion": "Balsas de sal y almacenes ocupados por brutos que la venden de contrabando.",
+   "recompensa": "Sal y mineral"
+  },
+  {
+   "id": "guarida_raqueros",
+   "nombre": "Guarida de los Raqueros",
+   "tipo": "campamento",
+   "region": "costa_velas_rotas",
+   "posicion": {
+    "x": 300,
+    "z": -680
+   },
+   "secreto": false,
+   "descripcion": "Fortín de restos de barcos donde el capitán Varek enciende luces falsas para hundir naves.",
+   "recompensa": "Ancla de Varek y cofre raro"
+  },
+  {
+   "id": "penon_grifo",
+   "nombre": "Peñón del Grifo",
+   "tipo": "secreto",
+   "region": "costa_velas_rotas",
+   "posicion": {
+    "x": 432,
+    "z": -792
+   },
+   "secreto": true,
+   "descripcion": "Promontorio de roca negra sobre el mar, al este del faro. La grifa anida en la cima; se sube por una senda de cornisas oculta entre las rocas de la cara oeste.",
+   "recompensa": "Domar al grifo"
+  },
+  {
+   "id": "cueva_contrabandista",
+   "nombre": "Cueva del Contrabandista",
+   "tipo": "cueva",
+   "region": "costa_velas_rotas",
+   "posicion": {
+    "x": 40,
+    "z": -845
+   },
+   "secreto": true,
+   "descripcion": "Boca de cueva en la pared del acantilado, tapada por una red vieja; se baja por una cuerda desde la playa.",
+   "recompensa": "Cofre épico y mapa de la senda del Peñón"
+  },
+  {
+   "id": "campamento_yunque",
+   "nombre": "Campamento del Yunque",
+   "tipo": "poblado",
+   "region": "meseta_yunque",
+   "posicion": {
+    "x": 580,
+    "z": 180
+   },
+   "secreto": false,
+   "descripcion": "Campamento minero en el borde de la meseta: tiendas, grúa y una forja de hierro rojo.",
+   "recompensa": "Comercio de hierro y misiones de mina"
+  },
+  {
+   "id": "borde_herida",
+   "nombre": "Borde de la Herida",
+   "tipo": "mirador",
+   "region": "meseta_yunque",
+   "posicion": {
+    "x": 700,
+    "z": 240
+   },
+   "secreto": false,
+   "descripcion": "Repisa en el borde del Cañón de la Herida; se ve el río 90 m más abajo.",
+   "recompensa": "Revela el mapa de la región"
+  },
+  {
+   "id": "arco_gigantes",
+   "nombre": "Arco de los Gigantes",
+   "tipo": "hito",
+   "region": "meseta_yunque",
+   "posicion": {
+    "x": 850,
+    "z": 60
+   },
+   "secreto": false,
+   "descripcion": "Arco de piedra natural tallado por el viento; dicen que es el asa de un yunque de gigantes.",
+   "recompensa": "Piedra de historia"
+  },
+  {
+   "id": "mina_hierro_rojo",
+   "nombre": "Mina de Hierro Rojo",
+   "tipo": "mina",
+   "region": "meseta_yunque",
+   "posicion": {
+    "x": 900,
+    "z": 200
+   },
+   "secreto": false,
+   "descripcion": "Galerías de mineral rojo tomadas por brutos y ballesteros.",
+   "recompensa": "Hierro rojo"
+  },
+  {
+   "id": "cantera_gigante",
+   "nombre": "Cantera del Gigante",
+   "tipo": "campamento",
+   "region": "meseta_yunque",
+   "posicion": {
+    "x": 850,
+    "z": -60
+   },
+   "secreto": false,
+   "descripcion": "Cantera escalonada donde Torvald obliga a picar piedra a los prisioneros.",
+   "recompensa": "Liberar prisioneros y cofre raro"
+  },
+  {
+   "id": "riscos_leon",
+   "nombre": "Riscos del León",
+   "tipo": "guarida",
+   "region": "meseta_yunque",
+   "posicion": {
+    "x": 875,
+    "z": 300
+   },
+   "secreto": false,
+   "descripcion": "Riscos escalonados en el borde este de la meseta donde caza la manada de leones.",
+   "recompensa": "Domar al león de las cumbres"
+  },
+  {
+   "id": "tumulos_pastores",
+   "nombre": "Túmulos de los Reyes Pastores",
+   "tipo": "cripta",
+   "region": "meseta_yunque",
+   "posicion": {
+    "x": 560,
+    "z": 60
+   },
+   "secreto": false,
+   "descripcion": "Colinas funerarias con puertas de piedra; dentro duermen reyes antiguos.",
+   "recompensa": "Equipo antiguo"
+  },
+  {
+   "id": "cornisa_eco",
+   "nombre": "Cornisa del Eco",
+   "tipo": "secreto",
+   "region": "meseta_yunque",
+   "posicion": {
+    "x": 752,
+    "z": 78
+   },
+   "secreto": true,
+   "descripcion": "Repisa a media altura en la pared del cañón; se baja por una grieta junto al Arco de los Gigantes.",
+   "recompensa": "Cofre épico y pluma negra"
+  },
+  {
+   "id": "tesoro_pastor",
+   "nombre": "Tesoro del Pastor",
+   "tipo": "secreto",
+   "region": "meseta_yunque",
+   "posicion": {
+    "x": 915,
+    "z": 40
+   },
+   "secreto": true,
+   "descripcion": "Cueva tapada por una roca partida que solo rompe el oso acorazado o un rayo de Fulmancia cargado.",
+   "recompensa": "Talismán del pastor"
+  },
+  {
+   "id": "refugio_campana",
+   "nombre": "Refugio de la Campana",
+   "tipo": "poblado",
+   "region": "ruinas_velmora",
+   "posicion": {
+    "x": -600,
+    "z": 120
+   },
+   "secreto": false,
+   "descripcion": "Abadía en ruinas reparada por monjes que guardan lo que queda de la biblioteca de Velmora.",
+   "recompensa": "Comercio de pergaminos y misiones"
+  },
+  {
+   "id": "catedral_velmora",
+   "nombre": "Catedral Rota de Velmora",
+   "tipo": "ruina",
+   "region": "ruinas_velmora",
+   "posicion": {
+    "x": -820,
+    "z": 230
+   },
+   "secreto": false,
+   "descripcion": "Catedral gótica sin techo, con vitrales rotos y un rosetón que aún brilla de noche. Guarida del Abad Hueco.",
+   "recompensa": "Esencia Sabia de calidad alta"
+  },
+  {
+   "id": "cripta_mil_nombres",
+   "nombre": "Cripta de los Mil Nombres",
+   "tipo": "cripta",
+   "region": "ruinas_velmora",
+   "posicion": {
+    "x": -900,
+    "z": 60
+   },
+   "secreto": false,
+   "descripcion": "Cripta de pasillos con nombres grabados; uno de ellos es el tuyo.",
+   "recompensa": "Equipo rúnico"
+  },
+  {
+   "id": "torre_campanario",
+   "nombre": "Torre del Campanario",
+   "tipo": "torre",
+   "region": "ruinas_velmora",
+   "posicion": {
+    "x": -760,
+    "z": 330
+   },
+   "secreto": false,
+   "descripcion": "Campanario alto que se ve desde toda la región; sus centinelas rúnicos hacen sonar la campana.",
+   "recompensa": "Revela el mapa de la región"
+  },
+  {
+   "id": "plaza_estatuas",
+   "nombre": "Plaza de las Estatuas",
+   "tipo": "hito",
+   "region": "ruinas_velmora",
+   "posicion": {
+    "x": -700,
+    "z": 0
+   },
+   "secreto": false,
+   "descripcion": "Plaza con estatuas sin rostro que giran la cabeza cuando nadie mira.",
+   "recompensa": "Piedra de historia"
+  },
+  {
+   "id": "campamento_culto",
+   "nombre": "Campamento del Culto Ceniciento",
+   "tipo": "campamento",
+   "region": "ruinas_velmora",
+   "posicion": {
+    "x": -900,
+    "z": 300
+   },
+   "secreto": false,
+   "descripcion": "Hogueras del culto ceniciento entre muros caídos.",
+   "recompensa": "Cofre raro"
+  },
+  {
+   "id": "biblioteca_oculta",
+   "nombre": "Biblioteca tras el muro",
+   "tipo": "secreto",
+   "region": "ruinas_velmora",
+   "posicion": {
+    "x": -845,
+    "z": 245
+   },
+   "secreto": true,
+   "descripcion": "Muro ilusorio en la nave lateral de la catedral; detrás queda la biblioteca que los monjes creen perdida.",
+   "recompensa": "Libro de la Caída (historia) y hechizo"
+  },
+  {
+   "id": "jardin_rosas_negras",
+   "nombre": "Jardín de las Rosas Negras",
+   "tipo": "secreto",
+   "region": "ruinas_velmora",
+   "posicion": {
+    "x": -930,
+    "z": -40
+   },
+   "secreto": true,
+   "descripcion": "Jardín escondido tras una puerta de hiedra al pie de la sierra; las rosas solo florecen de noche.",
+   "recompensa": "Rosa negra (ingrediente épico)"
+  },
+  {
+   "id": "altar_norte",
+   "nombre": "Altar del Norte",
+   "tipo": "altar",
+   "region": "tierra_carmesi",
+   "posicion": {
+    "x": 0,
+    "z": 860
+   },
+   "secreto": false,
+   "descripcion": "Altar de piedra negra sobre una colina; un rayo carmesí sube al cielo y se ve desde todo el mapa. Lo ocupa el Caballero de sangre.",
+   "recompensa": "Primera ala del Lucero (vuelo con montura) y esencia Arcana"
+  },
+  {
+   "id": "ermita_penitentes",
+   "nombre": "Ermita de los Penitentes",
+   "tipo": "poblado",
+   "region": "tierra_carmesi",
+   "posicion": {
+    "x": 70,
+    "z": 600
+   },
+   "secreto": false,
+   "descripcion": "Ermita junto al camino, justo tras el paso: el último lugar seguro antes del altar.",
+   "recompensa": "Misiones y descanso"
+  },
+  {
+   "id": "campo_espadas",
+   "nombre": "Campo de las Espadas",
+   "tipo": "hito",
+   "region": "tierra_carmesi",
+   "posicion": {
+    "x": -150,
+    "z": 700
+   },
+   "secreto": false,
+   "descripcion": "Antiguo campo de batalla con cientos de espadas clavadas en la hierba roja.",
+   "recompensa": "Arma de la hueste"
+  },
+  {
+   "id": "fosa_caidos",
+   "nombre": "Fosa de los Caídos",
+   "tipo": "cripta",
+   "region": "tierra_carmesi",
+   "posicion": {
+    "x": 180,
+    "z": 850
+   },
+   "secreto": false,
+   "descripcion": "Fosa común convertida en cripta por la hueste roja.",
+   "recompensa": "Equipo carmesí"
+  },
+  {
+   "id": "mirador_carmesi",
+   "nombre": "Mirador Carmesí",
+   "tipo": "mirador",
+   "region": "tierra_carmesi",
+   "posicion": {
+    "x": -180,
+    "z": 560
+   },
+   "secreto": false,
+   "descripcion": "Saliente rocoso al otro lado del paso; se ve todo el valle carmesí y el altar.",
+   "recompensa": "Revela el mapa de la región"
+  },
+  {
+   "id": "campamento_hueste",
+   "nombre": "Campamento de la Hueste Roja",
+   "tipo": "campamento",
+   "region": "tierra_carmesi",
+   "posicion": {
+    "x": 150,
+    "z": 720
+   },
+   "secreto": false,
+   "descripcion": "Tiendas rojas y estandartes de la hueste del Caballero.",
+   "recompensa": "Cofre raro"
+  },
+  {
+   "id": "capilla_lucero",
+   "nombre": "Capilla Oculta del Lucero",
+   "tipo": "secreto",
+   "region": "tierra_carmesi",
+   "posicion": {
+    "x": -190,
+    "z": 950
+   },
+   "secreto": true,
+   "descripcion": "Capilla excavada en la roca de los Dientes de Hierro, con un fresco de la caída del Lucero; se entra por detrás de una cascada seca.",
+   "recompensa": "Fragmento de halo (historia y mejora)"
+  },
+  {
+   "id": "grieta_corazon",
+   "nombre": "Grieta del Corazón",
+   "tipo": "cueva",
+   "region": "tierra_carmesi",
+   "posicion": {
+    "x": 230,
+    "z": 560
+   },
+   "secreto": true,
+   "descripcion": "Grieta estrecha al pie de la Muralla que late como un corazón; dentro, un charco de esencia pura.",
+   "recompensa": "Esencia Sanguínea perfecta"
+  },
+  {
+   "id": "fuerte_albor",
+   "nombre": "Fuerte Albor",
+   "tipo": "poblado",
+   "region": "picos_albor",
+   "posicion": {
+    "x": -560,
+    "z": 520
+   },
+   "secreto": false,
+   "descripcion": "Fortaleza de montañeses con muros de troncos y torres de vigía sobre el valle nevado.",
+   "recompensa": "Comercio de pieles y guías de montaña"
+  },
+  {
+   "id": "espejo_helado",
+   "nombre": "Espejo Helado",
+   "tipo": "hito",
+   "region": "picos_albor",
+   "posicion": {
+    "x": -660,
+    "z": 640
+   },
+   "secreto": false,
+   "descripcion": "Lago helado y liso como un espejo; bajo el hielo se ven figuras quietas.",
+   "recompensa": "Piedra de historia"
+  },
+  {
+   "id": "cubil_oso",
+   "nombre": "Cubil del Oso Acorazado",
+   "tipo": "guarida",
+   "region": "picos_albor",
+   "posicion": {
+    "x": -380,
+    "z": 700
+   },
+   "secreto": false,
+   "descripcion": "Cueva bajo los Dientes de Hierro donde duerme un oso con placas de hielo.",
+   "recompensa": "Domar al oso acorazado"
+  },
+  {
+   "id": "torre_vigia_helado",
+   "nombre": "Torre del Vigía Helado",
+   "tipo": "torre",
+   "region": "picos_albor",
+   "posicion": {
+    "x": -760,
+    "z": 560
+   },
+   "secreto": false,
+   "descripcion": "Torre de piedra cubierta de escarcha que vigila el paso del sur.",
+   "recompensa": "Revela el mapa de la región"
+  },
+  {
+   "id": "santuario_escarcha",
+   "nombre": "Santuario de la Escarcha",
+   "tipo": "santuario",
+   "region": "picos_albor",
+   "posicion": {
+    "x": -420,
+    "z": 560
+   },
+   "secreto": false,
+   "descripcion": "Obelisco de hielo que concede resistencia al frío.",
+   "recompensa": "Resistencia al frío"
+  },
+  {
+   "id": "campamento_jarl",
+   "nombre": "Campamento del Jarl",
+   "tipo": "campamento",
+   "region": "picos_albor",
+   "posicion": {
+    "x": -600,
+    "z": 800
+   },
+   "secreto": false,
+   "descripcion": "Salón de troncos y hogueras del jarl Hrimvald y sus brutos.",
+   "recompensa": "Hacha del jarl y cofre raro"
+  },
+  {
+   "id": "cornisas_cuervo",
+   "nombre": "Cornisas del Cuervo Blanco",
+   "tipo": "secreto",
+   "region": "picos_albor",
+   "posicion": {
+    "x": -500,
+    "z": 900
+   },
+   "secreto": true,
+   "descripcion": "Cornisas ocultas en la ladera norte del Pico Albor; se sube saltando de repisa en repisa desde el campamento del jarl.",
+   "recompensa": "Pluma blanca (mejora de planeo)"
+  },
+  {
+   "id": "cascada_helada",
+   "nombre": "Cueva tras la Cascada Helada",
+   "tipo": "cueva",
+   "region": "picos_albor",
+   "posicion": {
+    "x": -330,
+    "z": 820
+   },
+   "secreto": true,
+   "descripcion": "Cascada congelada en los Dientes de Hierro; al romper el hielo con fuego aparece una cueva.",
+   "recompensa": "Cofre épico"
+  },
+  {
+   "id": "avanzada_ascua",
+   "nombre": "Avanzada de Ascua",
+   "tipo": "poblado",
+   "region": "brasanegra",
+   "posicion": {
+    "x": 560,
+    "z": 560
+   },
+   "secreto": false,
+   "descripcion": "Avanzada de forjadores que trabajan la obsidiana con el calor del volcán.",
+   "recompensa": "Comercio de obsidiana y forja avanzada"
+  },
+  {
+   "id": "caldera_brasanegra",
+   "nombre": "Caldera de Brasanegra",
+   "tipo": "guarida",
+   "region": "brasanegra",
+   "posicion": {
+    "x": 795,
+    "z": 810
+   },
+   "secreto": false,
+   "descripcion": "Cráter humeante en la cima del volcán, donde el fénix arde y renace.",
+   "recompensa": "Domar al fénix de ceniza"
+  },
+  {
+   "id": "rios_escoria",
+   "nombre": "Ríos de Escoria",
+   "tipo": "hito",
+   "region": "brasanegra",
+   "posicion": {
+    "x": 880,
+    "z": 640
+   },
+   "secreto": false,
+   "descripcion": "Coladas de escoria fría con grietas que aún brillan; caminar por ellas quema.",
+   "recompensa": "Mineral de brasa"
+  },
+  {
+   "id": "templo_llama_negra",
+   "nombre": "Templo de la Llama Negra",
+   "tipo": "ruina",
+   "region": "brasanegra",
+   "posicion": {
+    "x": 560,
+    "z": 850
+   },
+   "secreto": false,
+   "descripcion": "Templo de basalto donde Ignaro alimenta una llama que no da luz.",
+   "recompensa": "Esencia Arcana"
+  },
+  {
+   "id": "fumarolas_azufre",
+   "nombre": "Fumarolas del Azufre",
+   "tipo": "hito",
+   "region": "brasanegra",
+   "posicion": {
+    "x": 650,
+    "z": 640
+   },
+   "secreto": false,
+   "descripcion": "Campo de fumarolas amarillas; el vapor envenena si te quedas quieto.",
+   "recompensa": "Azufre"
+  },
+  {
+   "id": "campamento_tiznados",
+   "nombre": "Campamento de los Tiznados",
+   "tipo": "campamento",
+   "region": "brasanegra",
+   "posicion": {
+    "x": 900,
+    "z": 520
+   },
+   "secreto": false,
+   "descripcion": "Campamento de brutos cubiertos de hollín que extraen roca de brasa.",
+   "recompensa": "Cofre raro"
+  },
+  {
+   "id": "mina_obsidiana",
+   "nombre": "Mina de Obsidiana",
+   "tipo": "mina",
+   "region": "brasanegra",
+   "posicion": {
+    "x": 450,
+    "z": 740
+   },
+   "secreto": false,
+   "descripcion": "Galerías de cristal negro al pie de la Cresta de las Brasas.",
+   "recompensa": "Obsidiana"
+  },
+  {
+   "id": "tubo_lava",
+   "nombre": "Tubo de Lava Oculto",
+   "tipo": "cueva",
+   "region": "brasanegra",
+   "posicion": {
+    "x": 960,
+    "z": 880
+   },
+   "secreto": true,
+   "descripcion": "Túnel de lava fría escondido tras una cortina de humo en la ladera este.",
+   "recompensa": "Cofre épico"
+  },
+  {
+   "id": "cornisa_brasa",
+   "nombre": "Cornisa de la Brasa Dormida",
+   "tipo": "secreto",
+   "region": "brasanegra",
+   "posicion": {
+    "x": 700,
+    "z": 700
+   },
+   "secreto": true,
+   "descripcion": "Sendero oculto en la ladera del volcán que sube hasta la caldera; solo se ve el resplandor de noche.",
+   "recompensa": "Acceso a la caldera"
+  },
+  {
+   "id": "observatorio_alba",
+   "nombre": "Observatorio del Alba",
+   "tipo": "poblado",
+   "region": "corona_lucero",
+   "posicion": {
+    "x": -780,
+    "z": 880
+   },
+   "secreto": false,
+   "descripcion": "Observatorio de piedra blanca donde vive la última vigía; el único techo de la Corona.",
+   "recompensa": "Mapa de estrellas y misiones finales"
+  },
+  {
+   "id": "trono_lucero",
+   "nombre": "Trono del Lucero",
+   "tipo": "altar",
+   "region": "corona_lucero",
+   "posicion": {
+    "x": -900,
+    "z": 960
+   },
+   "secreto": false,
+   "descripcion": "Trono de luz en la Aguja del Alba. Quien lo ocupa recupera sus alas.",
+   "recompensa": "Alas completas del Lucero"
+  },
+  {
+   "id": "crater_caida",
+   "nombre": "Cráter de la Caída",
+   "tipo": "hito",
+   "region": "corona_lucero",
+   "posicion": {
+    "x": -800,
+    "z": 965
+   },
+   "secreto": false,
+   "descripcion": "Cráter antiguo cubierto de hielo: aquí cayó el Lucero hace mil años.",
+   "recompensa": "Recuerdo de la caída (historia)"
+  },
+  {
+   "id": "puente_hielo",
+   "nombre": "Puente de Hielo",
+   "tipo": "hito",
+   "region": "corona_lucero",
+   "posicion": {
+    "x": -920,
+    "z": 820
+   },
+   "secreto": false,
+   "descripcion": "Arco de hielo sobre una sima entre dos cumbres.",
+   "recompensa": "Piedra de historia"
+  },
+  {
+   "id": "mirador_mil_leguas",
+   "nombre": "Mirador de las Mil Leguas",
+   "tipo": "mirador",
+   "region": "corona_lucero",
+   "posicion": {
+    "x": -990,
+    "z": 840
+   },
+   "secreto": false,
+   "descripcion": "El punto con mejor vista del mundo: se ve hasta el mar del sur.",
+   "recompensa": "Revela todo el mapa"
+  },
+  {
+   "id": "guardia_heraldo",
+   "nombre": "Guardia del Heraldo",
+   "tipo": "campamento",
+   "region": "corona_lucero",
+   "posicion": {
+    "x": -860,
+    "z": 800
+   },
+   "secreto": false,
+   "descripcion": "Puesto de centinelas de luz que cierran el camino al trono.",
+   "recompensa": "Cofre épico"
+  },
+  {
+   "id": "plumas_primer_vuelo",
+   "nombre": "Plumas del Primer Vuelo",
+   "tipo": "secreto",
+   "region": "corona_lucero",
+   "posicion": {
+    "x": -995,
+    "z": 995
+   },
+   "secreto": true,
+   "descripcion": "Nido abandonado en la cara oculta de la Aguja con plumas blancas de antes de la caída.",
+   "recompensa": "Pluma de alba (mejora final de alas)"
+  },
+  {
+   "id": "escalera_olvidada",
+   "nombre": "Escalera Olvidada",
+   "tipo": "secreto",
+   "region": "corona_lucero",
+   "posicion": {
+    "x": -700,
+    "z": 980
+   },
+   "secreto": true,
+   "descripcion": "Peldaños tallados en la cara norte de la cresta: un segundo camino a la Corona.",
+   "recompensa": "Atajo a la Corona"
+  }
+ ],
+ "campamentos": [
+  {
+   "region": "llanos_cruce",
+   "posicion": {
+    "x": 120,
+    "z": -260
+   },
+   "tipos": [
+    "saqueador",
+    "ballestero"
+   ],
+   "cantidad": 5,
+   "nivel": 4
+  },
+  {
+   "region": "llanos_cruce",
+   "posicion": {
+    "x": -200,
+    "z": 200
+   },
+   "tipos": [
+    "saqueador"
+   ],
+   "cantidad": 3,
+   "nivel": 2
+  },
+  {
+   "region": "llanos_cruce",
+   "posicion": {
+    "x": 200,
+    "z": -40
+   },
+   "tipos": [
+    "lobo"
+   ],
+   "cantidad": 3,
+   "nivel": 3
+  },
+  {
+   "region": "llanos_cruce",
+   "posicion": {
+    "x": -130,
+    "z": -240
+   },
+   "tipos": [
+    "saqueador"
+   ],
+   "cantidad": 2,
+   "nivel": 1
+  },
+  {
+   "region": "bosque_hondaniebla",
+   "posicion": {
+    "x": -250,
+    "z": -420
+   },
+   "tipos": [
+    "saqueador",
+    "ballestero"
+   ],
+   "cantidad": 5,
+   "nivel": 6
+  },
+  {
+   "region": "bosque_hondaniebla",
+   "posicion": {
+    "x": -500,
+    "z": -600
+   },
+   "tipos": [
+    "lobo"
+   ],
+   "cantidad": 4,
+   "nivel": 7
+  },
+  {
+   "region": "bosque_hondaniebla",
+   "posicion": {
+    "x": -640,
+    "z": -400
+   },
+   "tipos": [
+    "lobo"
+   ],
+   "cantidad": 5,
+   "nivel": 8
+  },
+  {
+   "region": "bosque_hondaniebla",
+   "posicion": {
+    "x": -380,
+    "z": -170
+   },
+   "tipos": [
+    "saqueador"
+   ],
+   "cantidad": 3,
+   "nivel": 5
+  },
+  {
+   "region": "marjal_ahogados",
+   "posicion": {
+    "x": 560,
+    "z": -300
+   },
+   "tipos": [
+    "esqueleto",
+    "sanadora"
+   ],
+   "cantidad": 5,
+   "nivel": 12
+  },
+  {
+   "region": "marjal_ahogados",
+   "posicion": {
+    "x": 420,
+    "z": -600
+   },
+   "tipos": [
+    "esqueleto"
+   ],
+   "cantidad": 4,
+   "nivel": 11
+  },
+  {
+   "region": "marjal_ahogados",
+   "posicion": {
+    "x": 680,
+    "z": -560
+   },
+   "tipos": [
+    "acolito",
+    "sanadora"
+   ],
+   "cantidad": 4,
+   "nivel": 13
+  },
+  {
+   "region": "marjal_ahogados",
+   "posicion": {
+    "x": 250,
+    "z": -520
+   },
+   "tipos": [
+    "esqueleto",
+    "acolito"
+   ],
+   "cantidad": 3,
+   "nivel": 10
+  },
+  {
+   "region": "costa_velas_rotas",
+   "posicion": {
+    "x": 300,
+    "z": -680
+   },
+   "tipos": [
+    "saqueador",
+    "ballestero",
+    "bruto"
+   ],
+   "cantidad": 6,
+   "nivel": 16
+  },
+  {
+   "region": "costa_velas_rotas",
+   "posicion": {
+    "x": -490,
+    "z": -820
+   },
+   "tipos": [
+    "esqueleto"
+   ],
+   "cantidad": 4,
+   "nivel": 14
+  },
+  {
+   "region": "costa_velas_rotas",
+   "posicion": {
+    "x": 60,
+    "z": -620
+   },
+   "tipos": [
+    "saqueador",
+    "ballestero"
+   ],
+   "cantidad": 4,
+   "nivel": 15
+  },
+  {
+   "region": "costa_velas_rotas",
+   "posicion": {
+    "x": -240,
+    "z": -620
+   },
+   "tipos": [
+    "bruto",
+    "saqueador"
+   ],
+   "cantidad": 4,
+   "nivel": 15
+  },
+  {
+   "region": "meseta_yunque",
+   "posicion": {
+    "x": 850,
+    "z": -60
+   },
+   "tipos": [
+    "bruto",
+    "saqueador"
+   ],
+   "cantidad": 5,
+   "nivel": 20
+  },
+  {
+   "region": "meseta_yunque",
+   "posicion": {
+    "x": 900,
+    "z": 200
+   },
+   "tipos": [
+    "bruto",
+    "ballestero"
+   ],
+   "cantidad": 4,
+   "nivel": 19
+  },
+  {
+   "region": "meseta_yunque",
+   "posicion": {
+    "x": 650,
+    "z": 300
+   },
+   "tipos": [
+    "ballestero",
+    "saqueador"
+   ],
+   "cantidad": 4,
+   "nivel": 18
+  },
+  {
+   "region": "ruinas_velmora",
+   "posicion": {
+    "x": -900,
+    "z": 300
+   },
+   "tipos": [
+    "acolito",
+    "sanadora"
+   ],
+   "cantidad": 5,
+   "nivel": 24
+  },
+  {
+   "region": "ruinas_velmora",
+   "posicion": {
+    "x": -900,
+    "z": 60
+   },
+   "tipos": [
+    "esqueleto",
+    "centinela_runico"
+   ],
+   "cantidad": 5,
+   "nivel": 25
+  },
+  {
+   "region": "ruinas_velmora",
+   "posicion": {
+    "x": -700,
+    "z": 0
+   },
+   "tipos": [
+    "esqueleto"
+   ],
+   "cantidad": 4,
+   "nivel": 22
+  },
+  {
+   "region": "ruinas_velmora",
+   "posicion": {
+    "x": -780,
+    "z": 330
+   },
+   "tipos": [
+    "centinela_runico"
+   ],
+   "cantidad": 2,
+   "nivel": 26
+  },
+  {
+   "region": "tierra_carmesi",
+   "posicion": {
+    "x": 150,
+    "z": 720
+   },
+   "tipos": [
+    "acolito",
+    "sanadora",
+    "esqueleto"
+   ],
+   "cantidad": 6,
+   "nivel": 27
+  },
+  {
+   "region": "tierra_carmesi",
+   "posicion": {
+    "x": 180,
+    "z": 850
+   },
+   "tipos": [
+    "esqueleto",
+    "centinela_runico"
+   ],
+   "cantidad": 4,
+   "nivel": 28
+  },
+  {
+   "region": "tierra_carmesi",
+   "posicion": {
+    "x": -150,
+    "z": 700
+   },
+   "tipos": [
+    "centinela_runico",
+    "esqueleto"
+   ],
+   "cantidad": 4,
+   "nivel": 27
+  },
+  {
+   "region": "tierra_carmesi",
+   "posicion": {
+    "x": -60,
+    "z": 830
+   },
+   "tipos": [
+    "acolito",
+    "centinela_runico"
+   ],
+   "cantidad": 4,
+   "nivel": 29
+  },
+  {
+   "region": "picos_albor",
+   "posicion": {
+    "x": -600,
+    "z": 800
+   },
+   "tipos": [
+    "bruto",
+    "lobo"
+   ],
+   "cantidad": 6,
+   "nivel": 34
+  },
+  {
+   "region": "picos_albor",
+   "posicion": {
+    "x": -760,
+    "z": 560
+   },
+   "tipos": [
+    "lobo"
+   ],
+   "cantidad": 5,
+   "nivel": 32
+  },
+  {
+   "region": "picos_albor",
+   "posicion": {
+    "x": -660,
+    "z": 640
+   },
+   "tipos": [
+    "centinela_runico",
+    "bruto"
+   ],
+   "cantidad": 4,
+   "nivel": 33
+  },
+  {
+   "region": "picos_albor",
+   "posicion": {
+    "x": -400,
+    "z": 740
+   },
+   "tipos": [
+    "lobo",
+    "bruto"
+   ],
+   "cantidad": 4,
+   "nivel": 35
+  },
+  {
+   "region": "brasanegra",
+   "posicion": {
+    "x": 900,
+    "z": 520
+   },
+   "tipos": [
+    "acolito",
+    "bruto"
+   ],
+   "cantidad": 6,
+   "nivel": 40
+  },
+  {
+   "region": "brasanegra",
+   "posicion": {
+    "x": 650,
+    "z": 640
+   },
+   "tipos": [
+    "acolito",
+    "centinela_runico"
+   ],
+   "cantidad": 4,
+   "nivel": 39
+  },
+  {
+   "region": "brasanegra",
+   "posicion": {
+    "x": 880,
+    "z": 640
+   },
+   "tipos": [
+    "bruto",
+    "centinela_runico"
+   ],
+   "cantidad": 4,
+   "nivel": 41
+  },
+  {
+   "region": "brasanegra",
+   "posicion": {
+    "x": 450,
+    "z": 740
+   },
+   "tipos": [
+    "bruto",
+    "saqueador"
+   ],
+   "cantidad": 4,
+   "nivel": 38
+  },
+  {
+   "region": "corona_lucero",
+   "posicion": {
+    "x": -860,
+    "z": 800
+   },
+   "tipos": [
+    "centinela_runico",
+    "sanadora"
+   ],
+   "cantidad": 5,
+   "nivel": 47
+  },
+  {
+   "region": "corona_lucero",
+   "posicion": {
+    "x": -920,
+    "z": 820
+   },
+   "tipos": [
+    "centinela_runico",
+    "esqueleto"
+   ],
+   "cantidad": 4,
+   "nivel": 48
+  },
+  {
+   "region": "corona_lucero",
+   "posicion": {
+    "x": -930,
+    "z": 880
+   },
+   "tipos": [
+    "centinela_runico"
+   ],
+   "cantidad": 3,
+   "nivel": 50
+  }
+ ],
+ "jefes": [
+  {
+   "id": "gorran",
+   "nombre": "Gorran el Desollador",
+   "region": "llanos_cruce",
+   "posicion": {
+    "x": 125,
+    "z": -268
+   },
+   "modelo": "Barbarian",
+   "vida": 600,
+   "dano": 14,
+   "descripcion": "Jefe de los saqueadores del llano. Carga en línea recta y lanza ganchos; al 50 % llama a dos ballesteros. Retiene a Toren el herrero."
+  },
+  {
+   "id": "ysolde",
+   "nombre": "Ysolde, la Cazadora de Bruma",
+   "region": "bosque_hondaniebla",
+   "posicion": {
+    "x": -625,
+    "z": -480
+   },
+   "modelo": "Rogue",
+   "vida": 800,
+   "dano": 16,
+   "descripcion": "Cazadora que vive con la manada. Se esconde en la niebla y dispara desde lejos; al 50 % suelta a los lobos de bruma."
+  },
+  {
+   "id": "madre_cienaga",
+   "nombre": "Madre Ciénaga",
+   "region": "marjal_ahogados",
+   "posicion": {
+    "x": 685,
+    "z": -570
+   },
+   "modelo": "Mage",
+   "vida": 1000,
+   "dano": 18,
+   "descripcion": "Bruja del marjal. Levanta ahogados del barro, cura a sus siervos y llena el suelo de charcos venenosos."
+  },
+  {
+   "id": "varek",
+   "nombre": "Capitán Varek Sal-Negra",
+   "region": "costa_velas_rotas",
+   "posicion": {
+    "x": 305,
+    "z": -690
+   },
+   "modelo": "Rogue",
+   "vida": 1200,
+   "dano": 20,
+   "descripcion": "Raquero que hunde barcos con luces falsas. Duelista rápido con barriles explosivos; al 50 % prende fuego a su fortín."
+  },
+  {
+   "id": "torvald",
+   "nombre": "Torvald Rompeyunques",
+   "region": "meseta_yunque",
+   "posicion": {
+    "x": 855,
+    "z": -70
+   },
+   "modelo": "Barbarian",
+   "vida": 1500,
+   "dano": 26,
+   "descripcion": "Gigante capataz de la cantera. Golpes lentos que parten el suelo y rocas que caen del borde; esquivar es obligatorio."
+  },
+  {
+   "id": "abad_hueco",
+   "nombre": "El Abad Hueco",
+   "region": "ruinas_velmora",
+   "posicion": {
+    "x": -815,
+    "z": 225
+   },
+   "modelo": "Skeleton_Warrior",
+   "vida": 1500,
+   "dano": 22,
+   "descripcion": "Esqueleto del último abad de Velmora, atado a la catedral. Invoca esqueletos con la campana y bloquea con su báculo de hierro."
+  },
+  {
+   "id": "caballero_sangre",
+   "nombre": "Caballero de sangre",
+   "region": "tierra_carmesi",
+   "posicion": {
+    "x": 0,
+    "z": 866
+   },
+   "modelo": "Knight",
+   "vida": 1800,
+   "dano": 24,
+   "descripcion": "Tomó el Altar del Norte la noche de la luna roja. Espada y magia de sangre; al 50 % se enfurece, se mueve más rápido y su rayo carmesí barre el altar."
+  },
+  {
+   "id": "hrimvald",
+   "nombre": "Hrimvald, Jarl de la Escarcha",
+   "region": "picos_albor",
+   "posicion": {
+    "x": -605,
+    "z": 810
+   },
+   "modelo": "Barbarian",
+   "vida": 2200,
+   "dano": 28,
+   "descripcion": "Jarl de los montañeses corrompidos. Hacha de hielo que congela al tercer golpe; llama a la ventisca y a sus lobos."
+  },
+  {
+   "id": "ignaro",
+   "nombre": "Ignaro, Sumo Sacerdote de Ceniza",
+   "region": "brasanegra",
+   "posicion": {
+    "x": 565,
+    "z": 856
+   },
+   "modelo": "Mage",
+   "vida": 2400,
+   "dano": 30,
+   "descripcion": "Sacerdote de la llama negra. Lluvia de brasas, muros de fuego y acólitos que lo protegen; hay que apagar sus braseros."
+  },
+  {
+   "id": "vaelthar",
+   "nombre": "Vaelthar, Heraldo del Alba",
+   "region": "corona_lucero",
+   "posicion": {
+    "x": -895,
+    "z": 955
+   },
+   "modelo": "Knight",
+   "vida": 3200,
+   "dano": 34,
+   "descripcion": "El guardián de luz que arrojó al Lucero del cielo. Tres fases: espada, lanzas de luz y vuelo. Al vencerlo, el Lucero recupera sus alas completas."
+  }
+ ],
+ "monturas": [
+  {
+   "id": "lobo_bruma",
+   "nombre": "Lobo de bruma",
+   "region": "bosque_hondaniebla",
+   "posicion": {
+    "x": -615,
+    "z": -462
+   },
+   "vuela": false,
+   "velocidad": 14,
+   "requisito": "Nivel 6. Vence a Ysolde en la Guarida de la Loba Gris; el lobo alfa queda libre: déjalo por debajo del 30 % y mantén H para atarlo con tu esencia."
+  },
+  {
+   "id": "leon_cumbres",
+   "nombre": "León de las cumbres",
+   "region": "meseta_yunque",
+   "posicion": {
+    "x": 880,
+    "z": 306
+   },
+   "vuela": false,
+   "velocidad": 15,
+   "requisito": "Nivel 20. Sigue las huellas en los Riscos del León y vence al león alfa sin matarlo (por debajo del 30 %, mantén H). Salta repisas y sube pendientes que el lobo no puede."
+  },
+  {
+   "id": "corcel_infernal",
+   "nombre": "Corcel infernal",
+   "region": "tierra_carmesi",
+   "posicion": {
+    "x": 35,
+    "z": 872
+   },
+   "vuela": false,
+   "velocidad": 16,
+   "requisito": "Derrota al Caballero de sangre: su corcel, encadenado al altar, reconoce al Lucero y acepta su mando. Inmune al fuego."
+  },
+  {
+   "id": "oso_acorazado",
+   "nombre": "Oso acorazado",
+   "region": "picos_albor",
+   "posicion": {
+    "x": -385,
+    "z": 705
+   },
+   "vuela": false,
+   "velocidad": 12,
+   "requisito": "Nivel 32. En el Cubil del Oso rompe sus placas de hielo con Piromancia y domínalo. Lento, pero aguanta golpes, rompe rocas grandes y cruza la ventisca."
+  },
+  {
+   "id": "grifo",
+   "nombre": "Grifo del Peñón",
+   "region": "costa_velas_rotas",
+   "posicion": {
+    "x": 436,
+    "z": -796
+   },
+   "vuela": true,
+   "velocidad": 24,
+   "requisito": "Nivel 30 y haber vencido al Caballero de sangre (devuelve la primera ala). Sube de noche a la cima del Peñón por la senda de cornisas y vence a la grifa madre sin matarla."
+  },
+  {
+   "id": "fenix_ceniza",
+   "nombre": "Fénix de ceniza",
+   "region": "brasanegra",
+   "posicion": {
+    "x": 792,
+    "z": 806
+   },
+   "vuela": true,
+   "velocidad": 26,
+   "requisito": "Nivel 42 y haber vencido a Ignaro. Sube a la Caldera por la Cornisa de la Brasa Dormida en Luna carmesí: el fénix renace de las brasas y elige al Lucero. Si cae, renace a los 60 s."
+  }
+ ],
+ "piedrasViaje": [
+  {
+   "id": "piedra_cruce",
+   "nombre": "Piedra del Cruce",
+   "posicion": {
+    "x": 5,
+    "z": -60
+   }
+  },
+  {
+   "id": "piedra_hondaniebla",
+   "nombre": "Piedra de Hondaniebla",
+   "posicion": {
+    "x": -300,
+    "z": -298
+   }
+  },
+  {
+   "id": "piedra_brumafria",
+   "nombre": "Piedra de Brumafría",
+   "posicion": {
+    "x": 345,
+    "z": -410
+   }
+  },
+  {
+   "id": "piedra_ancla",
+   "nombre": "Piedra del Ancla",
+   "posicion": {
+    "x": -80,
+    "z": -780
+   }
+  },
+  {
+   "id": "piedra_faro",
+   "nombre": "Piedra del Faro",
+   "posicion": {
+    "x": 230,
+    "z": -720
+   }
+  },
+  {
+   "id": "piedra_yunque",
+   "nombre": "Piedra del Yunque",
+   "posicion": {
+    "x": 545,
+    "z": 160
+   }
+  },
+  {
+   "id": "piedra_campana",
+   "nombre": "Piedra de la Campana",
+   "posicion": {
+    "x": -520,
+    "z": 120
+   }
+  },
+  {
+   "id": "piedra_juramento",
+   "nombre": "Piedra del Juramento",
+   "posicion": {
+    "x": 60,
+    "z": 555
+   }
+  },
+  {
+   "id": "piedra_albor",
+   "nombre": "Piedra de Albor",
+   "posicion": {
+    "x": -567,
+    "z": 485
+   }
+  },
+  {
+   "id": "piedra_ascua",
+   "nombre": "Piedra de Ascua",
+   "posicion": {
+    "x": 615,
+    "z": 535
+   }
+  },
+  {
+   "id": "piedra_alba",
+   "nombre": "Piedra del Alba",
+   "posicion": {
+    "x": -760,
+    "z": 858
+   }
+  }
+ ],
+ "npcs": [
+  {
+   "id": "maela",
+   "nombre": "Maela",
+   "oficio": "carpintera",
+   "poblado": "cruce",
+   "posicion": {
+    "x": 12,
+    "z": -8
+   },
+   "frase": "Si me traes madera levanto techos; si me traes noticias, levanto ánimos."
+  },
+  {
+   "id": "toren",
+   "nombre": "Toren",
+   "oficio": "herrero",
+   "poblado": "cruce",
+   "posicion": {
+    "x": -14,
+    "z": -30
+   },
+   "frase": "Tus manos calientan el hierro antes que la fragua. ¿Qué eres tú?"
+  },
+  {
+   "id": "iria",
+   "nombre": "Iria",
+   "oficio": "maga de la Academia Velada",
+   "poblado": "cruce",
+   "posicion": {
+    "x": 18,
+    "z": -34
+   },
+   "frase": "Las seis escuelas te temen, Lucero. Yo prefiero que me enseñes."
+  },
+  {
+   "id": "odila",
+   "nombre": "Hermana Odila",
+   "oficio": "sanadora",
+   "poblado": "cruce",
+   "posicion": {
+    "x": -10,
+    "z": -6
+   },
+   "frase": "Nadie cae tan hondo que no pueda volver a levantarse."
+  },
+  {
+   "id": "bram",
+   "nombre": "Bram",
+   "oficio": "mercader",
+   "poblado": "cruce",
+   "posicion": {
+    "x": 6,
+    "z": -44
+   },
+   "frase": "Plumas negras no acepto. Oro, esencia o pieles, sí."
+  },
+  {
+   "id": "nessa",
+   "nombre": "Nessa",
+   "oficio": "cazadora",
+   "poblado": "aserradero_hondaniebla",
+   "posicion": {
+    "x": -320,
+    "z": -292
+   },
+   "frase": "La niebla no esconde a los lobos: te esconde a ti de ellos."
+  },
+  {
+   "id": "corvo",
+   "nombre": "Viejo Corvo",
+   "oficio": "leñador",
+   "poblado": "aserradero_hondaniebla",
+   "posicion": {
+    "x": -342,
+    "z": -308
+   },
+   "frase": "Ese roble ya era viejo cuando tu caída partió el cielo."
+  },
+  {
+   "id": "merren",
+   "nombre": "Merren",
+   "oficio": "herbolaria",
+   "poblado": "pilotes_brumafria",
+   "posicion": {
+    "x": 322,
+    "z": -438
+   },
+   "frase": "Bajo el agua todo se pudre, menos las promesas de la Madre Ciénaga."
+  },
+  {
+   "id": "tilo",
+   "nombre": "Tilo",
+   "oficio": "barquero",
+   "poblado": "pilotes_brumafria",
+   "posicion": {
+    "x": 340,
+    "z": -422
+   },
+   "frase": "Sube a la barca. No mires al fondo, y si miras, no saludes."
+  },
+  {
+   "id": "rhosyn",
+   "nombre": "Capitana Rhosyn",
+   "oficio": "armadora",
+   "poblado": "puerto_ancla_rota",
+   "posicion": {
+    "x": -100,
+    "z": -790
+   },
+   "frase": "Varek quema mis barcos de noche. Tráeme su ancla y te deberé un mar entero."
+  },
+  {
+   "id": "dorn",
+   "nombre": "Dorn",
+   "oficio": "pescador",
+   "poblado": "puerto_ancla_rota",
+   "posicion": {
+    "x": -122,
+    "z": -808
+   },
+   "frase": "Desde el faro se ve a la grifa volver al Peñón cada noche. Nadie sube dos veces."
+  },
+  {
+   "id": "lys",
+   "nombre": "Lys",
+   "oficio": "cartógrafa",
+   "poblado": "puerto_ancla_rota",
+   "posicion": {
+    "x": -104,
+    "z": -812
+   },
+   "frase": "Cada pluma que encuentras me dibuja un trozo del mapa."
+  },
+  {
+   "id": "grenda",
+   "nombre": "Grenda",
+   "oficio": "capataz minera",
+   "poblado": "campamento_yunque",
+   "posicion": {
+    "x": 572,
+    "z": 190
+   },
+   "frase": "La meseta tiene más hierro que paciencia. Y Torvald, menos todavía."
+  },
+  {
+   "id": "hask",
+   "nombre": "Hask",
+   "oficio": "domador de bestias",
+   "poblado": "campamento_yunque",
+   "posicion": {
+    "x": 590,
+    "z": 172
+   },
+   "frase": "Al león no se le doma: se le convence de que tú también eres de las cumbres."
+  },
+  {
+   "id": "ansel",
+   "nombre": "Hermano Ansel",
+   "oficio": "archivero",
+   "poblado": "refugio_campana",
+   "posicion": {
+    "x": -592,
+    "z": 128
+   },
+   "frase": "Velmora guardaba libros sobre ti. Los quemaron todos, menos uno."
+  },
+  {
+   "id": "imelda",
+   "nombre": "Sor Imelda",
+   "oficio": "campanera",
+   "poblado": "refugio_campana",
+   "posicion": {
+    "x": -608,
+    "z": 112
+   },
+   "frase": "Si la campana suena sola, corre hacia la catedral, no lejos de ella."
+  },
+  {
+   "id": "calder",
+   "nombre": "Fray Calder",
+   "oficio": "penitente",
+   "poblado": "ermita_penitentes",
+   "posicion": {
+    "x": 78,
+    "z": 606
+   },
+   "frase": "Él tomó el altar la noche de la luna roja. Yo le abrí la puerta."
+  },
+  {
+   "id": "ulrik",
+   "nombre": "Ulrik",
+   "oficio": "guía de montaña",
+   "poblado": "fuerte_albor",
+   "posicion": {
+    "x": -552,
+    "z": 528
+   },
+   "frase": "Hay una escalera hacia la Corona, pero solo la encuentra quien no teme caer."
+  },
+  {
+   "id": "maren",
+   "nombre": "Maren",
+   "oficio": "peletera",
+   "poblado": "fuerte_albor",
+   "posicion": {
+    "x": -568,
+    "z": 512
+   },
+   "frase": "Con una piel de oso acorazado no te tocaría ni la ventisca."
+  },
+  {
+   "id": "kaelen",
+   "nombre": "Kaelen",
+   "oficio": "forjador de obsidiana",
+   "poblado": "avanzada_ascua",
+   "posicion": {
+    "x": 568,
+    "z": 566
+   },
+   "frase": "La obsidiana recuerda el fuego. Tú también, ¿verdad?"
+  },
+  {
+   "id": "brasa",
+   "nombre": "Brasa",
+   "oficio": "alquimista",
+   "poblado": "avanzada_ascua",
+   "posicion": {
+    "x": 552,
+    "z": 552
+   },
+   "frase": "Una gota de azufre, una de sangre, una de luna. Y no respires."
+  },
+  {
+   "id": "ismera",
+   "nombre": "Ismera",
+   "oficio": "la última vigía",
+   "poblado": "observatorio_alba",
+   "posicion": {
+    "x": -772,
+    "z": 886
+   },
+   "frase": "Te vi caer hace mil años. Has tardado en volver a subir."
+  }
+ ],
+ "inicio": {
+  "x": -132,
+  "z": -142
+ }
+}

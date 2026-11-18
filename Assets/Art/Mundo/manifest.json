@@ -1,0 +1,3856 @@
+{
+ "version": 1,
+ "orientacion": "Props estaticos: exportados con bake_space_transform (sin rotacion en la raiz). Frente del modelo = +Z de Unity (-Y en Blender), arriba = +Y, metros reales, escala 1. Origen en la base centrada (base_y = cota minima; negativa = parte que se hunde bajo el suelo). Sin UV: materiales por nombre con el shader triplanar.",
+ "modelos": [
+  {
+   "nombre": "arbol_calcinado",
+   "archivo": "Modelos/arbol_calcinado.fbx",
+   "categoria": "arbol",
+   "dims": [
+    3.18,
+    5.7,
+    3.3
+   ],
+   "tris": 282,
+   "materiales": [
+    "Ceniza",
+    "Brasa"
+   ],
+   "colisor": "capsula",
+   "radio": 0.45,
+   "tamano": [
+    0,
+    0,
+    0
+   ],
+   "base_y": -0.46,
+   "notas": "",
+   "jerarquia": [],
+   "orientacion": ""
+  },
+  {
+   "nombre": "arbol_muerto_a",
+   "archivo": "Modelos/arbol_muerto_a.fbx",
+   "categoria": "arbol",
+   "dims": [
+    3.47,
+    6.86,
+    3.95
+   ],
+   "tris": 340,
+   "materiales": [
+    "Corteza_muerta"
+   ],
+   "colisor": "capsula",
+   "radio": 0.4,
+   "tamano": [
+    0,
+    0,
+    0
+   ],
+   "base_y": -0.46,
+   "notas": "",
+   "jerarquia": [],
+   "orientacion": ""
+  },
+  {
+   "nombre": "arbol_muerto_b",
+   "archivo": "Modelos/arbol_muerto_b.fbx",
+   "categoria": "arbol",
+   "dims": [
+    5.28,
+    8.44,
+    4.67
+   ],
+   "tris": 340,
+   "materiales": [
+    "Corteza_muerta"
+   ],
+   "colisor": "capsula",
+   "radio": 0.5,
+   "tamano": [
+    0,
+    0,
+    0
+   ],
+   "base_y": -0.6,
+   "notas": "",
+   "jerarquia": [],
+   "orientacion": ""
+  },
+  {
+   "nombre": "manglar",
+   "archivo": "Modelos/manglar.fbx",
+   "categoria": "arbol",
+   "dims": [
+    8.25,
+    8.95,
+    8.34
+   ],
+   "tris": 950,
+   "materiales": [
+    "Corteza",
+    "Hojas_sauce"
+   ],
+   "colisor": "capsula",
+   "radio": 0.5,
+   "tamano": [
+    0,
+    0,
+    0
+   ],
+   "base_y": -0.56,
+   "notas": "Pantano: raices en zancos; el agua puede cubrir hasta 1,5 m.",
+   "jerarquia": [],
+   "orientacion": ""
+  },
+  {
+   "nombre": "pino_a",
+   "archivo": "Modelos/pino_a.fbx",
+   "categoria": "arbol",
+   "dims": [
+    4.8,
+    9.37,
+    4.65
+   ],
+   "tris": 264,
+   "materiales": [
+    "Corteza",
+    "Hojas_pino"
+   ],
+   "colisor": "capsula",
+   "radio": 0.4,
+   "tamano": [
+    0,
+    0,
+    0
+   ],
+   "base_y": -0.42,
+   "notas": "",
+   "jerarquia": [],
+   "orientacion": ""
+  },
+  {
+   "nombre": "pino_b",
+   "archivo": "Modelos/pino_b.fbx",
+   "categoria": "arbol",
+   "dims": [
+    6.56,
+    12.87,
+    6.61
+   ],
+   "tris": 264,
+   "materiales": [
+    "Corteza",
+    "Hojas_pino"
+   ],
+   "colisor": "capsula",
+   "radio": 0.5,
+   "tamano": [
+    0,
+    0,
+    0
+   ],
+   "base_y": -0.43,
+   "notas": "",
+   "jerarquia": [],
+   "orientacion": ""
+  },
+  {
+   "nombre": "pino_c",
+   "archivo": "Modelos/pino_c.fbx",
+   "categoria": "arbol",
+   "dims": [
+    2.78,
+    6.38,
+    2.88
+   ],
+   "tris": 240,
+   "materiales": [
+    "Corteza",
+    "Hojas_pino"
+   ],
+   "colisor": "capsula",
+   "radio": 0.3,
+   "tamano": [
+    0,
+    0,
+    0
+   ],
+   "base_y": -0.41,
+   "notas": "",
+   "jerarquia": [],
+   "orientacion": ""
+  },
+  {
+   "nombre": "pino_nevado_a",
+   "archivo": "Modelos/pino_nevado_a.fbx",
+   "categoria": "arbol",
+   "dims": [
+    5.15,
+    9.96,
+    5.39
+   ],
+   "tris": 420,
+   "materiales": [
+    "Corteza",
+    "Hojas_pino",
+    "Nieve"
+   ],
+   "colisor": "capsula",
+   "radio": 0.4,
+   "tamano": [
+    0,
+    0,
+    0
+   ],
+   "base_y": -0.42,
+   "notas": "",
+   "jerarquia": [],
+   "orientacion": ""
+  },
+  {
+   "nombre": "pino_nevado_b",
+   "archivo": "Modelos/pino_nevado_b.fbx",
+   "categoria": "arbol",
+   "dims": [
+    3.12,
+    6.97,
+    3.1
+   ],
+   "tris": 372,
+   "materiales": [
+    "Corteza",
+    "Hojas_pino",
+    "Nieve"
+   ],
+   "colisor": "capsula",
+   "radio": 0.3,
+   "tamano": [
+    0,
+    0,
+    0
+   ],
+   "base_y": -0.42,
+   "notas": "",
+   "jerarquia": [],
+   "orientacion": ""
+  },
+  {
+   "nombre": "roble_a",
+   "archivo": "Modelos/roble_a.fbx",
+   "categoria": "arbol",
+   "dims": [
+    7.27,
+    8.76,
+    6.37
+   ],
+   "tris": 776,
+   "materiales": [
+    "Corteza",
+    "Hojas_roble"
+   ],
+   "colisor": "capsula",
+   "radio": 0.6,
+   "tamano": [
+    0,
+    0,
+    0
+   ],
+   "base_y": -0.43,
+   "notas": "",
+   "jerarquia": [],
+   "orientacion": ""
+  },
+  {
+   "nombre": "roble_otono",
+   "archivo": "Modelos/roble_otono.fbx",
+   "categoria": "arbol",
+   "dims": [
+    7.5,
+    8.63,
+    7.54
+   ],
+   "tris": 776,
+   "materiales": [
+    "Corteza",
+    "Hojas_otono"
+   ],
+   "colisor": "capsula",
+   "radio": 0.6,
+   "tamano": [
+    0,
+    0,
+    0
+   ],
+   "base_y": -0.42,
+   "notas": "",
+   "jerarquia": [],
+   "orientacion": ""
+  },
+  {
+   "nombre": "sauce_pantano",
+   "archivo": "Modelos/sauce_pantano.fbx",
+   "categoria": "arbol",
+   "dims": [
+    6.91,
+    7.7,
+    6.31
+   ],
+   "tris": 1062,
+   "materiales": [
+    "Corteza_muerta",
+    "Hojas_sauce"
+   ],
+   "colisor": "capsula",
+   "radio": 0.6,
+   "tamano": [
+    0,
+    0,
+    0
+   ],
+   "base_y": -0.68,
+   "notas": "Pantano: sauce muerto con cortinas colgantes.",
+   "jerarquia": [],
+   "orientacion": ""
+  },
+  {
+   "nombre": "arbusto_a",
+   "archivo": "Modelos/arbusto_a.fbx",
+   "categoria": "arbusto",
+   "dims": [
+    2.46,
+    1.29,
+    2.02
+   ],
+   "tris": 400,
+   "materiales": [
+    "Arbusto"
+   ],
+   "colisor": "ninguno",
+   "radio": 0.0,
+   "tamano": [
+    0,
+    0,
+    0
+   ],
+   "base_y": -0.08,
+   "notas": "",
+   "jerarquia": [],
+   "orientacion": ""
+  },
+  {
+   "nombre": "arbusto_b",
+   "archivo": "Modelos/arbusto_b.fbx",
+   "categoria": "arbusto",
+   "dims": [
+    2.09,
+    1.49,
+    1.97
+   ],
+   "tris": 540,
+   "materiales": [
+    "Arbusto",
+    "Flor_roja"
+   ],
+   "colisor": "ninguno",
+   "radio": 0.0,
+   "tamano": [
+    0,
+    0,
+    0
+   ],
+   "base_y": -0.08,
+   "notas": "",
+   "jerarquia": [],
+   "orientacion": ""
+  },
+  {
+   "nombre": "arbusto_seco",
+   "archivo": "Modelos/arbusto_seco.fbx",
+   "categoria": "arbusto",
+   "dims": [
+    1.66,
+    1.06,
+    1.6
+   ],
+   "tris": 162,
+   "materiales": [
+    "Corteza_muerta"
+   ],
+   "colisor": "ninguno",
+   "radio": 0.0,
+   "tamano": [
+    0,
+    0,
+    0
+   ],
+   "base_y": -0.09,
+   "notas": "Desierto rojo / ceniza.",
+   "jerarquia": [],
+   "orientacion": ""
+  },
+  {
+   "nombre": "cactus_a",
+   "archivo": "Modelos/cactus_a.fbx",
+   "categoria": "arbusto",
+   "dims": [
+    2.02,
+    4.43,
+    0.77
+   ],
+   "tris": 310,
+   "materiales": [
+    "Cactus",
+    "Flor_roja"
+   ],
+   "colisor": "capsula",
+   "radio": 0.35,
+   "tamano": [
+    0,
+    0,
+    0
+   ],
+   "base_y": -0.2,
+   "notas": "Desierto rojo.",
+   "jerarquia": [],
+   "orientacion": ""
+  },
+  {
+   "nombre": "cactus_b",
+   "archivo": "Modelos/cactus_b.fbx",
+   "categoria": "arbusto",
+   "dims": [
+    1.6,
+    2.4,
+    1.5
+   ],
+   "tris": 376,
+   "materiales": [
+    "Cactus"
+   ],
+   "colisor": "capsula",
+   "radio": 0.5,
+   "tamano": [
+    0,
+    0,
+    0
+   ],
+   "base_y": -0.2,
+   "notas": "Desierto rojo.",
+   "jerarquia": [],
+   "orientacion": ""
+  },
+  {
+   "nombre": "flores_a",
+   "archivo": "Modelos/flores_a.fbx",
+   "categoria": "vegetacion_suelo",
+   "dims": [
+    0.8,
+    0.57,
+    0.78
+   ],
+   "tris": 248,
+   "materiales": [
+    "Hierba",
+    "Flor_palida"
+   ],
+   "colisor": "ninguno",
+   "radio": 0.0,
+   "tamano": [
+    0,
+    0,
+    0
+   ],
+   "base_y": -0.05,
+   "notas": "Flores palidas que brillan un poco de noche.",
+   "jerarquia": [],
+   "orientacion": ""
+  },
+  {
+   "nombre": "helecho",
+   "archivo": "Modelos/helecho.fbx",
+   "categoria": "vegetacion_suelo",
+   "dims": [
+    2.11,
+    0.59,
+    2.24
+   ],
+   "tris": 140,
+   "materiales": [
+    "Hierba"
+   ],
+   "colisor": "ninguno",
+   "radio": 0.0,
+   "tamano": [
+    0,
+    0,
+    0
+   ],
+   "base_y": 0.05,
+   "notas": "",
+   "jerarquia": [],
+   "orientacion": ""
+  },
+  {
+   "nombre": "hierba_alta",
+   "archivo": "Modelos/hierba_alta.fbx",
+   "categoria": "vegetacion_suelo",
+   "dims": [
+    0.93,
+    1.08,
+    1.24
+   ],
+   "tris": 48,
+   "materiales": [
+    "Hierba"
+   ],
+   "colisor": "ninguno",
+   "radio": 0.0,
+   "tamano": [
+    0,
+    0,
+    0
+   ],
+   "base_y": -0.05,
+   "notas": "",
+   "jerarquia": [],
+   "orientacion": ""
+  },
+  {
+   "nombre": "hongos_brillo",
+   "archivo": "Modelos/hongos_brillo.fbx",
+   "categoria": "vegetacion_suelo",
+   "dims": [
+    1.83,
+    1.23,
+    1.72
+   ],
+   "tris": 458,
+   "materiales": [
+    "Musgo",
+    "Hueso",
+    "Hongo_brillo"
+   ],
+   "colisor": "ninguno",
+   "radio": 0.0,
+   "tamano": [
+    0,
+    0,
+    0
+   ],
+   "base_y": -0.41,
+   "notas": "Hongos que brillan (bosque, pantano, cuevas).",
+   "jerarquia": [],
+   "orientacion": ""
+  },
+  {
+   "nombre": "huesos",
+   "archivo": "Modelos/huesos.fbx",
+   "categoria": "vegetacion_suelo",
+   "dims": [
+    2.74,
+    0.52,
+    1.68
+   ],
+   "tris": 466,
+   "materiales": [
+    "Hueso"
+   ],
+   "colisor": "ninguno",
+   "radio": 0.0,
+   "tamano": [
+    0,
+    0,
+    0
+   ],
+   "base_y": -0.08,
+   "notas": "",
+   "jerarquia": [],
+   "orientacion": ""
+  },
+  {
+   "nombre": "juncos",
+   "archivo": "Modelos/juncos.fbx",
+   "categoria": "vegetacion_suelo",
+   "dims": [
+    1.35,
+    1.74,
+    1.58
+   ],
+   "tris": 260,
+   "materiales": [
+    "Junco",
+    "Madera_oscura"
+   ],
+   "colisor": "ninguno",
+   "radio": 0.0,
+   "tamano": [
+    0,
+    0,
+    0
+   ],
+   "base_y": -0.1,
+   "notas": "Orillas y pantano.",
+   "jerarquia": [],
+   "orientacion": ""
+  },
+  {
+   "nombre": "nenufares",
+   "archivo": "Modelos/nenufares.fbx",
+   "categoria": "vegetacion_suelo",
+   "dims": [
+    2.65,
+    0.13,
+    3.04
+   ],
+   "tris": 332,
+   "materiales": [
+    "Nenufar",
+    "Flor_palida"
+   ],
+   "colisor": "ninguno",
+   "radio": 0.0,
+   "tamano": [
+    0,
+    0,
+    0
+   ],
+   "base_y": 0.0,
+   "notas": "Origen en la superficie del agua (colocar a la altura del agua).",
+   "jerarquia": [],
+   "orientacion": ""
+  },
+  {
+   "nombre": "fumarola",
+   "archivo": "Modelos/fumarola.fbx",
+   "categoria": "roca",
+   "dims": [
+    7.07,
+    3.08,
+    7.36
+   ],
+   "tris": 344,
+   "materiales": [
+    "Roca_volcanica",
+    "Lava"
+   ],
+   "colisor": "malla",
+   "radio": 0.0,
+   "tamano": [
+    0,
+    0,
+    0
+   ],
+   "base_y": -0.48,
+   "notas": "Tierras de ceniza: fumarola con lava en el crater (poner humo/luz en Unity).",
+   "jerarquia": [],
+   "orientacion": ""
+  },
+  {
+   "nombre": "pilar_roca",
+   "archivo": "Modelos/pilar_roca.fbx",
+   "categoria": "roca",
+   "dims": [
+    4.07,
+    17.14,
+    4.01
+   ],
+   "tris": 166,
+   "materiales": [
+    "Roca"
+   ],
+   "colisor": "malla",
+   "radio": 0.0,
+   "tamano": [
+    0,
+    0,
+    0
+   ],
+   "base_y": -0.96,
+   "notas": "Pilar de roca alto.",
+   "jerarquia": [],
+   "orientacion": ""
+  },
+  {
+   "nombre": "roca_a",
+   "archivo": "Modelos/roca_a.fbx",
+   "categoria": "roca",
+   "dims": [
+    0.86,
+    0.69,
+    0.74
+   ],
+   "tris": 52,
+   "materiales": [
+    "Roca"
+   ],
+   "colisor": "ninguno",
+   "radio": 0.0,
+   "tamano": [
+    0,
+    0,
+    0
+   ],
+   "base_y": -0.12,
+   "notas": "",
+   "jerarquia": [],
+   "orientacion": ""
+  },
+  {
+   "nombre": "roca_b",
+   "archivo": "Modelos/roca_b.fbx",
+   "categoria": "roca",
+   "dims": [
+    1.6,
+    1.43,
+    1.49
+   ],
+   "tris": 104,
+   "materiales": [
+    "Roca"
+   ],
+   "colisor": "malla",
+   "radio": 0.0,
+   "tamano": [
+    0,
+    0,
+    0
+   ],
+   "base_y": -0.24,
+   "notas": "",
+   "jerarquia": [],
+   "orientacion": ""
+  },
+  {
+   "nombre": "roca_c",
+   "archivo": "Modelos/roca_c.fbx",
+   "categoria": "roca",
+   "dims": [
+    3.23,
+    2.26,
+    2.79
+   ],
+   "tris": 148,
+   "materiales": [
+    "Roca"
+   ],
+   "colisor": "malla",
+   "radio": 0.0,
+   "tamano": [
+    0,
+    0,
+    0
+   ],
+   "base_y": -0.42,
+   "notas": "",
+   "jerarquia": [],
+   "orientacion": ""
+  },
+  {
+   "nombre": "roca_d",
+   "archivo": "Modelos/roca_d.fbx",
+   "categoria": "roca",
+   "dims": [
+    6.3,
+    3.64,
+    5.45
+   ],
+   "tris": 174,
+   "materiales": [
+    "Roca"
+   ],
+   "colisor": "malla",
+   "radio": 0.0,
+   "tamano": [
+    0,
+    0,
+    0
+   ],
+   "base_y": -0.63,
+   "notas": "",
+   "jerarquia": [],
+   "orientacion": ""
+  },
+  {
+   "nombre": "roca_musgo",
+   "archivo": "Modelos/roca_musgo.fbx",
+   "categoria": "roca",
+   "dims": [
+    2.32,
+    1.52,
+    2.11
+   ],
+   "tris": 182,
+   "materiales": [
+    "Musgo",
+    "Roca"
+   ],
+   "colisor": "malla",
+   "radio": 0.0,
+   "tamano": [
+    0,
+    0,
+    0
+   ],
+   "base_y": -0.22,
+   "notas": "Bosque: roca con musgo encima.",
+   "jerarquia": [],
+   "orientacion": ""
+  },
+  {
+   "nombre": "roca_nieve_a",
+   "archivo": "Modelos/roca_nieve_a.fbx",
+   "categoria": "roca",
+   "dims": [
+    2.48,
+    1.83,
+    1.75
+   ],
+   "tris": 176,
+   "materiales": [
+    "Nieve",
+    "Roca"
+   ],
+   "colisor": "malla",
+   "radio": 0.0,
+   "tamano": [
+    0,
+    0,
+    0
+   ],
+   "base_y": -0.32,
+   "notas": "Cumbres nevadas.",
+   "jerarquia": [],
+   "orientacion": ""
+  },
+  {
+   "nombre": "roca_nieve_b",
+   "archivo": "Modelos/roca_nieve_b.fbx",
+   "categoria": "roca",
+   "dims": [
+    5.4,
+    3.43,
+    3.86
+   ],
+   "tris": 266,
+   "materiales": [
+    "Nieve",
+    "Roca"
+   ],
+   "colisor": "malla",
+   "radio": 0.0,
+   "tamano": [
+    0,
+    0,
+    0
+   ],
+   "base_y": -0.58,
+   "notas": "Cumbres nevadas.",
+   "jerarquia": [],
+   "orientacion": ""
+  },
+  {
+   "nombre": "roca_oscura",
+   "archivo": "Modelos/roca_oscura.fbx",
+   "categoria": "roca",
+   "dims": [
+    2.19,
+    1.69,
+    2.17
+   ],
+   "tris": 102,
+   "materiales": [
+    "Roca_oscura"
+   ],
+   "colisor": "malla",
+   "radio": 0.0,
+   "tamano": [
+    0,
+    0,
+    0
+   ],
+   "base_y": -0.32,
+   "notas": "",
+   "jerarquia": [],
+   "orientacion": ""
+  },
+  {
+   "nombre": "roca_plana",
+   "archivo": "Modelos/roca_plana.fbx",
+   "categoria": "roca",
+   "dims": [
+    2.58,
+    0.56,
+    2.22
+   ],
+   "tris": 82,
+   "materiales": [
+    "Roca"
+   ],
+   "colisor": "caja",
+   "radio": 0.0,
+   "tamano": [
+    2.58,
+    0.56,
+    2.22
+   ],
+   "base_y": -0.12,
+   "notas": "",
+   "jerarquia": [],
+   "orientacion": ""
+  },
+  {
+   "nombre": "roca_roja",
+   "archivo": "Modelos/roca_roja.fbx",
+   "categoria": "roca",
+   "dims": [
+    2.5,
+    2.45,
+    1.92
+   ],
+   "tris": 88,
+   "materiales": [
+    "Roca_roja",
+    "Arenisca"
+   ],
+   "colisor": "malla",
+   "radio": 0.0,
+   "tamano": [
+    0,
+    0,
+    0
+   ],
+   "base_y": -0.33,
+   "notas": "Desierto rojo: roca estratificada.",
+   "jerarquia": [],
+   "orientacion": ""
+  },
+  {
+   "nombre": "roca_volcanica_a",
+   "archivo": "Modelos/roca_volcanica_a.fbx",
+   "categoria": "roca",
+   "dims": [
+    2.42,
+    2.08,
+    2.11
+   ],
+   "tris": 106,
+   "materiales": [
+    "Roca_volcanica",
+    "Lava"
+   ],
+   "colisor": "malla",
+   "radio": 0.0,
+   "tamano": [
+    0,
+    0,
+    0
+   ],
+   "base_y": -0.24,
+   "notas": "Tierras de ceniza: roca partida con nucleo de lava.",
+   "jerarquia": [],
+   "orientacion": ""
+  },
+  {
+   "nombre": "roca_volcanica_b",
+   "archivo": "Modelos/roca_volcanica_b.fbx",
+   "categoria": "roca",
+   "dims": [
+    4.32,
+    3.72,
+    4.15
+   ],
+   "tris": 340,
+   "materiales": [
+    "Roca_volcanica"
+   ],
+   "colisor": "malla",
+   "radio": 0.0,
+   "tamano": [
+    0,
+    0,
+    0
+   ],
+   "base_y": -0.4,
+   "notas": "Tierras de ceniza: columnas de basalto.",
+   "jerarquia": [],
+   "orientacion": ""
+  },
+  {
+   "nombre": "rocas_grupo",
+   "archivo": "Modelos/rocas_grupo.fbx",
+   "categoria": "roca",
+   "dims": [
+    3.12,
+    0.66,
+    1.67
+   ],
+   "tris": 114,
+   "materiales": [
+    "Roca"
+   ],
+   "colisor": "ninguno",
+   "radio": 0.0,
+   "tamano": [
+    0,
+    0,
+    0
+   ],
+   "base_y": -0.1,
+   "notas": "",
+   "jerarquia": [],
+   "orientacion": ""
+  },
+  {
+   "nombre": "acantilado_a",
+   "archivo": "Modelos/acantilado_a.fbx",
+   "categoria": "acantilado",
+   "dims": [
+    11.05,
+    11.57,
+    6.81
+   ],
+   "tris": 388,
+   "materiales": [
+    "Roca",
+    "Musgo"
+   ],
+   "colisor": "malla",
+   "radio": 0.0,
+   "tamano": [
+    0,
+    0,
+    0
+   ],
+   "base_y": -1.19,
+   "notas": "Frente hacia -Z de Unity... ver orientacion: frente del acantilado = +Z Unity, espalda plana.",
+   "jerarquia": [],
+   "orientacion": ""
+  },
+  {
+   "nombre": "acantilado_b",
+   "archivo": "Modelos/acantilado_b.fbx",
+   "categoria": "acantilado",
+   "dims": [
+    13.07,
+    16.01,
+    8.02
+   ],
+   "tris": 574,
+   "materiales": [
+    "Roca",
+    "Musgo"
+   ],
+   "colisor": "malla",
+   "radio": 0.0,
+   "tamano": [
+    0,
+    0,
+    0
+   ],
+   "base_y": -1.18,
+   "notas": "",
+   "jerarquia": [],
+   "orientacion": ""
+  },
+  {
+   "nombre": "acantilado_esquina",
+   "archivo": "Modelos/acantilado_esquina.fbx",
+   "categoria": "acantilado",
+   "dims": [
+    13.28,
+    11.09,
+    13.76
+   ],
+   "tris": 432,
+   "materiales": [
+    "Roca",
+    "Musgo"
+   ],
+   "colisor": "malla",
+   "radio": 0.0,
+   "tamano": [
+    0,
+    0,
+    0
+   ],
+   "base_y": -1.19,
+   "notas": "Esquina exterior (90 grados).",
+   "jerarquia": [],
+   "orientacion": ""
+  },
+  {
+   "nombre": "acantilado_nieve",
+   "archivo": "Modelos/acantilado_nieve.fbx",
+   "categoria": "acantilado",
+   "dims": [
+    11.06,
+    12.89,
+    6.87
+   ],
+   "tris": 422,
+   "materiales": [
+    "Roca",
+    "Nieve"
+   ],
+   "colisor": "malla",
+   "radio": 0.0,
+   "tamano": [
+    0,
+    0,
+    0
+   ],
+   "base_y": -1.19,
+   "notas": "Cumbres nevadas.",
+   "jerarquia": [],
+   "orientacion": ""
+  },
+  {
+   "nombre": "acantilado_rojo",
+   "archivo": "Modelos/acantilado_rojo.fbx",
+   "categoria": "acantilado",
+   "dims": [
+    11.02,
+    12.41,
+    6.54
+   ],
+   "tris": 298,
+   "materiales": [
+    "Roca_roja",
+    "Arenisca"
+   ],
+   "colisor": "malla",
+   "radio": 0.0,
+   "tamano": [
+    0,
+    0,
+    0
+   ],
+   "base_y": -1.19,
+   "notas": "Desierto rojo: estratos alternos.",
+   "jerarquia": [],
+   "orientacion": ""
+  },
+  {
+   "nombre": "acantilado_volcanico",
+   "archivo": "Modelos/acantilado_volcanico.fbx",
+   "categoria": "acantilado",
+   "dims": [
+    11.06,
+    12.9,
+    7.02
+   ],
+   "tris": 456,
+   "materiales": [
+    "Roca_volcanica",
+    "Ceniza",
+    "Lava"
+   ],
+   "colisor": "malla",
+   "radio": 0.0,
+   "tamano": [
+    0,
+    0,
+    0
+   ],
+   "base_y": -1.18,
+   "notas": "Tierras de ceniza: basalto con vetas de lava.",
+   "jerarquia": [],
+   "orientacion": ""
+  },
+  {
+   "nombre": "roca_cascada",
+   "archivo": "Modelos/roca_cascada.fbx",
+   "categoria": "acantilado",
+   "dims": [
+    16.34,
+    14.4,
+    12.11
+   ],
+   "tris": 398,
+   "materiales": [
+    "Roca",
+    "Musgo",
+    "Roca_oscura"
+   ],
+   "colisor": "malla",
+   "radio": 0.0,
+   "tamano": [
+    0,
+    0,
+    0
+   ],
+   "base_y": -1.16,
+   "notas": "Cascada: el agua sale del labio en Unity (0, 11.3, 0.8) y cae a la poza centrada en (0, 0, 4) radio ~3.8. El agua la pone Unity.",
+   "jerarquia": [],
+   "orientacion": ""
+  },
+  {
+   "nombre": "roca_meseta",
+   "archivo": "Modelos/roca_meseta.fbx",
+   "categoria": "acantilado",
+   "dims": [
+    24.63,
+    17.39,
+    20.09
+   ],
+   "tris": 1232,
+   "materiales": [
+    "Roca_roja",
+    "Arenisca"
+   ],
+   "colisor": "malla",
+   "radio": 0.0,
+   "tamano": [
+    0,
+    0,
+    0
+   ],
+   "base_y": -1.14,
+   "notas": "Meseta del desierto rojo: cima plana transitable a ~16 m.",
+   "jerarquia": [],
+   "orientacion": ""
+  },
+  {
+   "nombre": "barril",
+   "archivo": "Modelos/barril.fbx",
+   "categoria": "decoracion",
+   "dims": [
+    0.88,
+    1.0,
+    0.84
+   ],
+   "tris": 208,
+   "materiales": [
+    "Madera",
+    "Metal"
+   ],
+   "colisor": "capsula",
+   "radio": 0.4,
+   "tamano": [
+    0,
+    0,
+    0
+   ],
+   "base_y": 0.0,
+   "notas": "",
+   "jerarquia": [],
+   "orientacion": ""
+  },
+  {
+   "nombre": "caja",
+   "archivo": "Modelos/caja.fbx",
+   "categoria": "decoracion",
+   "dims": [
+    0.96,
+    0.9,
+    0.96
+   ],
+   "tris": 156,
+   "materiales": [
+    "Madera",
+    "Madera_oscura"
+   ],
+   "colisor": "caja",
+   "radio": 0.0,
+   "tamano": [
+    0.95,
+    0.95,
+    0.95
+   ],
+   "base_y": 0.0,
+   "notas": "",
+   "jerarquia": [],
+   "orientacion": ""
+  },
+  {
+   "nombre": "carreta",
+   "archivo": "Modelos/carreta.fbx",
+   "categoria": "decoracion",
+   "dims": [
+    4.12,
+    1.59,
+    1.8
+   ],
+   "tris": 596,
+   "materiales": [
+    "Madera",
+    "Madera_oscura",
+    "Metal",
+    "Tela_ocre"
+   ],
+   "colisor": "caja",
+   "radio": 0.0,
+   "tamano": [
+    4.12,
+    1.59,
+    1.8
+   ],
+   "base_y": -0.04,
+   "notas": "",
+   "jerarquia": [],
+   "orientacion": ""
+  },
+  {
+   "nombre": "cristales",
+   "archivo": "Modelos/cristales.fbx",
+   "categoria": "decoracion",
+   "dims": [
+    1.98,
+    2.75,
+    1.51
+   ],
+   "tris": 182,
+   "materiales": [
+    "Roca_oscura",
+    "Cristal"
+   ],
+   "colisor": "capsula",
+   "radio": 0.8,
+   "tamano": [
+    0,
+    0,
+    0
+   ],
+   "base_y": -0.25,
+   "notas": "Veta de cristal (recurso).",
+   "jerarquia": [],
+   "orientacion": ""
+  },
+  {
+   "nombre": "estandarte",
+   "archivo": "Modelos/estandarte.fbx",
+   "categoria": "decoracion",
+   "dims": [
+    1.6,
+    5.05,
+    0.22
+   ],
+   "tris": 102,
+   "materiales": [
+    "Madera_oscura",
+    "Metal",
+    "Tela_roja",
+    "Oro"
+   ],
+   "colisor": "ninguno",
+   "radio": 0.0,
+   "tamano": [
+    0,
+    0,
+    0
+   ],
+   "base_y": -0.3,
+   "notas": "Estandarte con tela roja hecha jirones y emblema; tela a doble cara.",
+   "jerarquia": [],
+   "orientacion": ""
+  },
+  {
+   "nombre": "farol",
+   "archivo": "Modelos/farol.fbx",
+   "categoria": "decoracion",
+   "dims": [
+    1.03,
+    3.3,
+    0.45
+   ],
+   "tris": 182,
+   "materiales": [
+    "Piedra_tallada",
+    "Metal",
+    "Luz_calida"
+   ],
+   "colisor": "ninguno",
+   "radio": 0.0,
+   "tamano": [
+    0,
+    0,
+    0
+   ],
+   "base_y": -0.1,
+   "notas": "Farol de calle; luz calida (poner Light en Unity en el farol, a 2,7 m).",
+   "jerarquia": [],
+   "orientacion": ""
+  },
+  {
+   "nombre": "grieta_lava",
+   "archivo": "Modelos/grieta_lava.fbx",
+   "categoria": "decoracion",
+   "dims": [
+    10.0,
+    0.6,
+    3.16
+   ],
+   "tris": 326,
+   "materiales": [
+    "Roca_volcanica",
+    "Lava"
+   ],
+   "colisor": "ninguno",
+   "radio": 0.0,
+   "tamano": [
+    0,
+    0,
+    0
+   ],
+   "base_y": -0.25,
+   "notas": "Grieta de lava en el suelo: colocar a ras del terreno. Eje largo en X.",
+   "jerarquia": [],
+   "orientacion": ""
+  },
+  {
+   "nombre": "hielo_cristales",
+   "archivo": "Modelos/hielo_cristales.fbx",
+   "categoria": "decoracion",
+   "dims": [
+    3.31,
+    3.58,
+    2.55
+   ],
+   "tris": 230,
+   "materiales": [
+    "Nieve",
+    "Roca",
+    "Hielo"
+   ],
+   "colisor": "caja",
+   "radio": 0.0,
+   "tamano": [
+    3.31,
+    3.58,
+    2.55
+   ],
+   "base_y": -0.41,
+   "notas": "Cumbres nevadas: puas de hielo.",
+   "jerarquia": [],
+   "orientacion": ""
+  },
+  {
+   "nombre": "hoguera",
+   "archivo": "Modelos/hoguera.fbx",
+   "categoria": "decoracion",
+   "dims": [
+    1.99,
+    1.35,
+    1.91
+   ],
+   "tris": 290,
+   "materiales": [
+    "Roca",
+    "Corteza",
+    "Brasa",
+    "Fuego_infernal"
+   ],
+   "colisor": "ninguno",
+   "radio": 0.0,
+   "tamano": [
+    0,
+    0,
+    0
+   ],
+   "base_y": -0.05,
+   "notas": "Hoguera: poner luz y particulas de fuego en Unity a 0,5 m.",
+   "jerarquia": [],
+   "orientacion": ""
+  },
+  {
+   "nombre": "jaula",
+   "archivo": "Modelos/jaula.fbx",
+   "categoria": "decoracion",
+   "dims": [
+    2.0,
+    3.44,
+    1.93
+   ],
+   "tris": 334,
+   "materiales": [
+    "Metal",
+    "Hueso"
+   ],
+   "colisor": "capsula",
+   "radio": 1.0,
+   "tamano": [
+    0,
+    0,
+    0
+   ],
+   "base_y": 0.0,
+   "notas": "",
+   "jerarquia": [],
+   "orientacion": ""
+  },
+  {
+   "nombre": "jaula_rescate",
+   "archivo": "Modelos/jaula_rescate.fbx",
+   "categoria": "decoracion",
+   "dims": [
+    3.28,
+    3.83,
+    3.28
+   ],
+   "tris": 640,
+   "materiales": [
+    "Madera",
+    "Madera_oscura",
+    "Metal",
+    "Tejado",
+    "Hueso",
+    "Oro"
+   ],
+   "colisor": "caja",
+   "radio": 0.0,
+   "tamano": [
+    3.2,
+    3.2,
+    3.2
+   ],
+   "base_y": -0.03,
+   "notas": "Jerarquia: raiz jaula_rescate > hijos 'estructura' (fija) y 'puerta' (origen en la bisagra, en Unity (0.72, 0.3, 1.5); gira sobre Y de Unity, abre ~100 grados).",
+   "jerarquia": [
+    "estructura",
+    "puerta"
+   ],
+   "orientacion": ""
+  },
+  {
+   "nombre": "lapida",
+   "archivo": "Modelos/lapida.fbx",
+   "categoria": "decoracion",
+   "dims": [
+    1.0,
+    1.61,
+    1.91
+   ],
+   "tris": 90,
+   "materiales": [
+    "Piedra_tallada",
+    "Tierra"
+   ],
+   "colisor": "caja",
+   "radio": 0.0,
+   "tamano": [
+    0.9,
+    1.3,
+    0.3
+   ],
+   "base_y": -0.31,
+   "notas": "Lapida generica (igual que lapida_a).",
+   "jerarquia": [],
+   "orientacion": ""
+  },
+  {
+   "nombre": "lapida_a",
+   "archivo": "Modelos/lapida_a.fbx",
+   "categoria": "decoracion",
+   "dims": [
+    1.0,
+    1.61,
+    1.91
+   ],
+   "tris": 90,
+   "materiales": [
+    "Piedra_tallada",
+    "Tierra"
+   ],
+   "colisor": "caja",
+   "radio": 0.0,
+   "tamano": [
+    0.9,
+    1.3,
+    0.3
+   ],
+   "base_y": -0.31,
+   "notas": "",
+   "jerarquia": [],
+   "orientacion": ""
+  },
+  {
+   "nombre": "lapida_cruz",
+   "archivo": "Modelos/lapida_cruz.fbx",
+   "categoria": "decoracion",
+   "dims": [
+    0.9,
+    1.75,
+    1.95
+   ],
+   "tris": 176,
+   "materiales": [
+    "Piedra_tallada",
+    "Tierra"
+   ],
+   "colisor": "caja",
+   "radio": 0.0,
+   "tamano": [
+    1.0,
+    1.8,
+    0.3
+   ],
+   "base_y": -0.15,
+   "notas": "",
+   "jerarquia": [],
+   "orientacion": ""
+  },
+  {
+   "nombre": "lapida_rota",
+   "archivo": "Modelos/lapida_rota.fbx",
+   "categoria": "decoracion",
+   "dims": [
+    1.26,
+    1.21,
+    1.81
+   ],
+   "tris": 58,
+   "materiales": [
+    "Piedra_tallada",
+    "Tierra"
+   ],
+   "colisor": "ninguno",
+   "radio": 0.0,
+   "tamano": [
+    0,
+    0,
+    0
+   ],
+   "base_y": -0.37,
+   "notas": "",
+   "jerarquia": [],
+   "orientacion": ""
+  },
+  {
+   "nombre": "poste_senal",
+   "archivo": "Modelos/poste_senal.fbx",
+   "categoria": "decoracion",
+   "dims": [
+    2.41,
+    3.2,
+    1.89
+   ],
+   "tris": 66,
+   "materiales": [
+    "Madera",
+    "Madera_oscura"
+   ],
+   "colisor": "ninguno",
+   "radio": 0.0,
+   "tamano": [
+    0,
+    0,
+    0
+   ],
+   "base_y": -0.3,
+   "notas": "",
+   "jerarquia": [],
+   "orientacion": ""
+  },
+  {
+   "nombre": "pozo",
+   "archivo": "Modelos/pozo.fbx",
+   "categoria": "decoracion",
+   "dims": [
+    2.98,
+    4.1,
+    2.76
+   ],
+   "tris": 320,
+   "materiales": [
+    "Piedra_tallada",
+    "Roca_oscura",
+    "Madera",
+    "Madera_oscura",
+    "Metal",
+    "Tejado"
+   ],
+   "colisor": "capsula",
+   "radio": 1.3,
+   "tamano": [
+    0,
+    0,
+    0
+   ],
+   "base_y": -0.3,
+   "notas": "",
+   "jerarquia": [],
+   "orientacion": ""
+  },
+  {
+   "nombre": "railes",
+   "archivo": "Modelos/railes.fbx",
+   "categoria": "decoracion",
+   "dims": [
+    1.48,
+    0.19,
+    4.0
+   ],
+   "tris": 96,
+   "materiales": [
+    "Metal",
+    "Madera_oscura"
+   ],
+   "colisor": "ninguno",
+   "radio": 0.0,
+   "tamano": [
+    0,
+    0,
+    0
+   ],
+   "base_y": 0.02,
+   "notas": "Railes rectos modulares de 4 m (eje Y Blender = Z Unity), ancho de via 0,9 m.",
+   "jerarquia": [],
+   "orientacion": ""
+  },
+  {
+   "nombre": "sarcofago",
+   "archivo": "Modelos/sarcofago.fbx",
+   "categoria": "decoracion",
+   "dims": [
+    1.94,
+    1.36,
+    2.97
+   ],
+   "tris": 148,
+   "materiales": [
+    "Piedra_tallada",
+    "Marmol"
+   ],
+   "colisor": "caja",
+   "radio": 0.0,
+   "tamano": [
+    1.4,
+    1.2,
+    2.6
+   ],
+   "base_y": -0.15,
+   "notas": "",
+   "jerarquia": [],
+   "orientacion": ""
+  },
+  {
+   "nombre": "tienda",
+   "archivo": "Modelos/tienda.fbx",
+   "categoria": "decoracion",
+   "dims": [
+    6.62,
+    2.7,
+    3.6
+   ],
+   "tris": 81,
+   "materiales": [
+    "Tela_ocre",
+    "Madera",
+    "Madera_oscura",
+    "Tela_roja"
+   ],
+   "colisor": "caja",
+   "radio": 0.0,
+   "tamano": [
+    6.62,
+    2.7,
+    3.6
+   ],
+   "base_y": -0.2,
+   "notas": "",
+   "jerarquia": [],
+   "orientacion": ""
+  },
+  {
+   "nombre": "tocon",
+   "archivo": "Modelos/tocon.fbx",
+   "categoria": "decoracion",
+   "dims": [
+    2.47,
+    1.17,
+    2.36
+   ],
+   "tris": 170,
+   "materiales": [
+    "Corteza",
+    "Madera"
+   ],
+   "colisor": "capsula",
+   "radio": 0.6,
+   "tamano": [
+    0,
+    0,
+    0
+   ],
+   "base_y": -0.31,
+   "notas": "",
+   "jerarquia": [],
+   "orientacion": ""
+  },
+  {
+   "nombre": "tronco_caido",
+   "archivo": "Modelos/tronco_caido.fbx",
+   "categoria": "decoracion",
+   "dims": [
+    6.88,
+    1.66,
+    2.1
+   ],
+   "tris": 258,
+   "materiales": [
+    "Musgo",
+    "Corteza",
+    "Madera",
+    "Hongo_brillo"
+   ],
+   "colisor": "capsula",
+   "radio": 0.45,
+   "tamano": [
+    0,
+    0,
+    0
+   ],
+   "base_y": -0.06,
+   "notas": "Eje largo en X (capsula horizontal).",
+   "jerarquia": [],
+   "orientacion": ""
+  },
+  {
+   "nombre": "tumba_abierta",
+   "archivo": "Modelos/tumba_abierta.fbx",
+   "categoria": "decoracion",
+   "dims": [
+    2.88,
+    1.71,
+    4.07
+   ],
+   "tris": 194,
+   "materiales": [
+    "Tierra",
+    "Roca_oscura",
+    "Madera_oscura",
+    "Madera",
+    "Metal",
+    "Piedra_tallada"
+   ],
+   "colisor": "caja",
+   "radio": 0.0,
+   "tamano": [
+    2.4,
+    0.8,
+    3.2
+   ],
+   "base_y": -0.2,
+   "notas": "",
+   "jerarquia": [],
+   "orientacion": ""
+  },
+  {
+   "nombre": "vagoneta",
+   "archivo": "Modelos/vagoneta.fbx",
+   "categoria": "decoracion",
+   "dims": [
+    1.59,
+    1.71,
+    1.97
+   ],
+   "tris": 294,
+   "materiales": [
+    "Hierro_oxidado",
+    "Metal",
+    "Roca_oscura",
+    "Cristal"
+   ],
+   "colisor": "caja",
+   "radio": 0.0,
+   "tamano": [
+    1.59,
+    1.71,
+    1.97
+   ],
+   "base_y": -0.0,
+   "notas": "Vagoneta de mina (encaja en los railes, ancho de via 0,9 m). Eje largo en Y Blender = Z Unity.",
+   "jerarquia": [],
+   "orientacion": ""
+  },
+  {
+   "nombre": "vigas_mina",
+   "archivo": "Modelos/vigas_mina.fbx",
+   "categoria": "decoracion",
+   "dims": [
+    3.2,
+    3.29,
+    1.2
+   ],
+   "tris": 120,
+   "materiales": [
+    "Madera_oscura",
+    "Madera"
+   ],
+   "colisor": "caja",
+   "radio": 0.0,
+   "tamano": [
+    3.2,
+    3.29,
+    1.2
+   ],
+   "base_y": -0.2,
+   "notas": "Marco de vigas para tuneles de mina (paso 2,6 m x 2,8 m).",
+   "jerarquia": [],
+   "orientacion": ""
+  },
+  {
+   "nombre": "aguja_gotica",
+   "archivo": "Modelos/aguja_gotica.fbx",
+   "categoria": "ruina",
+   "dims": [
+    2.8,
+    12.05,
+    2.8
+   ],
+   "tris": 566,
+   "materiales": [
+    "Piedra_tallada",
+    "Roca_oscura"
+   ],
+   "colisor": "capsula",
+   "radio": 1.2,
+   "tamano": [
+    0,
+    0,
+    0
+   ],
+   "base_y": -0.4,
+   "notas": "Aguja/pinaculo gotico de 11 m.",
+   "jerarquia": [],
+   "orientacion": ""
+  },
+  {
+   "nombre": "altar_sangre",
+   "archivo": "Modelos/altar_sangre.fbx",
+   "categoria": "ruina",
+   "dims": [
+    11.09,
+    5.9,
+    11.09
+   ],
+   "tris": 560,
+   "materiales": [
+    "Roca_oscura",
+    "Runa",
+    "Roca_volcanica",
+    "Hueso",
+    "Luz_calida"
+   ],
+   "colisor": "malla",
+   "radio": 0.0,
+   "tamano": [
+    0,
+    0,
+    0
+   ],
+   "base_y": -0.4,
+   "notas": "Altar de sangre octogonal; runas rojas brillantes.",
+   "jerarquia": [],
+   "orientacion": ""
+  },
+  {
+   "nombre": "arco_ruina",
+   "archivo": "Modelos/arco_ruina.fbx",
+   "categoria": "ruina",
+   "dims": [
+    7.1,
+    8.28,
+    4.05
+   ],
+   "tris": 716,
+   "materiales": [
+    "Piedra_tallada"
+   ],
+   "colisor": "malla",
+   "radio": 0.0,
+   "tamano": [
+    0,
+    0,
+    0
+   ],
+   "base_y": -0.4,
+   "notas": "Arco gotico (paso de 4,4 m de ancho, ~6,8 m de alto libre).",
+   "jerarquia": [],
+   "orientacion": ""
+  },
+  {
+   "nombre": "columna",
+   "archivo": "Modelos/columna.fbx",
+   "categoria": "ruina",
+   "dims": [
+    1.5,
+    6.38,
+    1.5
+   ],
+   "tris": 254,
+   "materiales": [
+    "Piedra_tallada",
+    "Marmol"
+   ],
+   "colisor": "capsula",
+   "radio": 0.6,
+   "tamano": [
+    0,
+    0,
+    0
+   ],
+   "base_y": -0.4,
+   "notas": "",
+   "jerarquia": [],
+   "orientacion": ""
+  },
+  {
+   "nombre": "columna_rota",
+   "archivo": "Modelos/columna_rota.fbx",
+   "categoria": "ruina",
+   "dims": [
+    7.16,
+    3.54,
+    4.53
+   ],
+   "tris": 328,
+   "materiales": [
+    "Piedra_tallada",
+    "Marmol"
+   ],
+   "colisor": "capsula",
+   "radio": 0.6,
+   "tamano": [
+    0,
+    0,
+    0
+   ],
+   "base_y": -0.4,
+   "notas": "",
+   "jerarquia": [],
+   "orientacion": ""
+  },
+  {
+   "nombre": "cripta_entrada",
+   "archivo": "Modelos/cripta_entrada.fbx",
+   "categoria": "ruina",
+   "dims": [
+    8.0,
+    9.15,
+    8.43
+   ],
+   "tris": 528,
+   "materiales": [
+    "Piedra_tallada",
+    "Tejado",
+    "Roca_oscura",
+    "Metal",
+    "Vitral"
+   ],
+   "colisor": "malla",
+   "radio": 0.0,
+   "tamano": [
+    0,
+    0,
+    0
+   ],
+   "base_y": -0.4,
+   "notas": "Entrada de cripta gotica; puerta hacia +Z Unity (interior oscuro).",
+   "jerarquia": [],
+   "orientacion": ""
+  },
+  {
+   "nombre": "escalera",
+   "archivo": "Modelos/escalera.fbx",
+   "categoria": "ruina",
+   "dims": [
+    5.9,
+    3.5,
+    5.31
+   ],
+   "tris": 264,
+   "materiales": [
+    "Piedra_tallada"
+   ],
+   "colisor": "malla",
+   "radio": 0.0,
+   "tamano": [
+    0,
+    0,
+    0
+   ],
+   "base_y": -0.4,
+   "notas": "Escalinata de 4 m de ancho que sube hacia +Y Blender (-Z Unity) hasta 2,4 m.",
+   "jerarquia": [],
+   "orientacion": ""
+  },
+  {
+   "nombre": "muro_ciudadela",
+   "archivo": "Modelos/muro_ciudadela.fbx",
+   "categoria": "ruina",
+   "dims": [
+    8.0,
+    8.1,
+    4.65
+   ],
+   "tris": 476,
+   "materiales": [
+    "Piedra_tallada",
+    "Madera_oscura",
+    "Roca_oscura"
+   ],
+   "colisor": "caja",
+   "radio": 0.0,
+   "tamano": [
+    8.0,
+    8.1,
+    4.65
+   ],
+   "base_y": -0.5,
+   "notas": "Muro de ciudadela de 8 m (eje X) con almenas; paso de ronda detras (+Y Blender = -Z Unity).",
+   "jerarquia": [],
+   "orientacion": ""
+  },
+  {
+   "nombre": "muro_gotico",
+   "archivo": "Modelos/muro_gotico.fbx",
+   "categoria": "ruina",
+   "dims": [
+    6.4,
+    10.4,
+    3.3
+   ],
+   "tris": 770,
+   "materiales": [
+    "Piedra_tallada",
+    "Vitral"
+   ],
+   "colisor": "malla",
+   "radio": 0.0,
+   "tamano": [
+    0,
+    0,
+    0
+   ],
+   "base_y": -0.4,
+   "notas": "Muro gotico de 6 m con ventanal y contrafuertes con pinaculo.",
+   "jerarquia": [],
+   "orientacion": ""
+  },
+  {
+   "nombre": "muro_ruina_a",
+   "archivo": "Modelos/muro_ruina_a.fbx",
+   "categoria": "ruina",
+   "dims": [
+    5.2,
+    3.6,
+    3.41
+   ],
+   "tris": 432,
+   "materiales": [
+    "Piedra_tallada"
+   ],
+   "colisor": "caja",
+   "radio": 0.0,
+   "tamano": [
+    5.2,
+    3.6,
+    3.41
+   ],
+   "base_y": -0.4,
+   "notas": "Muro modular de 5 m (eje X).",
+   "jerarquia": [],
+   "orientacion": ""
+  },
+  {
+   "nombre": "muro_ruina_b",
+   "archivo": "Modelos/muro_ruina_b.fbx",
+   "categoria": "ruina",
+   "dims": [
+    6.6,
+    5.0,
+    2.52
+   ],
+   "tris": 372,
+   "materiales": [
+    "Piedra_tallada"
+   ],
+   "colisor": "malla",
+   "radio": 0.0,
+   "tamano": [
+    0,
+    0,
+    0
+   ],
+   "base_y": -0.4,
+   "notas": "Muro de 6 m con ventana apuntada rota.",
+   "jerarquia": [],
+   "orientacion": ""
+  },
+  {
+   "nombre": "obelisco_runa",
+   "archivo": "Modelos/obelisco_runa.fbx",
+   "categoria": "ruina",
+   "dims": [
+    2.6,
+    8.9,
+    2.6
+   ],
+   "tris": 394,
+   "materiales": [
+    "Roca_oscura",
+    "Runa"
+   ],
+   "colisor": "capsula",
+   "radio": 0.9,
+   "tamano": [
+    0,
+    0,
+    0
+   ],
+   "base_y": -0.4,
+   "notas": "Obelisco runico (brillo rojo).",
+   "jerarquia": [],
+   "orientacion": ""
+  },
+  {
+   "nombre": "torre_ruina",
+   "archivo": "Modelos/torre_ruina.fbx",
+   "categoria": "ruina",
+   "dims": [
+    9.68,
+    16.02,
+    12.3
+   ],
+   "tris": 1068,
+   "materiales": [
+    "Piedra_tallada"
+   ],
+   "colisor": "malla",
+   "radio": 0.0,
+   "tamano": [
+    0,
+    0,
+    0
+   ],
+   "base_y": -0.5,
+   "notas": "Torre redonda en ruinas, radio 4,2 m; puerta hacia +Z Unity.",
+   "jerarquia": [],
+   "orientacion": ""
+  },
+  {
+   "nombre": "verja",
+   "archivo": "Modelos/verja.fbx",
+   "categoria": "ruina",
+   "dims": [
+    4.3,
+    3.05,
+    0.66
+   ],
+   "tris": 320,
+   "materiales": [
+    "Piedra_tallada",
+    "Metal"
+   ],
+   "colisor": "caja",
+   "radio": 0.0,
+   "tamano": [
+    4.3,
+    3.05,
+    0.66
+   ],
+   "base_y": -0.3,
+   "notas": "Verja de hierro modular de 4 m (eje X) con poste de piedra en +X Blender.",
+   "jerarquia": [],
+   "orientacion": ""
+  },
+  {
+   "nombre": "verja_puerta",
+   "archivo": "Modelos/verja_puerta.fbx",
+   "categoria": "ruina",
+   "dims": [
+    4.95,
+    4.27,
+    1.48
+   ],
+   "tris": 696,
+   "materiales": [
+    "Piedra_tallada",
+    "Metal"
+   ],
+   "colisor": "malla",
+   "radio": 0.0,
+   "tamano": [
+    0,
+    0,
+    0
+   ],
+   "base_y": -0.3,
+   "notas": "Puerta de cementerio: paso de 3,2 m; hoja derecha entreabierta.",
+   "jerarquia": [],
+   "orientacion": ""
+  },
+  {
+   "nombre": "vitral_roto",
+   "archivo": "Modelos/vitral_roto.fbx",
+   "categoria": "ruina",
+   "dims": [
+    5.28,
+    8.8,
+    2.52
+   ],
+   "tris": 744,
+   "materiales": [
+    "Piedra_tallada",
+    "Vitral"
+   ],
+   "colisor": "malla",
+   "radio": 0.0,
+   "tamano": [
+    0,
+    0,
+    0
+   ],
+   "base_y": -0.4,
+   "notas": "Ventanal gotico roto con restos de vitral (brillo tenue).",
+   "jerarquia": [],
+   "orientacion": ""
+  },
+  {
+   "nombre": "casa_a",
+   "archivo": "Modelos/casa_a.fbx",
+   "categoria": "poblado",
+   "dims": [
+    6.9,
+    8.25,
+    6.35
+   ],
+   "tris": 820,
+   "materiales": [
+    "Piedra_tallada",
+    "Yeso",
+    "Madera_oscura",
+    "Luz_calida",
+    "Madera",
+    "Tejado"
+   ],
+   "colisor": "caja",
+   "radio": 0.0,
+   "tamano": [
+    6.9,
+    8.25,
+    6.35
+   ],
+   "base_y": -0.6,
+   "notas": "Casa pequena de una planta y desvan. Puerta hacia +Z Unity.",
+   "jerarquia": [],
+   "orientacion": ""
+  },
+  {
+   "nombre": "casa_b",
+   "archivo": "Modelos/casa_b.fbx",
+   "categoria": "poblado",
+   "dims": [
+    12.6,
+    10.67,
+    7.3
+   ],
+   "tris": 2036,
+   "materiales": [
+    "Piedra_tallada",
+    "Luz_calida",
+    "Madera_oscura",
+    "Madera",
+    "Yeso",
+    "Tejado_rojo"
+   ],
+   "colisor": "caja",
+   "radio": 0.0,
+   "tamano": [
+    12.6,
+    10.67,
+    7.3
+   ],
+   "base_y": -0.6,
+   "notas": "Casa de dos plantas con anexo. Puerta hacia +Z Unity.",
+   "jerarquia": [],
+   "orientacion": ""
+  },
+  {
+   "nombre": "choza_pantano",
+   "archivo": "Modelos/choza_pantano.fbx",
+   "categoria": "poblado",
+   "dims": [
+    4.83,
+    7.73,
+    6.12
+   ],
+   "tris": 542,
+   "materiales": [
+    "Madera_oscura",
+    "Madera",
+    "Piedra_tallada",
+    "Luz_calida",
+    "Paja"
+   ],
+   "colisor": "caja",
+   "radio": 0.0,
+   "tamano": [
+    4.83,
+    7.73,
+    6.12
+   ],
+   "base_y": -1.0,
+   "notas": "Choza de pantano sobre pilotes (suelo a 1,6 m). Puerta hacia +Z Unity.",
+   "jerarquia": [],
+   "orientacion": ""
+  },
+  {
+   "nombre": "empalizada",
+   "archivo": "Modelos/empalizada.fbx",
+   "categoria": "poblado",
+   "dims": [
+    6.01,
+    4.34,
+    2.14
+   ],
+   "tris": 290,
+   "materiales": [
+    "Madera",
+    "Madera_oscura"
+   ],
+   "colisor": "caja",
+   "radio": 0.0,
+   "tamano": [
+    6.2,
+    3.6,
+    0.6
+   ],
+   "base_y": -0.5,
+   "notas": "Empalizada modular de 6 m (eje X); refuerzos detras (+Y Blender).",
+   "jerarquia": [],
+   "orientacion": ""
+  },
+  {
+   "nombre": "entrada_mina",
+   "archivo": "Modelos/entrada_mina.fbx",
+   "categoria": "poblado",
+   "dims": [
+    11.87,
+    6.21,
+    10.31
+   ],
+   "tris": 830,
+   "materiales": [
+    "Musgo",
+    "Roca",
+    "Roca_oscura",
+    "Madera_oscura",
+    "Madera",
+    "Metal",
+    "Luz_calida",
+    "Cristal"
+   ],
+   "colisor": "malla",
+   "radio": 0.0,
+   "tamano": [
+    0,
+    0,
+    0
+   ],
+   "base_y": -0.6,
+   "notas": "Entrada de mina con vigas; boca hacia +Z Unity, tunel oscuro de 3 m; railes que salen 4 m.",
+   "jerarquia": [],
+   "orientacion": ""
+  },
+  {
+   "nombre": "muelle",
+   "archivo": "Modelos/muelle.fbx",
+   "categoria": "poblado",
+   "dims": [
+    2.83,
+    4.3,
+    10.55
+   ],
+   "tris": 600,
+   "materiales": [
+    "Madera",
+    "Madera_oscura"
+   ],
+   "colisor": "malla",
+   "radio": 0.0,
+   "tamano": [
+    0,
+    0,
+    0
+   ],
+   "base_y": -3.5,
+   "notas": "Muelle de 10 m (hacia -Y Blender = +Z Unity, el agua). Origen = superficie del tablero.",
+   "jerarquia": [],
+   "orientacion": ""
+  },
+  {
+   "nombre": "piedra_camino",
+   "archivo": "Modelos/piedra_camino.fbx",
+   "categoria": "poblado",
+   "dims": [
+    3.14,
+    4.7,
+    3.14
+   ],
+   "tris": 218,
+   "materiales": [
+    "Piedra_tallada",
+    "Roca_oscura",
+    "Runa_azul",
+    "Cristal"
+   ],
+   "colisor": "capsula",
+   "radio": 0.8,
+   "tamano": [
+    0,
+    0,
+    0
+   ],
+   "base_y": -0.3,
+   "notas": "Piedra de viaje (teletransporte): runas azules y cristal flotante a 4 m.",
+   "jerarquia": [],
+   "orientacion": ""
+  },
+  {
+   "nombre": "puente_madera",
+   "archivo": "Modelos/puente_madera.fbx",
+   "categoria": "poblado",
+   "dims": [
+    14.28,
+    4.62,
+    3.44
+   ],
+   "tris": 732,
+   "materiales": [
+    "Madera",
+    "Madera_oscura"
+   ],
+   "colisor": "malla",
+   "radio": 0.0,
+   "tamano": [
+    0,
+    0,
+    0
+   ],
+   "base_y": -3.5,
+   "notas": "Puente de madera de 14 m (eje X). Origen = superficie del tablero (y=0); pilotes bajan a -3,5 m.",
+   "jerarquia": [],
+   "orientacion": ""
+  },
+  {
+   "nombre": "puente_piedra",
+   "archivo": "Modelos/puente_piedra.fbx",
+   "categoria": "poblado",
+   "dims": [
+    16.0,
+    7.65,
+    4.7
+   ],
+   "tris": 724,
+   "materiales": [
+    "Piedra_tallada"
+   ],
+   "colisor": "malla",
+   "radio": 0.0,
+   "tamano": [
+    0,
+    0,
+    0
+   ],
+   "base_y": -6.0,
+   "notas": "Puente de piedra de 16 m (eje X). Origen = cota del tablero en los extremos (sube 0,6 m en el centro); la boveda baja hasta -6 m (salva un rio o barranco).",
+   "jerarquia": [],
+   "orientacion": ""
+  },
+  {
+   "nombre": "puerta_poblado",
+   "archivo": "Modelos/puerta_poblado.fbx",
+   "categoria": "poblado",
+   "dims": [
+    6.6,
+    6.15,
+    2.0
+   ],
+   "tris": 392,
+   "materiales": [
+    "Madera_oscura",
+    "Luz_calida",
+    "Tejado",
+    "Madera",
+    "Hueso",
+    "Tela_roja"
+   ],
+   "colisor": "malla",
+   "radio": 0.0,
+   "tamano": [
+    0,
+    0,
+    0
+   ],
+   "base_y": -0.5,
+   "notas": "Portal de entrada del poblado: paso de 4,4 m de ancho y 4,2 m de alto.",
+   "jerarquia": [],
+   "orientacion": ""
+  },
+  {
+   "nombre": "taberna",
+   "archivo": "Modelos/taberna.fbx",
+   "categoria": "poblado",
+   "dims": [
+    10.9,
+    11.82,
+    9.7
+   ],
+   "tris": 2022,
+   "materiales": [
+    "Piedra_tallada",
+    "Luz_calida",
+    "Madera_oscura",
+    "Madera",
+    "Yeso",
+    "Tejado",
+    "Metal",
+    "Oro"
+   ],
+   "colisor": "caja",
+   "radio": 0.0,
+   "tamano": [
+    10.9,
+    11.82,
+    9.7
+   ],
+   "base_y": -0.6,
+   "notas": "Taberna de dos plantas con porche y letrero. Puerta hacia +Z Unity.",
+   "jerarquia": [],
+   "orientacion": ""
+  },
+  {
+   "nombre": "torre_vigia",
+   "archivo": "Modelos/torre_vigia.fbx",
+   "categoria": "poblado",
+   "dims": [
+    4.1,
+    10.31,
+    4.1
+   ],
+   "tris": 570,
+   "materiales": [
+    "Madera",
+    "Madera_oscura",
+    "Tejado",
+    "Metal",
+    "Fuego_infernal"
+   ],
+   "colisor": "caja",
+   "radio": 0.0,
+   "tamano": [
+    4,
+    9.5,
+    4
+   ],
+   "base_y": -0.31,
+   "notas": "Torre vigia de madera, plataforma a 6 m, escalera en el frente.",
+   "jerarquia": [],
+   "orientacion": ""
+  },
+  {
+   "nombre": "valla",
+   "archivo": "Modelos/valla.fbx",
+   "categoria": "poblado",
+   "dims": [
+    4.21,
+    1.55,
+    0.2
+   ],
+   "tris": 60,
+   "materiales": [
+    "Madera"
+   ],
+   "colisor": "caja",
+   "radio": 0.0,
+   "tamano": [
+    4.2,
+    1.3,
+    0.3
+   ],
+   "base_y": -0.3,
+   "notas": "Valla de madera modular de 4 m (eje X).",
+   "jerarquia": [],
+   "orientacion": ""
+  },
+  {
+   "nombre": "arbol_madre",
+   "archivo": "Modelos/arbol_madre.fbx",
+   "categoria": "hito",
+   "dims": [
+    25.22,
+    31.38,
+    26.67
+   ],
+   "tris": 2424,
+   "materiales": [
+    "Corteza",
+    "Hojas_madre",
+    "Runa_azul",
+    "Hongo_brillo"
+   ],
+   "colisor": "malla",
+   "radio": 3.0,
+   "tamano": [
+    0,
+    0,
+    0
+   ],
+   "base_y": -1.82,
+   "notas": "Arbol madre: hito unico del bosque antiguo. Runas y vainas brillantes.",
+   "jerarquia": [],
+   "orientacion": ""
+  },
+  {
+   "nombre": "arco_roca",
+   "archivo": "Modelos/arco_roca.fbx",
+   "categoria": "hito",
+   "dims": [
+    16.08,
+    13.63,
+    4.08
+   ],
+   "tris": 284,
+   "materiales": [
+    "Roca_roja",
+    "Arenisca"
+   ],
+   "colisor": "malla",
+   "radio": 0.0,
+   "tamano": [
+    0,
+    0,
+    0
+   ],
+   "base_y": -1.03,
+   "notas": "Arco natural de arenisca; se puede pasar por debajo (hueco ~8 m).",
+   "jerarquia": [],
+   "orientacion": ""
+  },
+  {
+   "nombre": "estatua_lucero",
+   "archivo": "Modelos/estatua_lucero.fbx",
+   "categoria": "hito",
+   "dims": [
+    6.09,
+    7.92,
+    5.8
+   ],
+   "tris": 1068,
+   "materiales": [
+    "Piedra_tallada",
+    "Runa_azul",
+    "Marmol",
+    "Luz_calida"
+   ],
+   "colisor": "malla",
+   "radio": 0.0,
+   "tamano": [
+    0,
+    0,
+    0
+   ],
+   "base_y": -0.4,
+   "notas": "Estatua del Angel Caido (lore de Lucifer): ala izquierda rota, halo partido, estrella en la mano.",
+   "jerarquia": [],
+   "orientacion": ""
+  },
+  {
+   "nombre": "huesos_gigantes",
+   "archivo": "Modelos/huesos_gigantes.fbx",
+   "categoria": "hito",
+   "dims": [
+    17.96,
+    6.51,
+    8.45
+   ],
+   "tris": 736,
+   "materiales": [
+    "Hueso",
+    "Roca_oscura"
+   ],
+   "colisor": "malla",
+   "radio": 0.0,
+   "tamano": [
+    0,
+    0,
+    0
+   ],
+   "base_y": -1.61,
+   "notas": "Desierto: costillar gigante semienterrado (se puede pasar por debajo).",
+   "jerarquia": [],
+   "orientacion": ""
+  },
+  {
+   "nombre": "portal_infernal",
+   "archivo": "Modelos/portal_infernal.fbx",
+   "categoria": "hito",
+   "dims": [
+    10.6,
+    12.54,
+    7.07
+   ],
+   "tris": 580,
+   "materiales": [
+    "Roca_volcanica",
+    "Fuego_infernal",
+    "Lava",
+    "Runa"
+   ],
+   "colisor": "malla",
+   "radio": 0.0,
+   "tamano": [
+    0,
+    0,
+    0
+   ],
+   "base_y": -0.76,
+   "notas": "Grieta del Caido: portal infernal (entrada de jefe). El plano de fuego mira a +Z Unity.",
+   "jerarquia": [],
+   "orientacion": ""
+  },
+  {
+   "nombre": "santuario",
+   "archivo": "Modelos/santuario.fbx",
+   "categoria": "hito",
+   "dims": [
+    8.8,
+    4.5,
+    8.5
+   ],
+   "tris": 1172,
+   "materiales": [
+    "Piedra_tallada",
+    "Marmol",
+    "Runa_azul",
+    "Metal",
+    "Luz_calida",
+    "Cristal"
+   ],
+   "colisor": "malla",
+   "radio": 0.0,
+   "tamano": [
+    0,
+    0,
+    0
+   ],
+   "base_y": -0.3,
+   "notas": "Santuario de esencia: plataforma con braseros y cristal flotante.",
+   "jerarquia": [],
+   "orientacion": ""
+  },
+  {
+   "nombre": "corcel_infernal",
+   "archivo": "Modelos/montura_corcel_infernal.fbx",
+   "categoria": "montura",
+   "dims": [
+    1.01,
+    2.78,
+    3.47
+   ],
+   "tris": 1260,
+   "materiales": [
+    "Pelaje_corcel",
+    "Garra",
+    "Ojo_brillo",
+    "Crin_brasas",
+    "Tela_roja",
+    "Cuero",
+    "Metal",
+    "Brasa"
+   ],
+   "colisor": "capsula",
+   "radio": 0.6,
+   "tamano": [
+    0,
+    0,
+    0
+   ],
+   "base_y": 0.0,
+   "notas": "Corcel infernal: caballo negro con crin y cola de brasas, cascos ardientes; lomo a 1,76 m. Silla (jinete) en Unity (-0.00, 1.90, 0.25) respecto a la raiz.",
+   "jerarquia": [
+    "cabeza@(-0.00,1.62,0.80)",
+    "cola@(-0.00,1.50,-0.95)",
+    "cuerpo@(-0.00,1.76,-0.00)",
+    "pata_del_der@(0.22,1.45,0.68)",
+    "pata_del_izq@(-0.22,1.45,0.68)",
+    "pata_tras_der@(0.22,1.42,-0.68)",
+    "pata_tras_izq@(-0.22,1.42,-0.68)",
+    "silla@(-0.00,1.90,0.25)"
+   ],
+   "orientacion": "Raiz vacia en el suelo (monturas) o en el punto de anclaje (alas). Mira hacia +Z de Unity (-Y en Blender). Exportado SIN bake_space_transform: en Unity la raiz trae una rotacion de -90 en X (aprox -89.98) y los hijos tienen ejes locales de Blender: X local = lateral (izquierda del animal en -X de Unity... ver notas), Z local = arriba, Y local = hacia atras. Recomendado: activar 'Bake Axis Conversion' en el importador del FBX para que raiz e hijos queden sin rotacion con ejes de Unity (X derecha, Y arriba, Z adelante). Patas: girar sobre el eje lateral (X). Alas: aleteo = girar sobre el eje adelante-atras (Z de Unity con Bake Axis Conversion; Y local sin ella)."
+  },
+  {
+   "nombre": "fenix_ceniza",
+   "archivo": "Modelos/montura_fenix_ceniza.fbx",
+   "categoria": "montura",
+   "dims": [
+    8.13,
+    3.74,
+    4.98
+   ],
+   "tris": 2398,
+   "materiales": [
+    "Plumas_fenix",
+    "Fuego_fenix",
+    "Pico",
+    "Ojo_brillo",
+    "Ceniza",
+    "Tela_roja",
+    "Cuero",
+    "Metal",
+    "Garra"
+   ],
+   "colisor": "capsula",
+   "radio": 0.8,
+   "tamano": [
+    0,
+    0,
+    0
+   ],
+   "base_y": 0.0,
+   "notas": "Fenix de ceniza: ave de fuego gigante, envergadura ~8,3 m; patas_del_* son vacios (ave de dos patas). Vuela. Silla (jinete) en Unity (-0.00, 2.47, -0.05) respecto a la raiz.",
+   "jerarquia": [
+    "ala_der@(0.36,2.12,0.35)",
+    "ala_izq@(-0.36,2.12,0.35)",
+    "cabeza@(-0.00,2.20,0.78)",
+    "cola@(-0.00,1.78,-0.92)",
+    "cuerpo@(-0.00,2.33,-0.00)",
+    "pata_del_der@(0.30,1.75,0.55)",
+    "pata_del_izq@(-0.30,1.75,0.55)",
+    "pata_tras_der@(0.26,1.62,-0.05)",
+    "pata_tras_izq@(-0.26,1.62,-0.05)",
+    "silla@(-0.00,2.47,-0.05)"
+   ],
+   "orientacion": "Raiz vacia en el suelo (monturas) o en el punto de anclaje (alas). Mira hacia +Z de Unity (-Y en Blender). Exportado SIN bake_space_transform: en Unity la raiz trae una rotacion de -90 en X (aprox -89.98) y los hijos tienen ejes locales de Blender: X local = lateral (izquierda del animal en -X de Unity... ver notas), Z local = arriba, Y local = hacia atras. Recomendado: activar 'Bake Axis Conversion' en el importador del FBX para que raiz e hijos queden sin rotacion con ejes de Unity (X derecha, Y arriba, Z adelante). Patas: girar sobre el eje lateral (X). Alas: aleteo = girar sobre el eje adelante-atras (Z de Unity con Bake Axis Conversion; Y local sin ella)."
+  },
+  {
+   "nombre": "grifo",
+   "archivo": "Modelos/montura_grifo.fbx",
+   "categoria": "montura",
+   "dims": [
+    7.54,
+    2.78,
+    4.93
+   ],
+   "tris": 2268,
+   "materiales": [
+    "Plumas_blancas",
+    "Plumas_grifo",
+    "Pico",
+    "Ojo_brillo",
+    "Pelaje_leon",
+    "Tela_azul",
+    "Cuero",
+    "Metal",
+    "Garra"
+   ],
+   "colisor": "capsula",
+   "radio": 0.8,
+   "tamano": [
+    0,
+    0,
+    0
+   ],
+   "base_y": 0.0,
+   "notas": "Grifo: cabeza y patas delanteras de aguila, cuerpo de leon, alas extendidas (envergadura ~7,9 m). Vuela. Silla (jinete) en Unity (-0.00, 2.07, 0.05) respecto a la raiz.",
+   "jerarquia": [
+    "ala_der@(0.36,1.95,0.55)",
+    "ala_izq@(-0.36,1.95,0.55)",
+    "cabeza@(-0.00,1.72,0.98)",
+    "cola@(-0.00,1.45,-1.25)",
+    "cuerpo@(-0.00,1.92,-0.00)",
+    "pata_del_der@(0.30,1.42,0.78)",
+    "pata_del_izq@(-0.30,1.42,0.78)",
+    "pata_tras_der@(0.30,1.38,-0.85)",
+    "pata_tras_izq@(-0.30,1.38,-0.85)",
+    "silla@(-0.00,2.07,0.05)"
+   ],
+   "orientacion": "Raiz vacia en el suelo (monturas) o en el punto de anclaje (alas). Mira hacia +Z de Unity (-Y en Blender). Exportado SIN bake_space_transform: en Unity la raiz trae una rotacion de -90 en X (aprox -89.98) y los hijos tienen ejes locales de Blender: X local = lateral (izquierda del animal en -X de Unity... ver notas), Z local = arriba, Y local = hacia atras. Recomendado: activar 'Bake Axis Conversion' en el importador del FBX para que raiz e hijos queden sin rotacion con ejes de Unity (X derecha, Y arriba, Z adelante). Patas: girar sobre el eje lateral (X). Alas: aleteo = girar sobre el eje adelante-atras (Z de Unity con Bake Axis Conversion; Y local sin ella)."
+  },
+  {
+   "nombre": "leon_cumbres",
+   "archivo": "Modelos/montura_leon_cumbres.fbx",
+   "categoria": "montura",
+   "dims": [
+    1.66,
+    2.29,
+    4.24
+   ],
+   "tris": 1396,
+   "materiales": [
+    "Pelaje_leon",
+    "Garra",
+    "Melena",
+    "Ojo_brillo",
+    "Tela_azul",
+    "Cuero",
+    "Metal"
+   ],
+   "colisor": "capsula",
+   "radio": 0.75,
+   "tamano": [
+    0,
+    0,
+    0
+   ],
+   "base_y": -0.01,
+   "notas": "Leon de las cumbres con melena oscura, lomo a 1,47 m. Silla (jinete) en Unity (-0.00, 1.61, 0.22) respecto a la raiz.",
+   "jerarquia": [
+    "cabeza@(-0.00,1.36,0.88)",
+    "cola@(-0.00,1.20,-1.05)",
+    "cuerpo@(-0.00,1.47,-0.00)",
+    "pata_del_der@(0.27,1.12,0.72)",
+    "pata_del_izq@(-0.27,1.12,0.72)",
+    "pata_tras_der@(0.27,1.10,-0.72)",
+    "pata_tras_izq@(-0.27,1.10,-0.72)",
+    "silla@(-0.00,1.61,0.22)"
+   ],
+   "orientacion": "Raiz vacia en el suelo (monturas) o en el punto de anclaje (alas). Mira hacia +Z de Unity (-Y en Blender). Exportado SIN bake_space_transform: en Unity la raiz trae una rotacion de -90 en X (aprox -89.98) y los hijos tienen ejes locales de Blender: X local = lateral (izquierda del animal en -X de Unity... ver notas), Z local = arriba, Y local = hacia atras. Recomendado: activar 'Bake Axis Conversion' en el importador del FBX para que raiz e hijos queden sin rotacion con ejes de Unity (X derecha, Y arriba, Z adelante). Patas: girar sobre el eje lateral (X). Alas: aleteo = girar sobre el eje adelante-atras (Z de Unity con Bake Axis Conversion; Y local sin ella)."
+  },
+  {
+   "nombre": "lobo_bruma",
+   "archivo": "Modelos/montura_lobo_bruma.fbx",
+   "categoria": "montura",
+   "dims": [
+    1.17,
+    2.17,
+    4.24
+   ],
+   "tris": 1284,
+   "materiales": [
+    "Pelaje_lobo",
+    "Pelaje_lobo_claro",
+    "Ojo_brillo",
+    "Garra",
+    "Tela_roja",
+    "Cuero",
+    "Metal"
+   ],
+   "colisor": "capsula",
+   "radio": 0.7,
+   "tamano": [
+    0,
+    0,
+    0
+   ],
+   "base_y": 0.0,
+   "notas": "Lobo de la bruma: lobo gigante montable, lomo a 1,5 m. Silla (jinete) en Unity (-0.00, 1.64, 0.22) respecto a la raiz.",
+   "jerarquia": [
+    "cabeza@(-0.00,1.38,0.85)",
+    "cola@(-0.00,1.22,-1.02)",
+    "cuerpo@(-0.00,1.50,-0.00)",
+    "pata_del_der@(0.25,1.15,0.70)",
+    "pata_del_izq@(-0.25,1.15,0.70)",
+    "pata_tras_der@(0.25,1.12,-0.70)",
+    "pata_tras_izq@(-0.25,1.12,-0.70)",
+    "silla@(-0.00,1.64,0.22)"
+   ],
+   "orientacion": "Raiz vacia en el suelo (monturas) o en el punto de anclaje (alas). Mira hacia +Z de Unity (-Y en Blender). Exportado SIN bake_space_transform: en Unity la raiz trae una rotacion de -90 en X (aprox -89.98) y los hijos tienen ejes locales de Blender: X local = lateral (izquierda del animal en -X de Unity... ver notas), Z local = arriba, Y local = hacia atras. Recomendado: activar 'Bake Axis Conversion' en el importador del FBX para que raiz e hijos queden sin rotacion con ejes de Unity (X derecha, Y arriba, Z adelante). Patas: girar sobre el eje lateral (X). Alas: aleteo = girar sobre el eje adelante-atras (Z de Unity con Bake Axis Conversion; Y local sin ella)."
+  },
+  {
+   "nombre": "oso_acorazado",
+   "archivo": "Modelos/montura_oso_acorazado.fbx",
+   "categoria": "montura",
+   "dims": [
+    1.48,
+    2.01,
+    3.04
+   ],
+   "tris": 1948,
+   "materiales": [
+    "Pelaje_oso",
+    "Garra",
+    "Armadura",
+    "Metal",
+    "Ojo_brillo",
+    "Tela_roja",
+    "Cuero"
+   ],
+   "colisor": "capsula",
+   "radio": 0.85,
+   "tamano": [
+    0,
+    0,
+    0
+   ],
+   "base_y": -0.01,
+   "notas": "Oso acorazado: placas de armadura en lomo, hombros y cabeza; lomo a 1,74 m. Silla (jinete) en Unity (-0.00, 1.88, 0.30) respecto a la raiz.",
+   "jerarquia": [
+    "cabeza@(-0.00,1.30,0.90)",
+    "cola@(-0.00,1.12,-1.00)",
+    "cuerpo@(-0.00,1.68,-0.00)",
+    "pata_del_der@(0.36,1.05,0.70)",
+    "pata_del_izq@(-0.36,1.05,0.70)",
+    "pata_tras_der@(0.36,1.00,-0.68)",
+    "pata_tras_izq@(-0.36,1.00,-0.68)",
+    "silla@(-0.00,1.88,0.30)"
+   ],
+   "orientacion": "Raiz vacia en el suelo (monturas) o en el punto de anclaje (alas). Mira hacia +Z de Unity (-Y en Blender). Exportado SIN bake_space_transform: en Unity la raiz trae una rotacion de -90 en X (aprox -89.98) y los hijos tienen ejes locales de Blender: X local = lateral (izquierda del animal en -X de Unity... ver notas), Z local = arriba, Y local = hacia atras. Recomendado: activar 'Bake Axis Conversion' en el importador del FBX para que raiz e hijos queden sin rotacion con ejes de Unity (X derecha, Y arriba, Z adelante). Patas: girar sobre el eje lateral (X). Alas: aleteo = girar sobre el eje adelante-atras (Z de Unity con Bake Axis Conversion; Y local sin ella)."
+  },
+  {
+   "nombre": "alas_lucifer",
+   "archivo": "Modelos/alas_lucifer.fbx",
+   "categoria": "alas",
+   "dims": [
+    4.11,
+    0.99,
+    0.51
+   ],
+   "tris": 1308,
+   "materiales": [
+    "Plumas_lucifer",
+    "Brasa"
+   ],
+   "colisor": "ninguno",
+   "radio": 0.0,
+   "tamano": [
+    0,
+    0,
+    0
+   ],
+   "base_y": -0.48,
+   "notas": "Alas de angel caido para la espalda de Lucifer: raiz en la espalda (entre omoplatos), alas hacia atras (+Y Blender). Plumas negras con bordes de brasa.",
+   "jerarquia": [
+    "ala_der@(0.12,0.00,-0.12)",
+    "ala_izq@(-0.12,0.00,-0.12)"
+   ],
+   "orientacion": "Raiz vacia en el suelo (monturas) o en el punto de anclaje (alas). Mira hacia +Z de Unity (-Y en Blender). Exportado SIN bake_space_transform: en Unity la raiz trae una rotacion de -90 en X (aprox -89.98) y los hijos tienen ejes locales de Blender: X local = lateral (izquierda del animal en -X de Unity... ver notas), Z local = arriba, Y local = hacia atras. Recomendado: activar 'Bake Axis Conversion' en el importador del FBX para que raiz e hijos queden sin rotacion con ejes de Unity (X derecha, Y arriba, Z adelante). Patas: girar sobre el eje lateral (X). Alas: aleteo = girar sobre el eje adelante-atras (Z de Unity con Bake Axis Conversion; Y local sin ella)."
+  }
+ ],
+ "materiales": [
+  {
+   "nombre": "Arbusto",
+   "color": [
+    0.15,
+    0.25,
+    0.11
+   ],
+   "emisivo": false,
+   "intensidad_emision": 0.0
+  },
+  {
+   "nombre": "Arenisca",
+   "color": [
+    0.55,
+    0.32,
+    0.22
+   ],
+   "emisivo": false,
+   "intensidad_emision": 0.0
+  },
+  {
+   "nombre": "Armadura",
+   "color": [
+    0.22,
+    0.23,
+    0.26
+   ],
+   "emisivo": false,
+   "intensidad_emision": 0.0
+  },
+  {
+   "nombre": "Brasa",
+   "color": [
+    1.0,
+    0.3,
+    0.04
+   ],
+   "emisivo": true,
+   "intensidad_emision": 3.5
+  },
+  {
+   "nombre": "Cactus",
+   "color": [
+    0.22,
+    0.3,
+    0.2
+   ],
+   "emisivo": false,
+   "intensidad_emision": 0.0
+  },
+  {
+   "nombre": "Ceniza",
+   "color": [
+    0.07,
+    0.06,
+    0.06
+   ],
+   "emisivo": false,
+   "intensidad_emision": 0.0
+  },
+  {
+   "nombre": "Corteza",
+   "color": [
+    0.24,
+    0.16,
+    0.1
+   ],
+   "emisivo": false,
+   "intensidad_emision": 0.0
+  },
+  {
+   "nombre": "Corteza_muerta",
+   "color": [
+    0.3,
+    0.27,
+    0.24
+   ],
+   "emisivo": false,
+   "intensidad_emision": 0.0
+  },
+  {
+   "nombre": "Crin_brasas",
+   "color": [
+    1.0,
+    0.35,
+    0.05
+   ],
+   "emisivo": true,
+   "intensidad_emision": 3.0
+  },
+  {
+   "nombre": "Cristal",
+   "color": [
+    0.3,
+    0.7,
+    1.0
+   ],
+   "emisivo": true,
+   "intensidad_emision": 2.5
+  },
+  {
+   "nombre": "Cuero",
+   "color": [
+    0.3,
+    0.17,
+    0.09
+   ],
+   "emisivo": false,
+   "intensidad_emision": 0.0
+  },
+  {
+   "nombre": "Flor_palida",
+   "color": [
+    0.55,
+    0.62,
+    0.85
+   ],
+   "emisivo": true,
+   "intensidad_emision": 0.6
+  },
+  {
+   "nombre": "Flor_roja",
+   "color": [
+    0.55,
+    0.06,
+    0.08
+   ],
+   "emisivo": false,
+   "intensidad_emision": 0.0
+  },
+  {
+   "nombre": "Fuego_fenix",
+   "color": [
+    1.0,
+    0.7,
+    0.15
+   ],
+   "emisivo": true,
+   "intensidad_emision": 3.5
+  },
+  {
+   "nombre": "Fuego_infernal",
+   "color": [
+    1.0,
+    0.32,
+    0.03
+   ],
+   "emisivo": true,
+   "intensidad_emision": 4.0
+  },
+  {
+   "nombre": "Garra",
+   "color": [
+    0.1,
+    0.09,
+    0.08
+   ],
+   "emisivo": false,
+   "intensidad_emision": 0.0
+  },
+  {
+   "nombre": "Hielo",
+   "color": [
+    0.55,
+    0.75,
+    0.9
+   ],
+   "emisivo": true,
+   "intensidad_emision": 0.15
+  },
+  {
+   "nombre": "Hierba",
+   "color": [
+    0.22,
+    0.32,
+    0.12
+   ],
+   "emisivo": false,
+   "intensidad_emision": 0.0
+  },
+  {
+   "nombre": "Hierro_oxidado",
+   "color": [
+    0.3,
+    0.16,
+    0.1
+   ],
+   "emisivo": false,
+   "intensidad_emision": 0.0
+  },
+  {
+   "nombre": "Hojas_madre",
+   "color": [
+    0.12,
+    0.3,
+    0.24
+   ],
+   "emisivo": false,
+   "intensidad_emision": 0.0
+  },
+  {
+   "nombre": "Hojas_otono",
+   "color": [
+    0.5,
+    0.24,
+    0.07
+   ],
+   "emisivo": false,
+   "intensidad_emision": 0.0
+  },
+  {
+   "nombre": "Hojas_pino",
+   "color": [
+    0.1,
+    0.2,
+    0.14
+   ],
+   "emisivo": false,
+   "intensidad_emision": 0.0
+  },
+  {
+   "nombre": "Hojas_roble",
+   "color": [
+    0.2,
+    0.3,
+    0.12
+   ],
+   "emisivo": false,
+   "intensidad_emision": 0.0
+  },
+  {
+   "nombre": "Hojas_sauce",
+   "color": [
+    0.22,
+    0.26,
+    0.14
+   ],
+   "emisivo": false,
+   "intensidad_emision": 0.0
+  },
+  {
+   "nombre": "Hongo_brillo",
+   "color": [
+    0.25,
+    0.9,
+    0.7
+   ],
+   "emisivo": true,
+   "intensidad_emision": 2.5
+  },
+  {
+   "nombre": "Hueso",
+   "color": [
+    0.76,
+    0.71,
+    0.6
+   ],
+   "emisivo": false,
+   "intensidad_emision": 0.0
+  },
+  {
+   "nombre": "Junco",
+   "color": [
+    0.38,
+    0.4,
+    0.18
+   ],
+   "emisivo": false,
+   "intensidad_emision": 0.0
+  },
+  {
+   "nombre": "Lava",
+   "color": [
+    1.0,
+    0.36,
+    0.05
+   ],
+   "emisivo": true,
+   "intensidad_emision": 4.0
+  },
+  {
+   "nombre": "Luz_calida",
+   "color": [
+    1.0,
+    0.62,
+    0.25
+   ],
+   "emisivo": true,
+   "intensidad_emision": 3.0
+  },
+  {
+   "nombre": "Madera",
+   "color": [
+    0.34,
+    0.23,
+    0.14
+   ],
+   "emisivo": false,
+   "intensidad_emision": 0.0
+  },
+  {
+   "nombre": "Madera_oscura",
+   "color": [
+    0.16,
+    0.1,
+    0.07
+   ],
+   "emisivo": false,
+   "intensidad_emision": 0.0
+  },
+  {
+   "nombre": "Marmol",
+   "color": [
+    0.74,
+    0.72,
+    0.68
+   ],
+   "emisivo": false,
+   "intensidad_emision": 0.0
+  },
+  {
+   "nombre": "Melena",
+   "color": [
+    0.3,
+    0.18,
+    0.1
+   ],
+   "emisivo": false,
+   "intensidad_emision": 0.0
+  },
+  {
+   "nombre": "Metal",
+   "color": [
+    0.14,
+    0.14,
+    0.16
+   ],
+   "emisivo": false,
+   "intensidad_emision": 0.0
+  },
+  {
+   "nombre": "Musgo",
+   "color": [
+    0.18,
+    0.28,
+    0.1
+   ],
+   "emisivo": false,
+   "intensidad_emision": 0.0
+  },
+  {
+   "nombre": "Nenufar",
+   "color": [
+    0.16,
+    0.3,
+    0.14
+   ],
+   "emisivo": false,
+   "intensidad_emision": 0.0
+  },
+  {
+   "nombre": "Nieve",
+   "color": [
+    0.86,
+    0.89,
+    0.94
+   ],
+   "emisivo": false,
+   "intensidad_emision": 0.0
+  },
+  {
+   "nombre": "Ojo_brillo",
+   "color": [
+    1.0,
+    0.85,
+    0.3
+   ],
+   "emisivo": true,
+   "intensidad_emision": 4.0
+  },
+  {
+   "nombre": "Oro",
+   "color": [
+    0.8,
+    0.6,
+    0.16
+   ],
+   "emisivo": false,
+   "intensidad_emision": 0.0
+  },
+  {
+   "nombre": "Paja",
+   "color": [
+    0.48,
+    0.4,
+    0.22
+   ],
+   "emisivo": false,
+   "intensidad_emision": 0.0
+  },
+  {
+   "nombre": "Pelaje_corcel",
+   "color": [
+    0.08,
+    0.07,
+    0.08
+   ],
+   "emisivo": false,
+   "intensidad_emision": 0.0
+  },
+  {
+   "nombre": "Pelaje_leon",
+   "color": [
+    0.62,
+    0.46,
+    0.26
+   ],
+   "emisivo": false,
+   "intensidad_emision": 0.0
+  },
+  {
+   "nombre": "Pelaje_lobo",
+   "color": [
+    0.42,
+    0.44,
+    0.48
+   ],
+   "emisivo": false,
+   "intensidad_emision": 0.0
+  },
+  {
+   "nombre": "Pelaje_lobo_claro",
+   "color": [
+    0.7,
+    0.72,
+    0.75
+   ],
+   "emisivo": false,
+   "intensidad_emision": 0.0
+  },
+  {
+   "nombre": "Pelaje_oso",
+   "color": [
+    0.25,
+    0.17,
+    0.11
+   ],
+   "emisivo": false,
+   "intensidad_emision": 0.0
+  },
+  {
+   "nombre": "Pico",
+   "color": [
+    0.8,
+    0.62,
+    0.22
+   ],
+   "emisivo": false,
+   "intensidad_emision": 0.0
+  },
+  {
+   "nombre": "Piedra_tallada",
+   "color": [
+    0.46,
+    0.44,
+    0.41
+   ],
+   "emisivo": false,
+   "intensidad_emision": 0.0
+  },
+  {
+   "nombre": "Plumas_blancas",
+   "color": [
+    0.85,
+    0.82,
+    0.75
+   ],
+   "emisivo": false,
+   "intensidad_emision": 0.0
+  },
+  {
+   "nombre": "Plumas_fenix",
+   "color": [
+    0.75,
+    0.18,
+    0.05
+   ],
+   "emisivo": true,
+   "intensidad_emision": 0.5
+  },
+  {
+   "nombre": "Plumas_grifo",
+   "color": [
+    0.45,
+    0.33,
+    0.2
+   ],
+   "emisivo": false,
+   "intensidad_emision": 0.0
+  },
+  {
+   "nombre": "Plumas_lucifer",
+   "color": [
+    0.06,
+    0.05,
+    0.07
+   ],
+   "emisivo": false,
+   "intensidad_emision": 0.0
+  },
+  {
+   "nombre": "Roca",
+   "color": [
+    0.36,
+    0.36,
+    0.35
+   ],
+   "emisivo": false,
+   "intensidad_emision": 0.0
+  },
+  {
+   "nombre": "Roca_oscura",
+   "color": [
+    0.18,
+    0.18,
+    0.19
+   ],
+   "emisivo": false,
+   "intensidad_emision": 0.0
+  },
+  {
+   "nombre": "Roca_roja",
+   "color": [
+    0.42,
+    0.18,
+    0.13
+   ],
+   "emisivo": false,
+   "intensidad_emision": 0.0
+  },
+  {
+   "nombre": "Roca_volcanica",
+   "color": [
+    0.11,
+    0.1,
+    0.1
+   ],
+   "emisivo": false,
+   "intensidad_emision": 0.0
+  },
+  {
+   "nombre": "Runa",
+   "color": [
+    1.0,
+    0.1,
+    0.06
+   ],
+   "emisivo": true,
+   "intensidad_emision": 3.0
+  },
+  {
+   "nombre": "Runa_azul",
+   "color": [
+    0.25,
+    0.6,
+    1.0
+   ],
+   "emisivo": true,
+   "intensidad_emision": 3.0
+  },
+  {
+   "nombre": "Tejado",
+   "color": [
+    0.16,
+    0.19,
+    0.23
+   ],
+   "emisivo": false,
+   "intensidad_emision": 0.0
+  },
+  {
+   "nombre": "Tejado_rojo",
+   "color": [
+    0.38,
+    0.14,
+    0.09
+   ],
+   "emisivo": false,
+   "intensidad_emision": 0.0
+  },
+  {
+   "nombre": "Tela_azul",
+   "color": [
+    0.12,
+    0.2,
+    0.42
+   ],
+   "emisivo": false,
+   "intensidad_emision": 0.0
+  },
+  {
+   "nombre": "Tela_ocre",
+   "color": [
+    0.55,
+    0.36,
+    0.14
+   ],
+   "emisivo": false,
+   "intensidad_emision": 0.0
+  },
+  {
+   "nombre": "Tela_roja",
+   "color": [
+    0.45,
+    0.05,
+    0.06
+   ],
+   "emisivo": false,
+   "intensidad_emision": 0.0
+  },
+  {
+   "nombre": "Tierra",
+   "color": [
+    0.24,
+    0.17,
+    0.11
+   ],
+   "emisivo": false,
+   "intensidad_emision": 0.0
+  },
+  {
+   "nombre": "Vitral",
+   "color": [
+    0.55,
+    0.12,
+    0.45
+   ],
+   "emisivo": true,
+   "intensidad_emision": 1.2
+  },
+  {
+   "nombre": "Yeso",
+   "color": [
+    0.68,
+    0.62,
+    0.5
+   ],
+   "emisivo": false,
+   "intensidad_emision": 0.0
+  }
+ ],
+ "texturas": [
+  {
+   "nombre": "pasto",
+   "color": "Texturas/pasto_color.png",
+   "normal": "Texturas/pasto_normal.png",
+   "metros_por_repeticion": 4,
+   "uso": "Pradera y bosque claro"
+  },
+  {
+   "nombre": "pasto_seco",
+   "color": "Texturas/pasto_seco_color.png",
+   "normal": "Texturas/pasto_seco_normal.png",
+   "metros_por_repeticion": 4,
+   "uso": "Meseta, lindes del desierto"
+  },
+  {
+   "nombre": "musgo_bosque",
+   "color": "Texturas/musgo_bosque_color.png",
+   "normal": "Texturas/musgo_bosque_normal.png",
+   "metros_por_repeticion": 4,
+   "uso": "Suelo del bosque oscuro"
+  },
+  {
+   "nombre": "tierra_camino",
+   "color": "Texturas/tierra_camino_color.png",
+   "normal": "Texturas/tierra_camino_normal.png",
+   "metros_por_repeticion": 4,
+   "uso": "Caminos y poblados"
+  },
+  {
+   "nombre": "arena",
+   "color": "Texturas/arena_color.png",
+   "normal": "Texturas/arena_normal.png",
+   "metros_por_repeticion": 6,
+   "uso": "Orillas y desierto claro"
+  },
+  {
+   "nombre": "nieve",
+   "color": "Texturas/nieve_color.png",
+   "normal": "Texturas/nieve_normal.png",
+   "metros_por_repeticion": 6,
+   "uso": "Cumbres nevadas"
+  },
+  {
+   "nombre": "ceniza_volcanica",
+   "color": "Texturas/ceniza_volcanica_color.png",
+   "normal": "Texturas/ceniza_volcanica_normal.png",
+   "metros_por_repeticion": 5,
+   "uso": "Tierras de ceniza"
+  },
+  {
+   "nombre": "barro_pantano",
+   "color": "Texturas/barro_pantano_color.png",
+   "normal": "Texturas/barro_pantano_normal.png",
+   "metros_por_repeticion": 5,
+   "uso": "Pantano"
+  },
+  {
+   "nombre": "tierra_roja",
+   "color": "Texturas/tierra_roja_color.png",
+   "normal": "Texturas/tierra_roja_normal.png",
+   "metros_por_repeticion": 5,
+   "uso": "Desierto rojo / meseta"
+  },
+  {
+   "nombre": "grava",
+   "color": "Texturas/grava_color.png",
+   "normal": "Texturas/grava_normal.png",
+   "metros_por_repeticion": 3,
+   "uso": "Rios, minas, laderas"
+  },
+  {
+   "nombre": "roca_acantilado",
+   "color": "Texturas/roca_acantilado_color.png",
+   "normal": "Texturas/roca_acantilado_normal.png",
+   "metros_por_repeticion": 8,
+   "uso": "Roca de acantilados y montanas (triplanar)"
+  }
+ ]
+}

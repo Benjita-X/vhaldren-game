@@ -8,8 +8,16 @@ namespace Vhaldren.Tests
     public sealed class MagicCatalogTests
     {
         [Test]
-        public void GrimoireHasSixSchoolsWithThreeValidSpellsEach()
+        public void GrimoireHasSevenSchoolsWithThreeValidSpellsEach()
         {
+            Assert.That(SpellCatalog.SchoolCount, Is.EqualTo(7));
+            Assert.That(SpellCatalog.CommonSchoolCount, Is.EqualTo(6));
+            int exclusive = 0;
+            for (int s = 0; s < SpellCatalog.SchoolCount; s++)
+                if (SpellCatalog.IsExclusive((SpellSchool)s))
+                    exclusive++;
+            Assert.That(exclusive, Is.EqualTo(SpellCatalog.SchoolCount - SpellCatalog.CommonSchoolCount));
+            Assert.That(SpellCatalog.IsExclusive(SpellSchool.FallenLight), Is.True, "La Luz caída es solo de Lucifer.");
             Assert.That(SpellCatalog.All.Count, Is.EqualTo(SpellCatalog.SchoolCount * SpellCatalog.SpellsPerSchool));
             HashSet<string> ids = new HashSet<string>();
             for (int s = 0; s < SpellCatalog.SchoolCount; s++)

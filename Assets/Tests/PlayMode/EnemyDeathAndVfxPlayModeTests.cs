@@ -259,6 +259,8 @@ namespace Vhaldren.Tests
             VfxHost host = VfxHost.Get();
             HashSet<VfxElement> seen = new HashSet<VfxElement>();
             foreach (SpellSchool school in System.Enum.GetValues(typeof(SpellSchool)))
+                // La Luz caída de Lucifer mezcla a propósito luz y fuego infernal (reutiliza su elemento).
+                if (!SpellCatalog.IsExclusive(school))
                 Assert.That(seen.Add(SpellVfx.ElementOf(school)), Is.True, school + " necesita su propio elemento.");
             foreach (VfxElement element in System.Enum.GetValues(typeof(VfxElement)))
             {

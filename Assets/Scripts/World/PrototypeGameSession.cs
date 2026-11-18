@@ -124,8 +124,19 @@ namespace Vhaldren.Gameplay.World
                 worldHud.Bind(player);
                 if (player.GetComponent<CharacterLoadout>() == null)
                     player.gameObject.AddComponent<CharacterLoadout>();
-                if (GameAutoCapture.RequestedFolder() != null && GetComponent<GameAutoCapture>() == null)
-                    gameObject.AddComponent<GameAutoCapture>();
+                // 020: aldeanos con diálogo.
+                Vhaldren.Gameplay.NPC.NpcBootstrap.Install(player);
+                // 020: mapa grande (regiones, mapa M, cofres, piedras de viaje, monturas, carrera).
+                Vhaldren.Gameplay.Exploration.ExplorationBootstrap.Install(player, this);
+                if (GameAutoCapture.RequestedFolder() != null)
+                {
+                    // El mapa grande tiene su propio recorrido de verificación.
+                    bool mapaGrande = gameObject.scene.name == "MundoVhaldren";
+                    if (mapaGrande && GetComponent<MapaAutoCapture>() == null)
+                        gameObject.AddComponent<MapaAutoCapture>();
+                    else if (!mapaGrande && GetComponent<GameAutoCapture>() == null)
+                        gameObject.AddComponent<GameAutoCapture>();
+                }
 
                 // Solo el mundo usa flechas fisicas; las pruebas y la sala
                 // de entrenamiento conservan el disparo legacy configurable.

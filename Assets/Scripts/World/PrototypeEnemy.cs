@@ -54,7 +54,26 @@ namespace Vhaldren.Gameplay.World
         private float nextSupportPulse;
         private bool enraged;
         private LineRenderer aimLine;
+        private Vector3 corpseVelocity;
+        private Vector3 corpseFallAxis = Vector3.forward;
+        private float corpseFeetOffset = 1f;
+        private float rootUntil;
+        private bool asleep;
+        private float nextSleepCheck;
+        private CombatDamageFeedback feedbackView;
+        private Light[] sleepLights;
         private static readonly Collider[] allies = new Collider[24];
+        private static readonly RaycastHit[] GroundHits = new RaycastHit[8];
+        private static Transform sharedPlayer;
+        private static float nextSharedLookup;
+
+        /// <summary>
+        /// Mas alla de esta distancia al jugador el enemigo duerme: no piensa, no anima y no
+        /// dibuja su barra (el mapa grande reparte campamentos lejos unos de otros).
+        /// </summary>
+        public const float SleepDistance = 70f;
+        /// <summary>Distancia a la que despierta (menor que la de dormir: sin parpadeos).</summary>
+        public const float WakeDistance = 60f;
 
         /// <summary>Segundos que el cuerpo queda a la vista tras morir antes de ocultarse.</summary>
         public const float CorpseSeconds = 1.8f;
@@ -70,6 +89,10 @@ namespace Vhaldren.Gameplay.World
 
         public bool IsBoss => isBoss;
         public bool IsDefeated => defeated;
+        /// <summary>Dormido por estar lejos del jugador (no gasta CPU).</summary>
+        public bool IsAsleep => asleep;
+        /// <summary>Atado (cadenas de Lucifer): no se mueve, pero puede golpear si te acercas.</summary>
+        public bool IsRooted => !defeated && Time.time < rootUntil;
         public bool IsSlowed => !defeated && Time.time < slowUntil;
         public bool IsAttackTelegraphed => windingUp;
         /// <summary>A quién persigue y golpea (el jugador en el mundo).</summary>
@@ -98,6 +121,14 @@ namespace Vhaldren.Gameplay.World
             if (feedback == null)
                 feedback = gameObject.AddComponent<CombatDamageFeedback>();
             feedback.ConfigureForEnemy(isBoss);
+            feedbackView = feedback;
+            // Terreno con pendientes: sube cuestas de hasta 50° y peldaños de 35 cm.
+            if (controller.slopeLimit < 50f)
+                controller.slopeLimit = 50f;
+            if (controller.stepOffset < 0.35f && controller.height >= 1.2f)
+                controller.stepOffset = 0.35f;
+            // Repartir las comprobaciones de sueño entre fotogramas.
+            nextSleepCheck = Time.time + UnityEngine.Random.value * 0.5f;
             CombatDamageReceiver damageReceiver = GetComponent<CombatDamageReceiver>();
             if (damageReceiver == null)
                 damageReceiver = gameObject.AddComponent<CombatDamageReceiver>();
@@ -189,6 +220,8 @@ namespace Vhaldren.Gameplay.World
 
         private void HandleDamaged(float damage)
         {
+            if (asleep)
+                SetAsleep(false);
             provokedUntil = Time.time + 12f;
             returningHome = false;
             AlertAllies();
@@ -206,6 +239,13 @@ namespace Vhaldren.Gameplay.World
             defeatedAt = Time.time;
             CancelAttack();
             respawnAt = Time.time + Mathf.Max(1f, respawnSeconds);
+            corpseVelocity = Vector3.zero;
+            corpseFallAxis = Vector3.forward;
+            rootUntil = 0f;
+            if (asleep)
+                SetAsleep(false);
+            if (controller != null)
+                corpseFeetOffset = -(controller.center.y - controller.height * 0.5f) * Mathf.Abs(transform.lossyScale.y);
             // Las colisiones se apagan al instante: el cuerpo que cae ya no bloquea ni recibe golpes.
             if (controller != null)
                 controller.enabled = false;
@@ -232,6 +272,7 @@ namespace Vhaldren.Gameplay.World
             if (modelRoot == null || !modelRoot.activeSelf || hideModelAt == float.PositiveInfinity)
                 return;
             float age = Time.time - defeatedAt;
+            SlideCorpse(Time.deltaTime);
             Transform model = modelRoot.transform;
             Vector3 position = modelRestPosition;
             Quaternion rotation = modelRestRotation;
@@ -240,7 +281,9 @@ namespace Vhaldren.Gameplay.World
             {
                 float fall = Mathf.Clamp01(age / 0.42f);
                 fall *= fall;   // cae acelerando, como un peso muerto
-                rotation = Quaternion.AngleAxis(82f * fall, Vector3.forward) * modelRestRotation;
+                // Cae hacia donde lo empujo el golpe final (de lado si no hubo empujon).
+                Vector3 axis = corpseFallAxis.sqrMagnitude > 0.01f ? corpseFallAxis.normalized : Vector3.forward;
+                rotation = Quaternion.AngleAxis(82f * fall, axis) * modelRestRotation;
                 position += Vector3.down * (halfHeight * 0.62f * fall);
             }
             if (!landedDust && age >= (proceduralDeath ? 0.42f : 0.55f))
@@ -271,6 +314,179 @@ namespace Vhaldren.Gameplay.World
             }
         }
 
+        /// <summary>
+        /// El cuerpo despedido se desliza y frena; se detiene contra paredes y sigue el
+        /// suelo (pendientes) para no quedar flotando ni enterrado.
+        /// </summary>
+        private void SlideCorpse(float deltaTime)
+        {
+            if (corpseVelocity.sqrMagnitude < 0.0025f || deltaTime <= 0f)
+                return;
+            Vector3 step = corpseVelocity * deltaTime;
+            float length = step.magnitude;
+            Vector3 heading = step / Mathf.Max(0.0001f, length);
+            if (Physics.Raycast(transform.position, heading, out RaycastHit wall, length + 0.45f,
+                    Physics.DefaultRaycastLayers, QueryTriggerInteraction.Ignore) &&
+                !wall.collider.transform.IsChildOf(transform))
+            {
+                corpseVelocity = Vector3.zero;
+                return;
+            }
+            Vector3 next = transform.position + step;
+            if (FindGroundBelow(next, 1.5f, 4f, out float groundY))
+                next.y = Mathf.Lerp(next.y, groundY + corpseFeetOffset, 0.6f);
+            transform.position = next;
+            corpseVelocity = Vector3.MoveTowards(corpseVelocity, Vector3.zero, 14f * deltaTime);
+        }
+
+        /// <summary>Altura del suelo bajo un punto, ignorando el propio cuerpo.</summary>
+        private bool FindGroundBelow(Vector3 point, float above, float depth, out float groundY)
+        {
+            groundY = point.y;
+            int count = Physics.RaycastNonAlloc(point + Vector3.up * above, Vector3.down, GroundHits, above + depth,
+                Physics.DefaultRaycastLayers, QueryTriggerInteraction.Ignore);
+            float best = float.PositiveInfinity;
+            for (int i = 0; i < count; i++)
+            {
+                Collider hit = GroundHits[i].collider;
+                if (hit == null || hit.transform.IsChildOf(transform) || hit.GetComponentInParent<CombatHealth>() != null)
+                    continue;
+                if (GroundHits[i].distance < best)
+                {
+                    best = GroundHits[i].distance;
+                    groundY = GroundHits[i].point.y;
+                }
+            }
+            return best < float.PositiveInfinity;
+        }
+
+        /// <summary>Decide si un enemigo debe dormir (con histeresis para no parpadear).</summary>
+        public static bool ShouldSleep(float planarDistance, bool currentlyAsleep, bool busy)
+        {
+            if (float.IsNaN(planarDistance) || float.IsInfinity(planarDistance))
+                return currentlyAsleep;
+            if (currentlyAsleep)
+                return planarDistance > WakeDistance;
+            return !busy && planarDistance > SleepDistance;
+        }
+
+        /// <summary>Comprueba cada medio segundo si debe dormir o despertar. True = dormido.</summary>
+        private bool UpdateSleep()
+        {
+            if (Time.time < nextSleepCheck)
+                return asleep;
+            nextSleepCheck = Time.time + 0.5f;
+            if (target == null)
+                TryAcquirePlayer();
+            if (target == null)
+            {
+                if (asleep)
+                    SetAsleep(false);
+                return false;
+            }
+            Vector3 planar = target.position - transform.position;
+            planar.y = 0f;
+            bool busy = windingUp || Time.time < staggerUntil || knockback.sqrMagnitude > 0.01f ||
+                        (controller != null && controller.enabled && !controller.isGrounded);
+            bool sleep = ShouldSleep(planar.magnitude, asleep, busy);
+            if (sleep != asleep)
+                SetAsleep(sleep);
+            return asleep;
+        }
+
+        /// <summary>
+        /// En un mapa generado el jugador puede aparecer despues que los enemigos: se busca
+        /// una sola vez cada 2 s para todos (no un Find por enemigo).
+        /// </summary>
+        private void TryAcquirePlayer()
+        {
+            if (sharedPlayer == null && Time.time >= nextSharedLookup)
+            {
+                nextSharedLookup = Time.time + 2f;
+                GameObject found = GameObject.Find("PlayerRoot");
+                sharedPlayer = found != null ? found.transform : null;
+            }
+            if (sharedPlayer == null)
+                return;
+            target = sharedPlayer;
+            targetHealth = target.GetComponent<CombatHealth>();
+            targetMotor = target.GetComponent<PlayerMotor>();
+        }
+
+        private void SetAsleep(bool value)
+        {
+            if (asleep == value)
+                return;
+            asleep = value;
+            if (animationDriver != null)
+                animationDriver.SetSleeping(value);
+            if (feedbackView != null)
+                feedbackView.enabled = !value;
+            if (value)
+            {
+                CancelAttack();
+                knockback = Vector3.zero;
+                provokedUntil = 0f;
+                // Nadie lo ve a 70 m: si volvia a casa, llega de golpe.
+                if (returningHome)
+                {
+                    returningHome = false;
+                    TeleportTo(spawnPosition);
+                }
+                sleepLights = GetComponentsInChildren<Light>(false);
+                for (int i = 0; i < sleepLights.Length; i++)
+                    if (sleepLights[i] != null)
+                        sleepLights[i].enabled = false;
+            }
+            else
+            {
+                if (sleepLights != null)
+                    for (int i = 0; i < sleepLights.Length; i++)
+                        if (sleepLights[i] != null)
+                            sleepLights[i].enabled = true;
+                sleepLights = null;
+                fallingSpeed = 0f;
+                SnapToGround();
+                nextAttackTime = Mathf.Max(nextAttackTime, Time.time + 0.4f);
+            }
+        }
+
+        /// <summary>Apoya el cuerpo en el suelo (al despertar o tras caer del mapa).</summary>
+        private void SnapToGround()
+        {
+            if (controller == null || !controller.enabled)
+                return;
+            float feet = -(controller.center.y - controller.height * 0.5f) * Mathf.Abs(transform.lossyScale.y);
+            if (FindGroundBelow(transform.position, 2f, 6f, out float groundY))
+            {
+                float wanted = groundY + feet + controller.skinWidth;
+                if (Mathf.Abs(wanted - transform.position.y) > 0.05f)
+                    TeleportTo(new Vector3(transform.position.x, wanted, transform.position.z));
+            }
+        }
+
+        private void TeleportTo(Vector3 position)
+        {
+            bool wasEnabled = controller != null && controller.enabled;
+            if (wasEnabled)
+                controller.enabled = false;
+            transform.position = position;
+            if (wasEnabled)
+                controller.enabled = true;
+            Physics.SyncTransforms();
+        }
+
+        /// <summary>
+        /// Ata al enemigo en el sitio (cadenas de azufre): no se desplaza durante unos
+        /// segundos, aunque sigue golpeando si el jugador se pone a su alcance.
+        /// </summary>
+        public void ApplyRoot(float seconds)
+        {
+            if (defeated || float.IsNaN(seconds) || float.IsInfinity(seconds) || seconds <= 0f)
+                return;
+            rootUntil = Mathf.Max(rootUntil, Time.time + Mathf.Min(seconds, 3f));
+        }
+
         private void RestoreModelPose()
         {
             if (modelRoot == null || !modelRestSaved)
@@ -291,6 +507,18 @@ namespace Vhaldren.Gameplay.World
 
             if (controller == null || !controller.enabled)
                 return;
+
+            // Lejos del jugador duerme: ni IA, ni gravedad, ni animacion.
+            if (UpdateSleep())
+                return;
+
+            // Si cayo fuera del terreno (hueco del mapa), vuelve a su sitio.
+            if (transform.position.y < spawnPosition.y - 40f)
+            {
+                TeleportTo(spawnPosition);
+                fallingSpeed = 0f;
+                SnapToGround();
+            }
 
             UpdateRoleAbilities();
 
@@ -364,17 +592,31 @@ namespace Vhaldren.Gameplay.World
                     move = home.normalized;
             }
 
-            if (move.sqrMagnitude > 0.001f)
+            // Atado: no se desplaza, pero sigue mirando a su objetivo.
+            Vector3 face = move;
+            if (Time.time < rootUntil)
+            {
+                if (target != null)
+                {
+                    face = target.position - transform.position;
+                    face.y = 0f;
+                }
+                move = Vector3.zero;
+            }
+            if (face.sqrMagnitude > 0.001f)
             {
                 transform.rotation = Quaternion.RotateTowards(
-                    transform.rotation, Quaternion.LookRotation(move, Vector3.up),
+                    transform.rotation, Quaternion.LookRotation(face, Vector3.up),
                     540f * Time.deltaTime);
             }
 
-            fallingSpeed = controller.isGrounded ? -2f :
-                Mathf.Max(-40f, fallingSpeed - 25f * Time.deltaTime);
             float currentSpeed = Mathf.Max(0f, moveSpeed) * (enraged ? 1.25f : 1f) *
                 (Time.time < slowUntil ? slowMultiplier : 1f);
+            // En el suelo empuja hacia abajo segun la velocidad: al bajar una cuesta sigue
+            // pegado al terreno en vez de ir dando saltitos.
+            fallingSpeed = controller.isGrounded
+                ? -(2f + (move.sqrMagnitude > 0.001f ? currentSpeed * 1.2f : 0f))
+                : Mathf.Max(-40f, fallingSpeed - 25f * Time.deltaTime);
             // Empujon del golpe: se frena rapido y respeta colisiones (CharacterController).
             Vector3 push = knockback;
             knockback = Vector3.MoveTowards(knockback, Vector3.zero, 30f * Time.deltaTime);
@@ -478,6 +720,24 @@ namespace Vhaldren.Gameplay.World
         public bool IsProvoked => !defeated && Time.time < provokedUntil;
         public Vector3 Knockback => knockback;
 
+        /// <summary>Direccion y velocidad con la que sale despedido el cuerpo al morir.</summary>
+        public Vector3 CorpseVelocity => corpseVelocity;
+
+        /// <summary>
+        /// Muerte con impulso: el cuerpo se desliza en la direccion del golpe que remata
+        /// (sin atravesar paredes) antes de caer. Solo tras la derrota.
+        /// </summary>
+        public void LaunchCorpse(Vector3 direction, float speed)
+        {
+            if (!defeated || float.IsNaN(speed) || speed <= 0f)
+                return;
+            direction.y = 0f;
+            if (direction.sqrMagnitude < 0.0001f)
+                return;
+            corpseVelocity = direction.normalized * Mathf.Min(speed, 12f);
+            corpseFallAxis = Vector3.Cross(Vector3.up, transform.InverseTransformDirection(direction.normalized));
+        }
+
         /// <summary>Empuja al enemigo unos centimetros en la direccion del golpe.</summary>
         public void ApplyKnockback(Vector3 direction, float distance)
         {
@@ -487,7 +747,7 @@ namespace Vhaldren.Gameplay.World
             if (direction.sqrMagnitude < 0.0001f)
                 return;
             // v^2 = 2·a·d con frenado de 30 m/s^2.
-            knockback = direction.normalized * Mathf.Sqrt(60f * Mathf.Min(distance, 2f));
+            knockback = direction.normalized * Mathf.Sqrt(60f * Mathf.Min(distance, 3f));
         }
 
         /// <summary>
@@ -743,6 +1003,9 @@ namespace Vhaldren.Gameplay.World
             staggerUntil = 0f;
             enraged = false;
             knockback = Vector3.zero;
+            corpseVelocity = Vector3.zero;
+            corpseFallAxis = Vector3.forward;
+            rootUntil = 0f;
             CancelAttack();
             provokedUntil = 0f;
             returningHome = false;

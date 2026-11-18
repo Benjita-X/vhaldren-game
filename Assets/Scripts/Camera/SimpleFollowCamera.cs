@@ -57,6 +57,10 @@ namespace Vhaldren.Gameplay.CameraSystem
                  "CameraOcclusionHider en vez de acercarla (mundo jugable).")]
         [SerializeField] private bool obstructionTerrainOnly;
 
+        [Header("Distancia extra (monturas y vuelo)")]
+        [Tooltip("Rapidez con la que la camara se aleja o se acerca al cambiar el multiplicador de distancia.")]
+        [SerializeField, Min(0f)] private float distanceMultiplierSharpness = 1.6f;
+
         private readonly RaycastHit[] obstructionHits = new RaycastHit[16];
         private float targetZoom = 1f;
         private float currentZoom = 1f;
@@ -68,6 +72,9 @@ namespace Vhaldren.Gameplay.CameraSystem
         private bool hasFollowFocus;
         // Distancia libre que deja la pared mas cercana; infinito = sin pared.
         private float obstructionLimit = float.PositiveInfinity;
+        // Alejamiento extra por encima del zoom (1 = sin cambio). Lo piden monturas y vuelo.
+        private float targetDistanceMultiplier = 1f;
+        private float currentDistanceMultiplier = 1f;
 
         public Transform Target => target;
         /// <summary>Zoom aplicado ahora mismo: 1 es la distancia normal, menos es mas cerca.</summary>
@@ -129,6 +136,23 @@ namespace Vhaldren.Gameplay.CameraSystem
         {
             get => obstructionTerrainOnly;
             set => obstructionTerrainOnly = value;
+        }
+
+        /// <summary>Multiplicador de distancia aplicado ahora mismo (1 = normal). No cambia el zoom del jugador.</summary>
+        public float DistanceMultiplier => currentDistanceMultiplier;
+        public float TargetDistanceMultiplier => targetDistanceMultiplier;
+
+        /// <summary>
+        /// Aleja (mayor que 1) o acerca la camara sobre la misma linea, por encima del zoom.
+        /// Lo usan las monturas y el vuelo; vuelve a 1 con suavidad al terminar.
+        /// </summary>
+        public void SetDistanceMultiplier(float value, bool immediate = false)
+        {
+            if (!IsFinite(value))
+                return;
+            targetDistanceMultiplier = Mathf.Clamp(value, 0.5f, 3f);
+            if (immediate)
+                currentDistanceMultiplier = targetDistanceMultiplier;
         }
 
         /// <summary>Acerca (negativo) o aleja (positivo) la camara dentro de sus limites.</summary>
@@ -253,6 +277,14 @@ namespace Vhaldren.Gameplay.CameraSystem
 
             float deltaTime = Time.deltaTime;
             currentZoom = Mathf.Lerp(currentZoom, targetZoom, Blend(zoomSharpness, deltaTime));
+            if (currentDistanceMultiplier != targetDistanceMultiplier)
+            {
+                currentDistanceMultiplier = Mathf.Lerp(currentDistanceMultiplier, targetDistanceMultiplier,
+                    Blend(distanceMultiplierSharpness, deltaTime));
+                if (!IsFinite(currentDistanceMultiplier) ||
+                    Mathf.Abs(currentDistanceMultiplier - targetDistanceMultiplier) < 0.0005f)
+                    currentDistanceMultiplier = targetDistanceMultiplier;
+            }
             StepYaw(Blend(rotationSharpness, deltaTime));
 
             Vector3 focus = target.position + SafeLookOffset();
@@ -316,6 +348,8 @@ namespace Vhaldren.Gameplay.CameraSystem
         private Vector3 ViewOffset()
         {
             float zoom = IsFinite(currentZoom) && currentZoom > 0f ? currentZoom : 1f;
+            if (currentDistanceMultiplier != 1f && IsFinite(currentDistanceMultiplier) && currentDistanceMultiplier > 0f)
+                zoom *= currentDistanceMultiplier;
             Vector3 relative = (SafeOffset() - SafeLookOffset()) * zoom;
             if (currentYaw != 0f && IsFinite(currentYaw))
                 relative = Quaternion.Euler(0f, currentYaw, 0f) * relative;
@@ -344,6 +378,7 @@ namespace Vhaldren.Gameplay.CameraSystem
         {
             currentZoom = targetZoom;
             currentYaw = targetYaw;
+            currentDistanceMultiplier = targetDistanceMultiplier;
             if (target == null)
                 return;
 

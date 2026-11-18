@@ -15,7 +15,10 @@ namespace Vhaldren.Gameplay.UI
     /// </summary>
     public sealed class MainMenuController : MonoBehaviour
     {
-        public const string WorldScene = "WorldPrototype001";
+        /// <summary>Mapa grande de Vhaldren (escena generada por el líder).</summary>
+        public const string WorldScene = "MundoVhaldren";
+        /// <summary>Escena de respaldo si el mapa grande aún no está en la compilación.</summary>
+        public const string FallbackWorldScene = "WorldPrototype001";
 
         private enum Screen { Main, Race, Options, Codex, Credits }
 
@@ -53,8 +56,12 @@ namespace Vhaldren.Gameplay.UI
         public void StartGame(RaceId race)
         {
             RaceSelection.Current = race;
-            SceneManager.LoadScene(WorldScene);
+            SceneManager.LoadScene(SceneToLoad());
         }
+
+        /// <summary>El mapa grande si está en la compilación; si no, el prototipo (nunca falla).</summary>
+        public static string SceneToLoad() =>
+            Application.CanStreamedLevelBeLoaded(WorldScene) ? WorldScene : FallbackWorldScene;
 
         private void OnGUI()
         {
@@ -108,20 +115,25 @@ namespace Vhaldren.Gameplay.UI
             for (int i = 0; i < RaceCatalog.All.Count; i++)
             {
                 RaceDefinition race = RaceCatalog.All[i];
-                if (GUI.Button(new Rect(0f, i * 54f, listWidth - 24f, 48f), race.Name,
+                // El protagonista (Lucifer) va primero y en dorado.
+                string label = race.Id == RaceCatalog.Default ? "<color=#ffd27a>" + race.Name + "</color>" : race.Name;
+                if (GUI.Button(new Rect(0f, i * 54f, listWidth - 24f, 48f), label,
                         race.Id == selectedRace ? MenuStyle.TabActive : MenuStyle.Tab))
                     selectedRace = race.Id;
             }
             GUI.EndScrollView();
 
-            StringBuilder text = new StringBuilder(512);
+            StringBuilder text = new StringBuilder(640);
+            if (selectedRace == RaceId.Lucifer)
+                text.Append("<color=#ffd27a><i>Cayó del cielo con las alas rotas sobre el Cruce de Vhaldren. ")
+                    .Append("La Luna carmesí lo llama y el Caballero de sangre lo teme: recupera tu luz.</i></color>\n");
             CodexPanel.AppendRace(text, RaceCatalog.Get(selectedRace));
             GUI.Label(new Rect(list.xMax + 24f, area.y + 60f, area.width - listWidth - 96f, area.height - 150f), text.ToString(), MenuStyle.Body);
 
             if (GUI.Button(new Rect(area.x + 24f, area.yMax - 60f, 220f, 44f), "Volver", MenuStyle.Tab))
                 screen = Screen.Main;
             if (GUI.Button(new Rect(area.xMax - 304f, area.yMax - 60f, 280f, 44f),
-                    "Comenzar como " + RaceCatalog.Get(selectedRace).Name, MenuStyle.Button))
+                    "Comenzar como " + RaceCatalog.Get(selectedRace).MenuName, MenuStyle.Button))
                 StartGame(selectedRace);
         }
 
@@ -158,7 +170,7 @@ namespace Vhaldren.Gameplay.UI
             yield return new WaitForSeconds(1.5f);
             yield return Shot("0a-menu-principal.png");
             screen = Screen.Race;
-            selectedRace = RaceId.Vampire;
+            selectedRace = RaceCatalog.Default;
             yield return new WaitForSeconds(0.4f);
             yield return Shot("0b-razas.png");
             screen = Screen.Options;
@@ -171,7 +183,7 @@ namespace Vhaldren.Gameplay.UI
             screen = Screen.Codex;
             yield return new WaitForSeconds(0.4f);
             yield return Shot("0d-informacion.png");
-            StartGame(RaceId.Vampire);
+            StartGame(RaceCatalog.Default);
         }
 
         private static IEnumerator Shot(string file)

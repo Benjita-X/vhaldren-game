@@ -3,6 +3,23 @@ using UnityEngine;
 namespace Vhaldren.Gameplay.Player
 {
     /// <summary>
+    /// Locomocion externa opcional (monturas, vuelo). Mientras
+    /// <see cref="OverridesLocomotion"/> sea verdadero sustituye la marcha normal, la
+    /// esquiva y la gravedad del motor; el motor sigue moviendo el CharacterController,
+    /// girando el modelo y midiendo la velocidad real. Sin sustituto, nada cambia.
+    /// </summary>
+    public interface IPlayerLocomotionOverride
+    {
+        bool OverridesLocomotion { get; }
+
+        /// <summary>
+        /// Velocidad del paso en m/s (incluida la vertical: el sustituto decide la gravedad)
+        /// y orientacion plana deseada (cero = conservar la actual).
+        /// </summary>
+        Vector3 StepVelocity(PlayerMotionCommand command, float deltaTime, out Vector3 facing);
+    }
+
+    /// <summary>
     /// Ejecuta intenciones de locomocion en espacio del mundo.
     /// No lee teclado, raton, camara ni red. No decide autoridad de red.
     /// </summary>
@@ -55,6 +72,9 @@ namespace Vhaldren.Gameplay.Player
         public Vector3 ActualVelocity { get; private set; }
         public bool IsGrounded { get; private set; }
 
+        /// <summary>Locomocion externa (montura). Null = marcha normal de siempre.</summary>
+        public IPlayerLocomotionOverride LocomotionOverride { get; set; }
+
         private void Awake()
         {
             controller = GetComponent<CharacterController>();
@@ -99,6 +119,14 @@ namespace Vhaldren.Gameplay.Player
             if (!isActiveAndEnabled || controller == null || !controller.enabled ||
                 !IsFinite(deltaTime) || deltaTime <= 0f)
                 return;
+
+            IPlayerLocomotionOverride external = LocomotionOverride;
+            if (external != null && !(external is Object unityObject && unityObject == null) &&
+                external.OverridesLocomotion)
+            {
+                SimulateOverride(external, command, deltaTime);
+                return;
+            }
 
             Vector3 move = IsFinite(command.MoveWorld) ? command.MoveWorld : Vector3.zero;
             move.y = 0f;
@@ -210,6 +238,42 @@ namespace Vhaldren.Gameplay.Player
             targetTransform.rotation = Quaternion.RotateTowards(
                 targetTransform.rotation, targetRotation, maxTurn
             );
+        }
+
+        /// <summary>
+        /// Paso con locomocion externa (montura): sin esquiva ni gravedad propia. Un
+        /// aturdimiento sigue bloqueando la marcha pedida. Al terminar, la velocidad
+        /// vertical continua desde la del sustituto (no hay saltos al desmontar).
+        /// </summary>
+        private void SimulateOverride(IPlayerLocomotionOverride external, PlayerMotionCommand command,
+            float deltaTime)
+        {
+            dash.Cancel();
+            DashMovedThisStep = false;
+            if (actionModifiers != null && !actionModifiers.AllowsMovement)
+                command = new PlayerMotionCommand(Vector3.zero, command.FaceWorld);
+
+            Vector3 velocity = external.StepVelocity(command, deltaTime, out Vector3 facing);
+            if (!IsFinite(velocity))
+                velocity = Vector3.zero;
+            horizontalVelocity = new Vector3(velocity.x, 0f, velocity.z);
+            verticalSpeed = velocity.y;
+
+            Vector3 previousPosition = transform.position;
+            CollisionFlags flags = controller.Move(velocity * deltaTime);
+            IsGrounded = (flags & CollisionFlags.Below) != 0;
+            ActualVelocity = (transform.position - previousPosition) / deltaTime;
+            if (!IsFinite(ActualVelocity))
+                ActualVelocity = Vector3.zero;
+
+            facing = IsFinite(facing) ? NormalizePlanar(new Vector3(facing.x, 0f, facing.z)) : Vector3.zero;
+            if (facing == Vector3.zero)
+                return;
+            CurrentFacing = facing;
+            Transform targetTransform = visualRoot != null ? visualRoot : transform;
+            float safeTurningSpeed = IsFinite(turningSpeedDegrees) ? Mathf.Max(0f, turningSpeedDegrees) : 0f;
+            targetTransform.rotation = Quaternion.RotateTowards(targetTransform.rotation,
+                Quaternion.LookRotation(CurrentFacing, Vector3.up), Mathf.Min(safeTurningSpeed * deltaTime, 360f));
         }
 
         /// <summary>

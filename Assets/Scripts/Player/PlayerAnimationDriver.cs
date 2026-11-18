@@ -42,6 +42,12 @@ namespace Vhaldren.Gameplay.Player
         private bool wasDashing;
         private int lastShots;
 
+        /// <summary>
+        /// Jinete sentado en una montura: las piernas quedan en reposo (sin correr ni
+        /// esquivar) aunque el cuerpo se desplace deprisa. Lo activa el control de monturas.
+        /// </summary>
+        public bool Seated { get; set; }
+
         private void Awake()
         {
             if (motor == null)
@@ -58,12 +64,12 @@ namespace Vhaldren.Gameplay.Player
                 return;
 
             Vector3 forward = visualRoot != null ? visualRoot.forward : transform.forward;
-            Vector2 local = LocalMoveDirection(motor.ActualVelocity, forward, runSpeed);
+            Vector2 local = Seated ? Vector2.zero : LocalMoveDirection(motor.ActualVelocity, forward, runSpeed);
             float damp = float.IsNaN(dampTime) ? 0f : Mathf.Max(0f, dampTime);
             animator.SetFloat(MoveXId, local.x, damp, Time.deltaTime);
             animator.SetFloat(MoveYId, local.y, damp, Time.deltaTime);
 
-            bool dashing = motor.IsDashing || motor.DashMovedThisStep;
+            bool dashing = !Seated && (motor.IsDashing || motor.DashMovedThisStep);
             if (dashing && !wasDashing)
             {
                 Vector2 dodge = LocalMoveDirection(motor.ActualVelocity, forward, 0.001f);

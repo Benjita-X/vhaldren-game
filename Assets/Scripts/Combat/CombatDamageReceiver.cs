@@ -70,6 +70,9 @@ namespace Vhaldren.Gameplay.Combat
             new System.Collections.Generic.List<IDamageAbsorber>();
         public event Action<CombatDamageResult> Resolved;
         public float LastAppliedDamage { get; private set; }
+        /// <summary>Origen del último golpe recibido (dirección de la reacción y del empujón).</summary>
+        public Vector3 LastAttackSource { get; private set; }
+        public CombatDamageKind LastKind { get; private set; }
 
         public void ConfigureResistances(float melee, float arrow, float magic)
         {
@@ -137,7 +140,15 @@ namespace Vhaldren.Gameplay.Combat
             }
 
             amount = Mathf.Max(0f, amount);
-            float applied = amount > 0f ? health.ApplyDamage(amount) : 0f;
+            LastAttackSource = attackSource;
+            LastKind = kind;
+            float applied = 0f;
+            if (amount > 0f)
+            {
+                // Quien escuche Damaged (números, reacción del modelo) sabe tipo y origen.
+                using (CombatHitContext.Resolve(kind, attackSource))
+                    applied = health.ApplyDamage(amount);
+            }
             LastAppliedDamage = applied;
             float prevented = Mathf.Max(0f, requestedDamage - amount);
             CombatDamageResult result = new CombatDamageResult(applied, prevented, parried, evaded);

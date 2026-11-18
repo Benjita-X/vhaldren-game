@@ -84,7 +84,7 @@ namespace Vhaldren.Gameplay.Player
 
         private void Update()
         {
-            if (health != null && !health.IsDefeated)
+            if (health != null && !health.IsDefeated && !Vhaldren.Gameplay.NPC.NpcDialogue.IsOpen)
             {
                 if (SwordPressed())
                     TrySwordSweep();
@@ -306,8 +306,11 @@ namespace Vhaldren.Gameplay.Player
                     !Unobstructed(receiver, origin + Vector3.up * 0.55f))
                     continue;
 
-                CombatDamageResult result =
-                    receiver.Receive(swordDamage * (counter ? 1.5f : 1f),
+                // El contraataque tras una parada se siente como un crítico: número grande,
+                // parón largo y empujón fuerte.
+                CombatDamageResult result;
+                using (CombatHitContext.Push(counter, counter ? 1.6f : 1.1f))
+                    result = receiver.Receive(swordDamage * (counter ? 1.5f : 1f),
                         CombatDamageKind.Melee, origin);
                 if (result.Applied > 0f)
                 {
@@ -348,8 +351,9 @@ namespace Vhaldren.Gameplay.Player
                     continue;
                 if (!Unobstructed(receiver, center + Vector3.up * 0.55f))
                     continue;
-                CombatDamageResult result = receiver.Receive(
-                    runeDamage, CombatDamageKind.Magic, center);
+                CombatDamageResult result;
+                using (CombatHitContext.Push(false, 1.4f))
+                    result = receiver.Receive(runeDamage, CombatDamageKind.Magic, center);
                 if (result.Applied > 0f)
                 {
                     if (damageTracker == null)

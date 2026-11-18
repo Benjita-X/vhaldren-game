@@ -55,11 +55,15 @@ namespace Vhaldren.Gameplay.Magic
         private Transform ignitionOwner;
         private int chillStacks;
         private float frozenUntil;
+        private float boundUntil;
         private float nextIgnitionTick;
 
         public event Action<StatusKind> Applied;
         public int ChillStacks => Has(StatusKind.Chill) ? chillStacks : 0;
         public bool IsFrozen => Time.time < frozenUntil;
+        /// <summary>Atado por cadenas de azufre (Salto de alas de Lucifer): no se desplaza.</summary>
+        public bool IsBound => Time.time < boundUntil;
+        public float BoundRemaining => Mathf.Max(0f, boundUntil - Time.time);
 
         /// <summary>Multiplicador de daño recibido (maldicion, vulnerabilidad).</summary>
         public float IncomingMultiplier =>
@@ -190,6 +194,20 @@ namespace Vhaldren.Gameplay.Magic
         }
 
         /// <summary>
+        /// Ata al objetivo en el sitio (máximo 3 s): no se desplaza pero puede seguir
+        /// golpeando a quien se acerque. No es un estado de escuela: no aparece en la lista.
+        /// </summary>
+        public void Bind(float seconds)
+        {
+            if (health == null || health.IsDefeated || float.IsNaN(seconds) || seconds <= 0f)
+                return;
+            float safe = Mathf.Clamp(seconds, 0f, 3f);
+            boundUntil = Mathf.Max(boundUntil, Time.time + safe);
+            if (enemy != null)
+                enemy.ApplyRoot(safe);
+        }
+
+        /// <summary>
         /// Descarga la estatica por el receptor central. Respeta resistencias,
         /// barreras, modificadores de raza/equipo y feedback de daño.
         /// </summary>
@@ -221,6 +239,7 @@ namespace Vhaldren.Gameplay.Magic
                 until[i] = 0f;
             chillStacks = 0;
             frozenUntil = 0f;
+            boundUntil = 0f;
             ignitionOwner = null;
         }
 

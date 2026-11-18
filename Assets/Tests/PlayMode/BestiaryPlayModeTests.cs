@@ -119,7 +119,7 @@ namespace Vhaldren.Tests
             yield return null;
             CombatHealth health = skeleton.GetComponent<CombatHealth>();
             Assert.That(skeleton.Archetype.Id, Is.EqualTo("esqueleto"));
-            Assert.That(health.MaximumHealth, Is.EqualTo(55f));
+            Assert.That(health.MaximumHealth, Is.EqualTo(80f), "Equilibrio 023: 3-4 golpes de espada.");
             Assert.That(skeleton.GetComponent<EnemyArchetypeVisual>().BuiltFor, Is.EqualTo("esqueleto"));
             CombatDamageResult arrow = skeleton.GetComponent<CombatDamageReceiver>()
                 .Receive(20f, CombatDamageKind.Arrow, Vector3.zero);
@@ -134,7 +134,7 @@ namespace Vhaldren.Tests
             float timeout = Time.time + 4f;
             while (playerHealth.CurrentHealth >= 100f && Time.time < timeout)
                 yield return null;
-            Assert.That(playerHealth.CurrentHealth, Is.EqualTo(92f).Within(0.01f), "Un virote de 8.");
+            Assert.That(playerHealth.CurrentHealth, Is.EqualTo(88f).Within(0.01f), "Un virote de 12.");
             Assert.That(archer.ActiveAttackKind, Is.EqualTo(CombatDamageKind.Arrow));
             Vector3 delta = archer.transform.position - player.transform.position;
             delta.y = 0f;
@@ -162,7 +162,7 @@ namespace Vhaldren.Tests
             CombatHealth bruteHealth = brute.GetComponent<CombatHealth>();
             bruteHealth.ApplyDamage(70f);
             Assert.That(healer.HealAllies(), Is.EqualTo(1));
-            Assert.That(bruteHealth.CurrentHealth, Is.EqualTo(70f + 140f * 0.14f).Within(0.01f));
+            Assert.That(bruteHealth.CurrentHealth, Is.EqualTo(130f + 200f * 0.14f).Within(0.01f));
         }
 
         [UnityTest]

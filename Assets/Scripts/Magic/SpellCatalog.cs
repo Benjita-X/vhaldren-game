@@ -3,7 +3,10 @@ using UnityEngine;
 
 namespace Vhaldren.Gameplay.Magic
 {
-    /// <summary>Seis escuelas arcanas originales de Vhaldren.</summary>
+    /// <summary>
+    /// Seis escuelas arcanas originales de Vhaldren, mas la Luz caida: el poder propio de
+    /// Lucifer, que ninguna esencia ni maestro puede enseñar a otro linaje.
+    /// </summary>
     public enum SpellSchool
     {
         Pyromancy = 0,   // Fuego
@@ -11,7 +14,8 @@ namespace Vhaldren.Gameplay.Magic
         Fulmancy = 2,    // Tormenta
         Umbramancy = 3,  // Sombras
         Hemomancy = 4,   // Sangre
-        Lumancy = 5      // Luz
+        Lumancy = 5,     // Luz
+        FallenLight = 6  // Luz caida (exclusiva de Lucifer): luz dorada y fuego infernal
     }
 
     /// <summary>Como llega el hechizo al objetivo.</summary>
@@ -22,7 +26,8 @@ namespace Vhaldren.Gameplay.Magic
         Zone = 2,     // Circulo avisado en el cursor que estalla tras un retraso.
         Chain = 3,    // Rayo instantaneo que salta entre enemigos cercanos.
         Blink = 4,    // Desplazamiento corto respetando colisiones; estalla al llegar.
-        Barrier = 5   // Escudo que absorbe daño segun el poder de hechizo.
+        Barrier = 5,  // Escudo que absorbe daño segun el poder de hechizo.
+        Leap = 6      // Salto con alas por encima de obstaculos; estalla y ata al caer.
     }
 
     /// <summary>Datos de un hechizo. Las mejoras futuras solo cambian estos datos.</summary>
@@ -45,12 +50,15 @@ namespace Vhaldren.Gameplay.Magic
         public readonly int ChainTargets;
         public readonly int Charges;
         public readonly string Description;
+        /// <summary>Enemigos que atraviesa un proyectil antes de detenerse (0 = el primero).</summary>
+        public readonly int Pierce;
 
         public SpellDefinition(string id, string displayName, SpellSchool school, SpellDelivery delivery,
             float damage, float radius, float range, float windup, float cooldown, float staminaCost,
             StatusKind status, int statusStacks, string description,
-            float selfHeal = 0f, float lifeSteal = 0f, int chainTargets = 0)
+            float selfHeal = 0f, float lifeSteal = 0f, int chainTargets = 0, int pierce = 0)
         {
+            Pierce = Mathf.Max(0, pierce);
             Id = id;
             DisplayName = displayName;
             School = school;
@@ -74,13 +82,16 @@ namespace Vhaldren.Gameplay.Magic
     }
 
     /// <summary>
-    /// Grimorio completo: 6 escuelas x 3 hechizos (1 basico, 2 control, 3 definitivo).
+    /// Grimorio completo: 7 escuelas x 3 hechizos (1 basico, 2 control, 3 definitivo).
+    /// Las 6 primeras son comunes; la Luz caida es el kit exclusivo de Lucifer.
     /// Inspirado en el genero de magos duelistas, con nombres y efectos propios.
     /// </summary>
     public static class SpellCatalog
     {
         public const int SpellsPerSchool = 3;
-        public const int SchoolCount = 6;
+        public const int SchoolCount = 7;
+        /// <summary>Escuelas que cualquier linaje puede aprender (sin las exclusivas).</summary>
+        public const int CommonSchoolCount = 6;
 
         private static readonly SpellDefinition[] spells =
         {
@@ -149,7 +160,21 @@ namespace Vhaldren.Gameplay.Magic
             new SpellDefinition("juicio_celestial", "Juicio celestial", SpellSchool.Lumancy, SpellDelivery.Zone,
                 55f, 4f, 14f, 1.00f, 20f, 35f, StatusKind.Dazzle, 1,
                 "Definitivo: luz que castiga y te cura.", selfHeal: 20f),
+
+            // ── Luz caída (solo Lucifer) ──────────────────────────────
+            new SpellDefinition("lanza_lucero", "Lanza del Lucero", SpellSchool.FallenLight, SpellDelivery.Bolt,
+                17f, 0.4f, 20f, 0.12f, 1.5f, 10f, StatusKind.Ignition, 1,
+                "Lanza de luz dorada y fuego infernal: atraviesa hasta tres enemigos y los prende.", pierce: 3),
+            new SpellDefinition("salto_alas", "Salto de alas", SpellSchool.FallenLight, SpellDelivery.Leap,
+                18f, 3.2f, 9f, 0.15f, 9f, 22f, StatusKind.Ignition, 1,
+                "Vuelas hasta 9 m por encima de muros y vallas; al caer, cadenas de azufre atan 1,5 s y queman."),
+            new SpellDefinition("caida_lucero", "Caída del Lucero", SpellSchool.FallenLight, SpellDelivery.Zone,
+                58f, 5f, 15f, 1.40f, 24f, 35f, StatusKind.Ignition, 1,
+                "Definitivo: arrancas una estrella del cielo; cae en el gran círculo avisado y lo arrasa."),
         };
+
+        /// <summary>Escuela reservada a un linaje (la Luz caída solo la usa Lucifer).</summary>
+        public static bool IsExclusive(SpellSchool school) => school == SpellSchool.FallenLight;
 
         public static IReadOnlyList<SpellDefinition> All => spells;
 
@@ -177,6 +202,7 @@ namespace Vhaldren.Gameplay.Magic
                 case SpellSchool.Umbramancy: return "Umbramancia";
                 case SpellSchool.Hemomancy: return "Hemomancia";
                 case SpellSchool.Lumancy: return "Lumancia";
+                case SpellSchool.FallenLight: return "Luz caída";
                 default: return school.ToString();
             }
         }
@@ -191,6 +217,7 @@ namespace Vhaldren.Gameplay.Magic
                 case SpellSchool.Umbramancy: return new Color(0.55f, 0.25f, 0.85f);
                 case SpellSchool.Hemomancy: return new Color(0.85f, 0.08f, 0.18f);
                 case SpellSchool.Lumancy: return new Color(1f, 0.92f, 0.55f);
+                case SpellSchool.FallenLight: return new Color(1f, 0.7f, 0.26f);
                 default: return Color.white;
             }
         }

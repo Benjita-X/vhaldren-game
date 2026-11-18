@@ -22,6 +22,29 @@ namespace Vhaldren.Gameplay.Combat
             public int Lane;
             public bool Healing;
             public bool Defended;
+            public bool Critical;
+            public bool OverTime;
+            public bool Magic;
+            public float Scale;
+        }
+
+        /// <summary>Tamaño relativo de un número: los golpes que quitan más vida se leen más grandes.</summary>
+        public static float PopupScale(float amount, float maxHealth, bool critical, bool overTime)
+        {
+            if (overTime)
+                return 0.72f;
+            float share = maxHealth > 0f ? Mathf.Clamp01(amount / maxHealth) : 0f;
+            float scale = Mathf.Lerp(0.95f, 1.35f, Mathf.Clamp01(share * 2.5f));
+            return critical ? scale * 1.45f : scale;
+        }
+
+        /// <summary>Texto del número: entero (sin decimales que ensucien); crítico con exclamación.</summary>
+        public static string PopupText(float amount, bool critical, bool healing)
+        {
+            string value = amount >= 1f ? Mathf.RoundToInt(amount).ToString() : amount.ToString("0.#");
+            if (healing)
+                return "+" + value;
+            return critical ? "¡" + value + "!" : "-" + value;
         }
 
         [SerializeField, Min(2f)] private float maximumDisplayDistance = 42f;
@@ -121,15 +144,25 @@ namespace Vhaldren.Gameplay.Combat
 
             // Buffer fijo: al saturar solo reemplaza el aviso mas antiguo.
             // Formatear texto una sola vez por golpe, no en cada OnGUI.
+            // El receptor publica tipo y critico del golpe que se aplica ahora mismo.
+            bool resolving = CombatHitContext.Resolving;
+            bool critical = resolving && CombatHitContext.Critical && !playerTarget;
+            bool overTime = resolving && CombatHitContext.Kind == CombatDamageKind.DamageOverTime;
+            bool magic = resolving && (CombatHitContext.Kind == CombatDamageKind.Magic ||
+                                       CombatHitContext.Kind == CombatDamageKind.Explosion);
             int index = nextPopup % PopupCapacity;
             nextPopup++;
             popups[index] = new DamagePopup
             {
-                Text = "-" + actualAmount.ToString("0.##"),
+                Text = PopupText(actualAmount, critical, false),
                 Time = Time.time,
                 Lane = index,
                 Healing = false,
-                Defended = false
+                Defended = false,
+                Critical = critical,
+                OverTime = overTime,
+                Magic = magic,
+                Scale = PopupScale(actualAmount, health != null ? health.MaximumHealth : 100f, critical, overTime)
             };
             cachedHealth = float.NaN;
         }
@@ -145,11 +178,12 @@ namespace Vhaldren.Gameplay.Combat
             nextPopup++;
             popups[index] = new DamagePopup
             {
-                Text = "+" + actualAmount.ToString("0.##"),
+                Text = PopupText(actualAmount, false, true),
                 Time = Time.time,
                 Lane = index,
                 Healing = true,
-                Defended = false
+                Defended = false,
+                Scale = 1f
             };
             cachedHealth = float.NaN;
         }
@@ -168,7 +202,8 @@ namespace Vhaldren.Gameplay.Combat
                 Time = Time.time,
                 Lane = index,
                 Healing = false,
-                Defended = true
+                Defended = true,
+                Scale = parry ? 1.1f : 0.85f
             };
         }
 
@@ -254,27 +289,53 @@ namespace Vhaldren.Gameplay.Combat
         {
             Color previous = GUI.color;
             // Opcion del menu: ocultar los numeros flotantes de daño y curacion.
+            int baseSize = bossTarget ? 27 : 23;
             for (int i = 0; Vhaldren.Gameplay.Settings.GameSettings.DamageNumbers && i < PopupCapacity; i++)
             {
                 DamagePopup popup = popups[i];
                 if (popup.Text == null)
                     continue;
+                float lifetime = popup.Critical ? PopupLifetime * 1.3f : PopupLifetime;
                 float age = Time.time - popup.Time;
-                if (age < 0f || age >= PopupLifetime)
+                if (age < 0f || age >= lifetime)
                     continue;
 
-                float fade = 1f - Mathf.Clamp01(age / PopupLifetime);
+                float t = Mathf.Clamp01(age / lifetime);
+                // Opaco la primera mitad y se desvanece despues: se lee mejor.
+                float fade = t < 0.5f ? 1f : 1f - (t - 0.5f) * 2f;
                 float spread = (popup.Lane - 2.5f) * 16f;
-                GUI.color = popup.Healing
+                // Sube rapido y frena (ease-out); el critico sube menos y late al aparecer.
+                float rise = (1f - (1f - t) * (1f - t)) * (popup.Critical ? 48f : 62f);
+                float pop = popup.Critical
+                    ? 1f + 0.55f * Mathf.Clamp01(1f - age / 0.14f)
+                    : 1f + 0.2f * Mathf.Clamp01(1f - age / 0.1f);
+                float scale = Mathf.Max(0.5f, popup.Scale > 0f ? popup.Scale : 1f) * pop;
+                Color color = popup.Healing
                     ? new Color(0.35f, 1f, 0.54f, fade)
                     : popup.Defended
                         ? new Color(0.38f, 0.86f, 1f, fade)
                         : playerTarget
                             ? new Color(1f, 0.3f, 0.35f, fade)
-                            : new Color(1f, 0.87f, 0.35f, fade);
-                GUI.Label(new Rect(x - 40f + spread,
-                    y - 56f - age * 55f, 80f, 36f), popup.Text, numberStyle);
+                            : popup.Critical
+                                ? new Color(1f, 0.58f, 0.12f, fade)
+                                : popup.OverTime
+                                    ? new Color(1f, 0.55f, 0.2f, fade * 0.9f)
+                                    : popup.Magic
+                                        ? new Color(0.86f, 0.84f, 1f, fade)
+                                        : new Color(1f, 0.9f, 0.45f, fade);
+                numberStyle.fontSize = Mathf.RoundToInt(baseSize * scale);
+                float w = 150f * scale, hgt = 44f * scale;
+                float shake = popup.Critical && age < 0.18f ? Mathf.Sin(age * 90f) * 2.5f : 0f;
+                Rect box = new Rect(x - w * 0.5f + spread + shake, y - 56f - rise - (hgt - 36f) * 0.5f, w, hgt);
+                // Contorno oscuro: legible sobre hierba, nieve o fuego.
+                GUI.color = new Color(0f, 0f, 0f, 0.8f * fade);
+                GUI.Label(new Rect(box.x + 2f, box.y + 2f, box.width, box.height), popup.Text, numberStyle);
+                GUI.Label(new Rect(box.x - 1.5f, box.y + 1.5f, box.width, box.height), popup.Text, numberStyle);
+                GUI.Label(new Rect(box.x + 1.5f, box.y - 1f, box.width, box.height), popup.Text, numberStyle);
+                GUI.color = color;
+                GUI.Label(box, popup.Text, numberStyle);
             }
+            numberStyle.fontSize = baseSize;
             GUI.color = previous;
         }
 
@@ -303,7 +364,9 @@ namespace Vhaldren.Gameplay.Combat
                 {
                     fontSize = bossTarget ? 27 : 23,
                     fontStyle = FontStyle.Bold,
-                    alignment = TextAnchor.MiddleCenter
+                    alignment = TextAnchor.MiddleCenter,
+                    clipping = TextClipping.Overflow,
+                    wordWrap = false
                 };
                 numberStyle.normal.textColor = Color.white;
             }

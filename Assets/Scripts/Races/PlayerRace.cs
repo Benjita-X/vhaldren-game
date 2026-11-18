@@ -42,6 +42,7 @@ namespace Vhaldren.Gameplay.Races
         private float furyUntil;
         private string message = string.Empty;
         private float messageUntil;
+        private bool announcedLineage;
 
         public static PlayerRace Local => local;
         public RaceDefinition Data => data ?? RaceCatalog.Get(race);
@@ -137,8 +138,42 @@ namespace Vhaldren.Gameplay.Races
             if (book != null)
                 foreach (SpellSchool school in data.ExtraSchools)
                     book.Unlock(school);
+            ApplyLineage(id, book);
             appliedSpeed = -1f;
             UpdateSpeed();
+        }
+
+        /// <summary>
+        /// Lucifer: concede su escuela exclusiva (Luz caída, activa desde el inicio), le pone
+        /// alas, tinte y halo. Cualquier otro linaje los pierde si los tenía.
+        /// </summary>
+        private void ApplyLineage(RaceId id, PlayerSpellbook book)
+        {
+            LuciferAvatar avatar = GetComponent<LuciferAvatar>();
+            if (id == RaceId.Lucifer)
+            {
+                if (book != null)
+                    book.GrantExclusive(SpellSchool.FallenLight, true);
+                if (avatar == null)
+                    gameObject.AddComponent<LuciferAvatar>();
+                if (Application.isPlaying && !announcedLineage)
+                {
+                    announcedLineage = true;
+                    Vhaldren.Gameplay.UI.HudNotices.Post("Lucifer despierta con las alas rotas · " +
+                        GameInput.Label(GameAction.Spell1) + " Lanza del Lucero · " +
+                        GameInput.Label(GameAction.Spell2) + " Salto de alas · " +
+                        GameInput.Label(GameAction.Spell3) + " Caída del Lucero · " +
+                        GameInput.Label(GameAction.RacialPower) + " Estallido de alas",
+                        new Color(1f, 0.82f, 0.45f), 8f);
+                }
+            }
+            else
+            {
+                if (book != null && book.HasExclusive(SpellSchool.FallenLight))
+                    book.RevokeExclusive(SpellSchool.FallenLight);
+                if (avatar != null)
+                    Destroy(avatar);
+            }
         }
 
         private void UpdateSpeed()
@@ -165,6 +200,8 @@ namespace Vhaldren.Gameplay.Races
             PlayerBuilder builder = GetComponent<PlayerBuilder>();
             if (builder != null && builder.IsBuilding)
                 return;   // en construccion R gira las piezas
+            if (Vhaldren.Gameplay.NPC.NpcDialogue.IsOpen)
+                return;   // hablando con un aldeano
             if (GameInput.Down(GameAction.RacialPower))
                 TryUsePower();
         }
@@ -229,6 +266,12 @@ namespace Vhaldren.Gameplay.Races
                     health.Heal(health.MaximumHealth * 0.12f);
                     buffUntil = Time.time + 5f;
                     break;
+                case RacialPower.WingBurst:
+                    // Lucifer: las alas se abren de golpe, empujan lejos y prenden.
+                    FallenLightKit.WingBurstVfx(transform);
+                    Burst(FallenLightKit.WingBurstRadius, FallenLightKit.WingBurstDamage, tint,
+                        FallenLightKit.WingBurstForce, FallenLightKit.WingBurstStagger);
+                    break;
             }
             SpellImpactFlash.Spawn(transform.position + Vector3.up * 0.2f, tint, 1.3f, 0.45f, 2.2f);
             if (GameFeel.Enabled)
@@ -237,7 +280,7 @@ namespace Vhaldren.Gameplay.Races
             return Say(Data.PowerName + "!");
         }
 
-        private void Burst(float radius, float damage, Color tint)
+        private void Burst(float radius, float damage, Color tint, float force = 1f, float stagger = 0f)
         {
             int count = Physics.OverlapSphereNonAlloc(transform.position, radius, nearby,
                 Physics.DefaultRaycastLayers, QueryTriggerInteraction.Ignore);
@@ -256,11 +299,15 @@ namespace Vhaldren.Gameplay.Races
                     continue;
                 if (!Unobstructed(receiver))
                     continue;
-                CombatDamageResult result = receiver.Receive(damage, CombatDamageKind.Magic, transform.position);
+                CombatDamageResult result;
+                using (CombatHitContext.Push(false, force))
+                    result = receiver.Receive(damage, CombatDamageKind.Magic, transform.position);
                 if (result.Applied > 0f)
                 {
                     StatusEffects.For(receiver)?.ApplyFrom(StatusKind.Ignition, this);
                     GetComponent<PlayerDamageTracker>()?.Record(result.Applied, CombatDamageKind.Magic);
+                    if (stagger > 0f)
+                        receiver.GetComponent<PrototypeEnemy>()?.InterruptAttack(stagger);
                 }
             }
         }
@@ -319,6 +366,7 @@ namespace Vhaldren.Gameplay.Races
                 case RaceId.HalfDemon: return new Color(1f, 0.35f, 0.05f);
                 case RaceId.HalfCelestial: return new Color(1f, 0.95f, 0.6f);
                 case RaceId.Arcanist: return new Color(0.5f, 0.6f, 1f);
+                case RaceId.Lucifer: return new Color(1f, 0.74f, 0.3f);
                 default: return new Color(0.9f, 0.9f, 0.95f);
             }
         }

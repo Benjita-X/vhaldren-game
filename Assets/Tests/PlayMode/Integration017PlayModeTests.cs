@@ -41,12 +41,14 @@ namespace Vhaldren.Tests
             sessionObject.SetActive(true);
             yield return null;
 
+            // La vida máxima depende del linaje por defecto (Lucifer: x1,1); se mide relativa.
+            float max = health.MaximumHealth;
             health.ApplyDamage(25f);
-            Assert.That(health.CurrentHealth, Is.EqualTo(75f));
+            Assert.That(health.CurrentHealth, Is.EqualTo(max - 25f));
             Assert.That(session.TryDrinkPotion(), Is.EqualTo(25f),
                 "Si faltan 25 PV, una pocion de hasta 35 debe curar 25.");
             Assert.That(session.LastPotionHealed, Is.EqualTo(25f));
-            Assert.That(health.CurrentHealth, Is.EqualTo(100f));
+            Assert.That(health.CurrentHealth, Is.EqualTo(max));
             Assert.That(session.TryDrinkPotion(), Is.Zero,
                 "No consumir ni anunciar una segunda pocion en cooldown.");
         }

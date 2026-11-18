@@ -25,6 +25,8 @@ namespace Vhaldren.Gameplay.Magic
                 case SpellSchool.Umbramancy: return VfxElement.Shadow;
                 case SpellSchool.Hemomancy: return VfxElement.Blood;
                 case SpellSchool.Lumancy: return VfxElement.Light;
+                // Luz caída: brasas de fuego infernal (la luz dorada la añade su propio kit).
+                case SpellSchool.FallenLight: return VfxElement.Fire;
                 default: return VfxElement.Neutral;
             }
         }
@@ -37,6 +39,14 @@ namespace Vhaldren.Gameplay.Magic
         {
             SpellImpactFlash.Spawn(point, SpellCatalog.SchoolColor(school), critical ? 0.8f : 0.5f, 0.22f, 0f,
                 ElementOf(school));
+            if (school == SpellSchool.FallenLight)
+            {
+                // Chispas doradas sobre las brasas: luz que quema.
+                VfxHost host = VfxHost.Get();
+                if (host != null)
+                    host.Glints(point, 0.25f, new Color(1f, 0.9f, 0.55f, 1f), critical ? 16 : 9, 0.16f, 0.45f,
+                        Vector3.up * 1.4f);
+            }
         }
 
         /// <summary>

@@ -14,9 +14,17 @@ namespace Vhaldren.Tests
         public void ResetKeys() => GameInput.ResetDefaults();
 
         [Test]
-        public void EightRacesWithCompleteSheets()
+        public void NineLineagesWithLuciferFirstAndCompleteSheets()
         {
-            Assert.That(RaceCatalog.All.Count, Is.EqualTo(8));
+            // Las 8 razas de siempre más Lucifer, que va primero y es el linaje por defecto.
+            Assert.That(RaceCatalog.All.Count, Is.EqualTo(9));
+            Assert.That(RaceCatalog.All[0].Id, Is.EqualTo(RaceId.Lucifer), "Lucifer encabeza el menú.");
+            Assert.That(RaceCatalog.Default, Is.EqualTo(RaceId.Lucifer));
+            foreach (RaceId id in System.Enum.GetValues(typeof(RaceId)))
+            {
+                Assert.That(RaceCatalog.IsDefined(id), Is.True, id.ToString());
+                Assert.That(RaceCatalog.Get(id).Id, Is.EqualTo(id), "Get busca por identificador, no por posición.");
+            }
             HashSet<RacialPower> powers = new HashSet<RacialPower>();
             foreach (RaceDefinition race in RaceCatalog.All)
             {
@@ -58,7 +66,10 @@ namespace Vhaldren.Tests
                         IsBuildSlot(binding.Action) && IsSpell(other);
                     bool buildAndRace = key == Key.R &&
                         (other == GameAction.RacialPower || binding.Action == GameAction.RacialPower);
-                    Assert.That(buildAndSpell || buildAndRace, Is.True,
+                    // G: montar fuera de construcción, desmontar pieza dentro (nunca a la vez).
+                    bool mountAndDismantle = key == Key.G &&
+                        (other == GameAction.Mount || binding.Action == GameAction.Mount);
+                    Assert.That(buildAndSpell || buildAndRace || mountAndDismantle, Is.True,
                         binding.Action + " choca con " + other + " fuera de un contexto exclusivo.");
                 }
                 else

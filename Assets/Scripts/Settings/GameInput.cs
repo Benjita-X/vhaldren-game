@@ -23,7 +23,9 @@ namespace Vhaldren.Gameplay.Settings
         Noticeboard, Accept, Offer, Buy, Help, Pause,
         // Al final: los valores anteriores no cambian.
         CameraRotateLeft, CameraRotateRight, CameraReset,
-        DebugHud
+        DebugHud,
+        // 020: mapa grande, monturas y carrera.
+        Map, Mount, Sprint, Fly
     }
 
     /// <summary>
@@ -62,7 +64,7 @@ namespace Vhaldren.Gameplay.Settings
             const int W = 0, S = 0, A = 0, D = 0, Space = 0, V = 0, T = 0, F = 0, Z = 0, C = 0, X = 0, Q = 0,
                 Digit0 = 0, Digit1 = 0, Digit2 = 0, Digit3 = 0, Digit4 = 0, Digit5 = 0, Digit6 = 0,
                 Digit7 = 0, Digit8 = 0, Digit9 = 0, Tab = 0, H = 0, R = 0, U = 0, B = 0, G = 0, E = 0, J = 0,
-                K = 0, N = 0, Y = 0, O = 0, P = 0, F1 = 0, F3 = 0, Escape = 0;
+                K = 0, N = 0, Y = 0, O = 0, P = 0, F1 = 0, F3 = 0, Escape = 0, M = 0, LeftShift = 0, LeftCtrl = 0;
 #endif
 #if ENABLE_INPUT_SYSTEM
             Add(GameAction.MoveForward, "Avanzar", "Movimiento", Key.W);
@@ -111,6 +113,10 @@ namespace Vhaldren.Gameplay.Settings
             Add(GameAction.Help, "Ayuda en pantalla", "Interfaz", Key.F1);
             Add(GameAction.Pause, "Menú / pausa", "Interfaz", Key.Escape);
             Add(GameAction.DebugHud, "Recuadros de depuración", "Interfaz", Key.F3);
+            Add(GameAction.Map, "Mapa del mundo", "Interfaz", Key.M);
+            Add(GameAction.Mount, "Montar / desmontar", "Movimiento", Key.G);
+            Add(GameAction.Sprint, "Correr (mantener)", "Movimiento", Key.LeftShift);
+            Add(GameAction.Fly, "Despegar / aterrizar (montura voladora)", "Movimiento", Key.LeftCtrl);
 #endif
             return list.ToArray();
         }
@@ -123,6 +129,9 @@ namespace Vhaldren.Gameplay.Settings
         {
             if ((a == GameAction.Rotate || a == GameAction.Dismantle) && b == GameAction.RacialPower ||
                 (b == GameAction.Rotate || b == GameAction.Dismantle) && a == GameAction.RacialPower)
+                return true;
+            // Montar no está disponible en modo construcción (donde G desmonta piezas).
+            if ((a == GameAction.Mount && b == GameAction.Dismantle) || (b == GameAction.Mount && a == GameAction.Dismantle))
                 return true;
             return (IsBuildSlot(a) && IsSpellSlot(b)) ||
                    (IsBuildSlot(b) && IsSpellSlot(a));

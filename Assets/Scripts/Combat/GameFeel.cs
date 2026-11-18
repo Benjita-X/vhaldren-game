@@ -54,24 +54,87 @@ namespace Vhaldren.Gameplay.Combat
                 return;
             }
 
-            float weight = Mathf.Clamp01(applied / 40f);
-            HitStop(Mathf.Lerp(0.03f, 0.085f, weight));
-            Shake(Mathf.Lerp(0.05f, 0.16f, weight), 0.16f);
-            Host().Burst(center, away, SparkColor(kind), Mathf.RoundToInt(Mathf.Lerp(8f, 20f, weight)), Mathf.Lerp(4f, 7f, weight));
+            // Respuesta proporcional: golpes flojos apenas paran el tiempo; fuertes, criticos
+            // y el golpe que remata congelan un instante mas, empujan mas y sueltan mas chispas.
+            bool critical = CombatHitContext.Critical;
+            float force = CombatHitContext.Force;
+            CombatHealth health = victim.GetComponent<CombatHealth>();
+            bool killed = health != null && health.IsDefeated;
+            float maxHealth = health != null ? health.MaximumHealth : 100f;
+            float weight = HitWeight(applied, critical);
+            HitStop(HitStopSeconds(applied, critical, killed));
+            Shake(Mathf.Lerp(0.05f, 0.17f, weight) * (critical ? 1.35f : 1f) * (killed ? 1.25f : 1f),
+                critical || killed ? 0.22f : 0.16f);
+            Host().Burst(center, away, SparkColor(kind), Mathf.RoundToInt(Mathf.Lerp(8f, 22f, weight)), Mathf.Lerp(4f, 7.5f, weight));
+            if (critical)
+                Host().Burst(center, Vector3.up, new Color(1f, 0.86f, 0.45f), 18, 7f, 0.34f, 0.13f);
             GameAudio.Play(kind == CombatDamageKind.Magic ? GameSound.SpellImpact : GameSound.HitFlesh, center,
                 Mathf.Lerp(0.6f, 1f, weight));
             Vhaldren.Gameplay.World.PrototypeEnemy enemy = victim.GetComponent<Vhaldren.Gameplay.World.PrototypeEnemy>();
             if (enemy != null)
             {
-                enemy.ApplyKnockback(away, Mathf.Lerp(0.25f, 0.8f, weight) * (enemy.IsBoss ? 0.3f : 1f));
-                CombatHealth health = victim.GetComponent<CombatHealth>();
-                if (health != null && health.IsDefeated)
+                if (killed)
                 {
-                    HitStop(0.12f);
+                    // Muerte con impulso: el cuerpo sale despedido en la direccion del golpe.
+                    enemy.LaunchCorpse(away, DeathImpulse(applied, maxHealth, critical, force, enemy.IsBoss));
                     Shake(0.2f, 0.25f);
                     GameAudio.Play(GameSound.EnemyDown, center, 1f, 0.05f);
                 }
+                else
+                {
+                    enemy.ApplyKnockback(away, KnockbackDistance(applied, maxHealth, kind, enemy.IsBoss, critical, force));
+                }
             }
+        }
+
+        /// <summary>Peso de un golpe entre 0 y 1 (40 de daño = golpe pesado; el crítico pesa más).</summary>
+        public static float HitWeight(float applied, bool critical) =>
+            Mathf.Clamp01(Mathf.Max(0f, applied) / 40f * (critical ? 1.4f : 1f));
+
+        /// <summary>Duración del parón: breve en golpes flojos, más en fuertes, críticos y remates.</summary>
+        public static float HitStopSeconds(float applied, bool critical, bool killing)
+        {
+            float seconds = Mathf.Lerp(0.03f, 0.09f, HitWeight(applied, false));
+            if (critical)
+                seconds = Mathf.Max(seconds, 0.11f);
+            if (killing)
+                seconds = Mathf.Max(seconds, 0.12f);
+            return Mathf.Min(seconds, 0.15f);
+        }
+
+        /// <summary>
+        /// Metros que retrocede un enemigo: crece con el daño, baja con su vida máxima (un bruto
+        /// apenas se mueve, un lobo sale volando), depende del tipo de golpe y de su fuerza.
+        /// </summary>
+        public static float KnockbackDistance(float applied, float maxHealth, CombatDamageKind kind, bool boss,
+            bool critical, float force)
+        {
+            if (applied <= 0f || float.IsNaN(applied))
+                return 0f;
+            float distance = Mathf.Lerp(0.2f, 1.1f, Mathf.Clamp01(applied / 40f));
+            distance *= Mathf.Clamp(80f / Mathf.Max(1f, maxHealth), 0.45f, 1.25f);
+            switch (kind)
+            {
+                case CombatDamageKind.Arrow: distance *= 0.7f; break;
+                case CombatDamageKind.Magic: distance *= 0.9f; break;
+                case CombatDamageKind.Explosion: distance *= 1.25f; break;
+                case CombatDamageKind.DamageOverTime: return 0f;
+            }
+            if (critical)
+                distance *= 1.35f;
+            distance *= float.IsNaN(force) ? 1f : Mathf.Clamp(force, 0f, CombatHitContext.MaxForce);
+            if (boss)
+                distance *= 0.3f;
+            return Mathf.Clamp(distance, 0f, 3f);
+        }
+
+        /// <summary>Velocidad (m/s) con la que sale despedido el cuerpo del enemigo que cae.</summary>
+        public static float DeathImpulse(float applied, float maxHealth, bool critical, float force, bool boss)
+        {
+            float overkill = Mathf.Clamp01(Mathf.Max(0f, applied) / Mathf.Max(1f, maxHealth * 0.5f));
+            float speed = Mathf.Lerp(2.2f, 6.5f, overkill) * (critical ? 1.3f : 1f) *
+                          Mathf.Clamp(float.IsNaN(force) ? 1f : force, 0.5f, 2.5f);
+            return boss ? speed * 0.35f : Mathf.Min(speed, 11f);
         }
 
         /// <summary>Parada perfecta o bloqueo: choque metalico sin daño.</summary>
@@ -90,12 +153,16 @@ namespace Vhaldren.Gameplay.Combat
             }
         }
 
-        /// <summary>Golpe critico: un empujon extra de impacto.</summary>
+        /// <summary>
+        /// Golpe critico: destello dorado extra. El parón largo ya lo dio OnHit al leer
+        /// <see cref="CombatHitContext.Critical"/>; aqui solo se intenta por si el golpe no
+        /// paso por el receptor (no se encadena gracias a MinHitStopGap).
+        /// </summary>
         public static void Critical(Vector3 position)
         {
             if (!Enabled)
                 return;
-            HitStop(0.09f);
+            HitStop(0.11f);
             Shake(0.12f, 0.15f);
             Host().Burst(position, Vector3.up, new Color(1f, 0.95f, 0.6f), 16, 6f);
         }
