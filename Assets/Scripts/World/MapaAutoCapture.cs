@@ -42,6 +42,7 @@ namespace Vhaldren.Gameplay.World
             yield return new WaitForSeconds(5f);
             yield return Medir("inicio", 2f);
             yield return Shot("01-inicio.png");
+            yield return Lucifer(player, terrain);
 
             if (cam != null && terrain != null)
             {
@@ -108,6 +109,51 @@ namespace Vhaldren.Gameplay.World
             File.WriteAllText(Path.Combine(folder, "informe-mapa.txt"), report.ToString());
             yield return new WaitForSeconds(0.5f);
             Application.Quit();
+        }
+
+        /// <summary>Lanza el kit de Lucifer cerca de un enemigo y fotografía cada habilidad.</summary>
+        private IEnumerator Lucifer(GameObject player, Terrain terrain)
+        {
+            if (player == null) yield break;
+            Vhaldren.Gameplay.Magic.PlayerSpellbook book = player.GetComponent<Vhaldren.Gameplay.Magic.PlayerSpellbook>();
+            Vhaldren.Gameplay.Races.PlayerRace race = player.GetComponent<Vhaldren.Gameplay.Races.PlayerRace>();
+            report.AppendLine("Linaje: " + (race != null ? race.Data.Name : "?") + " | escuela activa: " + (book != null ? book.School.ToString() : "sin grimorio"));
+            PrototypeEnemy objetivo = null;
+            float mejor = float.MaxValue;
+            foreach (PrototypeEnemy e in FindObjectsByType<PrototypeEnemy>(FindObjectsSortMode.None))
+            {
+                if (e.IsBoss) continue;
+                float d = (e.transform.position - player.transform.position).sqrMagnitude;
+                if (d < mejor) { mejor = d; objetivo = e; }
+            }
+            if (objetivo != null)
+            {
+                Teleport(player, objetivo.transform.position + new Vector3(0f, 0f, -9f), terrain);
+                yield return new WaitForSeconds(1.5f);
+            }
+            Vector3 aim = objetivo != null ? objetivo.transform.position : player.transform.position + player.transform.forward * 8f;
+            string[] nombres = { "lanza", "salto", "caida" };
+            for (int slot = 0; slot < 3 && book != null; slot++)
+            {
+                book.ResetCooldowns();
+                bool ok = book.TryCast(slot, aim);
+                report.AppendLine("Habilidad " + (slot + 1) + " (" + nombres[slot] + "): " + (ok ? "lanzada" : "NO se lanzó"));
+                yield return new WaitForSeconds(0.15f);
+                yield return Shot("05-lucifer-" + (slot + 1) + "a-" + nombres[slot] + ".png");
+                yield return new WaitForSeconds(0.55f);
+                yield return Shot("05-lucifer-" + (slot + 1) + "b-" + nombres[slot] + ".png");
+                yield return new WaitForSeconds(1.1f);
+                yield return Shot("05-lucifer-" + (slot + 1) + "c-" + nombres[slot] + ".png");
+                yield return new WaitForSeconds(0.8f);
+            }
+            if (race != null)
+            {
+                bool ok = race.TryUsePower();
+                report.AppendLine("Poder R: " + (ok ? "usado" : "NO se usó"));
+                yield return new WaitForSeconds(0.2f);
+                yield return Shot("05-lucifer-4-estallido.png");
+                yield return new WaitForSeconds(1f);
+            }
         }
 
         private static void Teleport(GameObject player, Vector3 pos, Terrain terrain)

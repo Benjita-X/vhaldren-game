@@ -72,7 +72,12 @@ Shader "Vhaldren/VfxSuelo"
             v2f vert(appdata v)
             {
                 v2f o;
-                o.pos = UnityObjectToClipPos(v.vertex);
+                // El disco es plano y el terreno no: se acerca a la cámara a lo largo del rayo
+                // de visión (misma posición en pantalla) para que las lomas no lo corten.
+                float3 vp = UnityObjectToViewPos(v.vertex.xyz);
+                float len = max(length(vp), 0.001);
+                vp *= max(len - 2.2, len * 0.5) / len;
+                o.pos = mul(UNITY_MATRIX_P, float4(vp, 1.0));
                 o.p = v.uv * 2.0 - 1.0;   // centro del disco = (0,0), borde = radio 1
                 return o;
             }
