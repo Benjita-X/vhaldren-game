@@ -8,6 +8,9 @@ EditorBuildSettings:
   - enabled: 1
     path: Assets/Scenes/MainMenu.unity
     guid: d670f18a0e774c84daaa6729c4deffcb
+  - enabled: 1
+    path: Assets/Scenes/MundoVhaldren.unity
+    guid: 231d5db8704619641bacff6e0d2befcd
   - enabled: 0
     path: Assets/Scenes/Movement001.unity
     guid: 89b0d35ac3d24364bbd28076c7b685e5
